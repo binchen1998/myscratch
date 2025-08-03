@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童编程工具 - 基于Blockly</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="blockly.min.js"></script>
+    <script src="zh-hans.js"></script>
+</head>
+<body>
+    <!-- 顶部控制栏 -->
+    <div class="top-bar">
+        <div class="control-buttons">
+            <button id="startBtn" class="control-btn start">▶ 开始</button>
+            <button id="stopBtn" class="control-btn stop" disabled>⏹ 停止</button>
+            <button id="saveBtn" class="control-btn save">💾 保存</button>
+            <button id="loadBtn" class="control-btn load">📂 加载</button>
+            <button id="debugBtn" class="control-btn debug">🐛 调试</button>
+            <button id="debugLoopBtn" class="control-btn debug-loop">🔄 循环调试</button>
+        </div>
+        <h1>儿童编程工具</h1>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <div class="main-container">
+        <!-- 左侧：代码编辑区 -->
+        <div class="code-container">
+            <div class="sprite-info">
+                <span id="currentSpriteName">请选择一个精灵</span>
+                <div class="sprite-buttons">
+                    <button id="codeBtn" class="code-btn" style="display: none;">📝 Code</button>
+                    <button id="chatBtn" class="chat-btn" style="display: none;">💬 Chat</button>
+                </div>
+            </div>
+            <div id="blocklyDiv" class="blockly-workspace"></div>
+        </div>
+
+        <!-- 中间：舞台区域 -->
+        <div class="stage-container">
+            <div class="stage-header">
+                <h3>舞台</h3>
+                <div class="stage-controls">
+                    <div class="grid-toggle">
+                        <label class="grid-toggle-label">
+                            <input type="checkbox" id="gridToggle" title="显示网格">
+                            <span class="grid-toggle-text">网格</span>
+                        </label>
+                    </div>
+                    <button class="stage-btn" title="全屏模式">⛶</button>
+                    <button class="stage-btn" title="停止">⏹</button>
+                </div>
+            </div>
+            
+            <!-- Canvas区域 -->
+            <div class="canvas-area">
+                <canvas id="stage" width="480" height="360"></canvas>
+                <div class="stage-info">
+                    <span>尺寸: 480x360</span>
+                </div>
+            </div>
+            
+            <!-- 背景管理区域 -->
+            <div class="backgrounds-panel">
+                <div class="backgrounds-header">
+                    <h4>背景</h4>
+                    <button class="add-background-btn" id="addBackgroundBtn">+</button>
+                </div>
+                <div class="backgrounds-list" id="backgroundsList">
+                    <!-- 背景项目将在这里动态添加 -->
+                </div>
+                <input type="file" id="backgroundFileInput" accept="image/*" style="display: none;">
+            </div>
+        </div>
+
+        <!-- 右侧：精灵管理 -->
+        <div class="sprites-panel">
+            <!-- 精灵列表 -->
+            <div class="sprites-container">
+                <div class="sprites-header">
+                    <h3>精灵</h3>
+                    <button id="addSpriteBtn" class="add-sprite-btn">+</button>
+                </div>
+                <div id="spritesList" class="sprites-list">
+                    <!-- 精灵项目将在这里动态添加 -->
+                </div>
+                <input type="file" id="spriteFileInput" accept="image/png" style="display: none;">
+            </div>
+
+            <!-- 精灵属性面板 -->
+            <div class="sprite-properties">
+                <h3>精灵属性</h3>
+                <div id="spriteProperties" class="properties-content">
+                    <div class="no-sprite-selected">
+                        <p>请选择一个精灵来查看属性</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+
+    <!-- 精灵添加模态框 -->
+    <div id="spriteModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>添加新精灵</h3>
+            <div class="modal-body">
+                <input type="text" id="spriteNameInput" placeholder="精灵名称" />
+                <button id="selectImageBtn" class="select-image-btn">选择图片</button>
+                <div id="imagePreview" class="image-preview"></div>
+                <div class="modal-buttons">
+                    <button id="confirmAddSprite" class="confirm-btn">确认添加</button>
+                    <button id="cancelAddSprite" class="cancel-btn">取消</button>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="notification" style="display: none;">
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- AI聊天窗口 -->
+    <div id="chatModal" class="chat-modal" style="display: none;">
+        <div class="chat-content">
+            <div class="chat-header">
+                <h3>AI编程助手 - <span id="chatSpriteName"></span></h3>
+                <button class="chat-close" id="chatCloseBtn">&times;</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- 聊天消息将在这里显示 -->
+            </div>
+            <div class="chat-input-area">
+                <textarea id="chatInput" placeholder="请输入您的编程需求..." rows="3"></textarea>
+                <button id="chatSendBtn" class="chat-send-btn">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code编辑窗口 -->
+    <div id="codeModal" class="code-modal" style="display: none;">
+        <div class="code-content">
+            <div class="code-header">
+                <h3>代码编辑器 - <span id="codeSpriteName"></span></h3>
+                <div class="code-controls">
+                    <button class="code-btn apply-btn" id="codeApplyBtn">Apply</button>
+                    <button class="code-btn revert-btn" id="codeRevertBtn">Revert</button>
+                    <button class="code-close" id="codeCloseBtn">&times;</button>
+                </div>
+            </div>
+            <div class="code-body">
+                <div class="code-info">
+                    <p>当前精灵的可执行代码（可编辑）：</p>
+                </div>
+                <textarea id="codeEditor" placeholder="代码将在这里显示..." rows="20"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- 造型管理对话框 -->
+    <div id="costumeModal" class="costume-modal" style="display: none;">
+        <div class="costume-content">
+            <div class="costume-header">
+                <h3>造型管理 - <span id="costumeSpriteName"></span></h3>
+                <button class="costume-close" id="costumeCloseBtn">&times;</button>
+            </div>
+            <div class="costume-body">
+                <div class="costume-controls">
+                    <button id="addCostumeBtn" class="costume-add-btn">+ 添加造型</button>
+                    <button id="removeCostumeBtn" class="costume-remove-btn" disabled>- 删除造型</button>
+                </div>
+                <div class="costumes-grid" id="costumesGrid">
+                    <!-- 造型将在这里显示 -->
+                </div>
+                <input type="file" id="costumeFileInput" accept="image/*" style="display: none;">
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="core.js"></script>
+    <script src="sprite.js"></script>
+    <script src="canvas.js"></script>
+    <script src="background.js"></script>
+    <script src="blockly-config.js"></script>
+    <script src="execution.js"></script>
+    <script src="ui.js"></script>
+    <script src="project.js"></script>
+    <script src="ai-chat.js"></script>
+    <script src="code-editor.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
