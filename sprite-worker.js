@@ -243,6 +243,24 @@ class Sprite {
         this.rotation = rotation;
         this.scale = scale;
         this.visible = visible;
+        
+        // 初始化造型管理
+        this.costumes = [
+            {
+                id: 'costume_1',
+                name: '造型1',
+                image: null
+            }
+        ];
+        this.currentCostumeIndex = 0;
+    }
+    
+    switchCostume(index) {
+        if (index >= 0 && index < this.costumes.length) {
+            this.currentCostumeIndex = index;
+            return true;
+        }
+        return false;
     }
 }
 
@@ -268,6 +286,8 @@ class SpriteExecutionState {
         this.executionContext = null;
     }
 }
+
+
 
 // 创建执行上下文
 function createExecutionContext(sprite) {
@@ -1056,20 +1076,9 @@ function createExecutionContext(sprite) {
             });
         },
 
-        // 创建克隆
-        createClone: function(option) {
-            return new Promise(resolve => {
-                if (!isRunning) {
-                    resolve();
-                    return;
-                }
-                
-                console.log('[Worker] 创建克隆:', option);
-                // 简化实现，暂时只记录日志
-                // TODO: 实现真正的克隆功能
-                resolve();
-            });
-        },
+
+
+
 
         // ===== 侦测函数 =====
 
@@ -1356,6 +1365,13 @@ function createExecutionContext(sprite) {
                 
                 console.log(`[Worker] 精灵 ${sprite.name} 切换到造型: ${costumeId}`);
                 
+                // 确保costumes数组存在且有内容
+                if (!sprite.costumes || sprite.costumes.length === 0) {
+                    console.warn(`[Worker] 精灵 ${sprite.name} 没有造型数据，跳过切换`);
+                    resolve();
+                    return;
+                }
+                
                 // 查找造型索引
                 const costumeIndex = sprite.costumes.findIndex(c => c.id === costumeId);
                 if (costumeIndex !== -1) {
@@ -1367,6 +1383,8 @@ function createExecutionContext(sprite) {
                         costumeIndex: costumeIndex,
                         costumeName: sprite.costumes[costumeIndex].name
                     });
+                } else {
+                    console.warn(`[Worker] 精灵 ${sprite.name} 找不到造型: ${costumeId}`);
                 }
                 
                 resolve();
@@ -1381,6 +1399,13 @@ function createExecutionContext(sprite) {
                 }
                 
                 console.log(`[Worker] 精灵 ${sprite.name} 切换到下一个造型`);
+                
+                // 确保costumes数组存在且有内容
+                if (!sprite.costumes || sprite.costumes.length === 0) {
+                    console.warn(`[Worker] 精灵 ${sprite.name} 没有造型数据，跳过切换`);
+                    resolve();
+                    return;
+                }
                 
                 const nextIndex = (sprite.currentCostumeIndex + 1) % sprite.costumes.length;
                 sprite.switchCostume(nextIndex);
@@ -1397,8 +1422,14 @@ function createExecutionContext(sprite) {
         },
         
         getCostumeNumber: function() {
+            // 确保costumes数组存在且有内容
+            if (!sprite.costumes || sprite.costumes.length === 0) {
+                return 1; // 默认返回1
+            }
             return sprite.currentCostumeIndex + 1;
-        }
+        },
+        
+
     };
 }
 
@@ -1500,7 +1531,6 @@ async function executeCode(sprite, jsCode, abortSignal) {
         const setRotationStyle = context.setRotationStyle;
         const stopProgram = context.stopProgram;
         const stopExecution = context.stopExecution;
-        const createClone = context.createClone;
         const checkTouchingColor = context.checkTouchingColor;
         const checkColorTouchingColor = context.checkColorTouchingColor;
         const getDistance = context.getDistance;
@@ -1592,7 +1622,7 @@ async function executeCode(sprite, jsCode, abortSignal) {
         const func = new Function('moveTo', 'moveToAnimated', 'rotate', 'checkCollision', 'waitSeconds', 'sleep',
             'moveXSteps', 'moveYSteps', 'moveToRandom', 'moveToMouse', 'pointInDirection',
             'pointTowardsMouse', 'pointTowardsSprite', 'setX', 'setY', 'changeX', 'changeY',
-            'bounceIfOnEdge', 'setRotationStyle', 'stopProgram', 'stopExecution', 'createClone',
+            'bounceIfOnEdge', 'setRotationStyle', 'stopProgram', 'stopExecution',
             'checkTouchingColor', 'checkColorTouchingColor', 'getDistance', 'isKeyPressed', 'isMouseDown', 'getTimer', 'switchBackground',
             'broadcastMessage', 'broadcastMessageAndWait', 'addMessageListener', 'removeMessageListener',
             'registerKeyEvent', 'removeKeyEvent', 'registerSpriteClickEvent', 'removeSpriteClickEvent',
@@ -1630,7 +1660,7 @@ async function executeCode(sprite, jsCode, abortSignal) {
         const executionPromise =         func(moveTo, moveToAnimated, rotate, checkCollision, waitSeconds, sleep,
             moveXSteps, moveYSteps, moveToRandom, moveToMouse, pointInDirection,
             pointTowardsMouse, pointTowardsSprite, setX, setY, changeX, changeY,
-            bounceIfOnEdge, setRotationStyle, stopProgram, stopExecution, createClone,
+            bounceIfOnEdge, setRotationStyle, stopProgram, stopExecution,
             checkTouchingColor, checkColorTouchingColor, getDistance, isKeyPressed, isMouseDown, getTimer, switchBackground,
             broadcastMessage, broadcastMessageAndWait, addMessageListener, removeMessageListener,
             registerKeyEvent, removeKeyEvent, registerSpriteClickEvent, removeSpriteClickEvent,
@@ -1699,9 +1729,15 @@ self.onmessage = function(e) {
         case 'INIT_SPRITES':
             console.log('[Worker] 初始化精灵数据:', data.sprites);
             console.log('[Worker] 原始数据中的代码:', data.sprites.map(s => ({ name: s.name, code: s.code, codeLength: s.code ? s.code.length : 0 })));
-            sprites = data.sprites.map(s => new Sprite(
-                s.id, s.name, s.x, s.y, s.rotation, s.scale, s.visible
-            ));
+            sprites = data.sprites.map(s => {
+                const sprite = new Sprite(s.id, s.name, s.x, s.y, s.rotation, s.scale, s.visible);
+                // 如果主线程发送了造型数据，则使用它；否则使用默认值
+                if (s.costumes && s.costumes.length > 0) {
+                    sprite.costumes = s.costumes;
+                    sprite.currentCostumeIndex = s.currentCostumeIndex || 0;
+                }
+                return sprite;
+            });
             
             // 初始化精灵执行状态
             spriteExecutionStates.clear();
@@ -2027,6 +2063,8 @@ function createBackgroundExecutionContext(background) {
     };
 }
 
+
+
 // 提取事件监听器注册代码
 function extractMessageListenerCode(jsCode) {
     console.log('[Worker] 🔍 提取事件监听器代码，原始代码:', jsCode);
@@ -2103,7 +2141,6 @@ function executeMessageListenerRegistration(sprite, listenerCode, context) {
         const setRotationStyle = context.setRotationStyle;
         const stopProgram = context.stopProgram;
         const stopExecution = context.stopExecution;
-        const createClone = context.createClone;
         const checkTouchingColor = context.checkTouchingColor;
         const checkColorTouchingColor = context.checkColorTouchingColor;
         const getDistance = context.getDistance;
@@ -2170,7 +2207,7 @@ function executeMessageListenerRegistration(sprite, listenerCode, context) {
         const func = new Function('moveTo', 'moveToAnimated', 'rotate', 'checkCollision', 'waitSeconds', 'sleep',
             'moveXSteps', 'moveYSteps', 'moveToRandom', 'moveToMouse', 'pointInDirection',
             'pointTowardsMouse', 'pointTowardsSprite', 'setX', 'setY', 'changeX', 'changeY',
-            'bounceIfOnEdge', 'setRotationStyle', 'stopProgram', 'stopExecution', 'createClone',
+            'bounceIfOnEdge', 'setRotationStyle', 'stopProgram', 'stopExecution',
             'checkTouchingColor', 'checkColorTouchingColor', 'getDistance', 'isKeyPressed', 'isMouseDown', 'getTimer', 'switchBackground',
             'broadcastMessage', 'broadcastMessageAndWait', 'addMessageListener', 'removeMessageListener',
             'registerKeyEvent', 'removeKeyEvent', 'registerSpriteClickEvent', 'removeSpriteClickEvent',
@@ -2193,7 +2230,7 @@ function executeMessageListenerRegistration(sprite, listenerCode, context) {
         func(moveTo, moveToAnimated, rotate, checkCollision, waitSeconds, sleep,
             moveXSteps, moveYSteps, moveToRandom, moveToMouse, pointInDirection,
             pointTowardsMouse, pointTowardsSprite, setX, setY, changeX, changeY,
-            bounceIfOnEdge, setRotationStyle, stopProgram, stopExecution, createClone,
+            bounceIfOnEdge, setRotationStyle, stopProgram, stopExecution,
             checkTouchingColor, checkColorTouchingColor, getDistance, isKeyPressed, isMouseDown, getTimer, switchBackground,
             broadcastMessage, broadcastMessageAndWait, addMessageListener, removeMessageListener,
             registerKeyEvent, removeKeyEvent, registerSpriteClickEvent, removeSpriteClickEvent,

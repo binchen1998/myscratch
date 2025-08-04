@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprite调试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .log-output {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .button-group {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .debug-button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .debug-button:hover {
+            background: #1976D2;
+            transform: translateY(-1px);
+        }
+        .debug-button.check {
+            background: #4CAF50;
+        }
+        .debug-button.check:hover {
+            background: #45a049;
+        }
+        .debug-button.create {
+            background: #FF9800;
+        }
+        .debug-button.create:hover {
+            background: #F57C00;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>Sprite调试页面</h1>
+        
+        <div class="debug-section">
+            <h3>调试控制</h3>
+            <div class="button-group">
+                <button class="debug-button check" onclick="checkGlobalVariables()">检查全局变量</button>
+                <button class="debug-button check" onclick="checkSpriteList()">检查Sprite列表</button>
+                <button class="debug-button check" onclick="checkCanvas()">检查Canvas</button>
+                <button class="debug-button create" onclick="createTestSprite()">创建测试Sprite</button>
+                <button class="debug-button" onclick="forceRedraw()">强制重绘</button>
+                <button class="debug-button" onclick="clearLog()">清空日志</button>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>调试日志</h3>
+            <div id="logOutput" class="log-output"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.textContent += `[${timestamp}] ${message}\n`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('logOutput').textContent = '';
+        }
+
+        function checkGlobalVariables() {
+            log('=== 检查全局变量 ===');
+            
+            // 检查sprites数组
+            if (typeof sprites !== 'undefined') {
+                log(`sprites数组存在，长度: ${sprites.length}`);
+                sprites.forEach((sprite, index) => {
+                    log(`  Sprite ${index}: ID=${sprite.id}, 名称=${sprite.name}, 位置=(${sprite.x}, ${sprite.y}), 可见=${sprite.visible}`);
+                });
+            } else {
+                log('❌ sprites数组未定义');
+            }
+            
+            // 检查canvas
+            if (typeof canvas !== 'undefined' && canvas) {
+                log(`canvas存在，尺寸: ${canvas.width} x ${canvas.height}`);
+            } else {
+                log('❌ canvas未定义或为空');
+            }
+            
+            // 检查ctx
+            if (typeof ctx !== 'undefined' && ctx) {
+                log('ctx存在');
+            } else {
+                log('❌ ctx未定义或为空');
+            }
+            
+            // 检查workspace
+            if (typeof workspace !== 'undefined' && workspace) {
+                log('workspace存在');
+            } else {
+                log('❌ workspace未定义或为空');
+            }
+            
+            // 检查currentSpriteId
+            if (typeof currentSpriteId !== 'undefined') {
+                log(`currentSpriteId: ${currentSpriteId}`);
+            } else {
+                log('❌ currentSpriteId未定义');
+            }
+        }
+
+        function checkSpriteList() {
+            log('=== 检查Sprite列表 ===');
+            
+            if (typeof sprites !== 'undefined') {
+                log(`Sprite总数: ${sprites.length}`);
+                
+                if (sprites.length === 0) {
+                    log('⚠️ 没有Sprite');
+                } else {
+                    sprites.forEach((sprite, index) => {
+                        log(`Sprite ${index + 1}:`);
+                        log(`  ID: ${sprite.id}`);
+                        log(`  名称: ${sprite.name}`);
+                        log(`  位置: (${sprite.x}, ${sprite.y})`);
+                        log(`  可见: ${sprite.visible}`);
+                        log(`  缩放: ${sprite.scale}`);
+                        log(`  旋转: ${sprite.rotation}°`);
+                        log(`  图片: ${sprite.image ? '存在' : '不存在'}`);
+                        if (sprite.image) {
+                            if (sprite.image instanceof HTMLImageElement) {
+                                log(`  图片尺寸: ${sprite.image.naturalWidth || sprite.image.width} x ${sprite.image.naturalHeight || sprite.image.height}`);
+                            } else if (sprite.image instanceof HTMLCanvasElement) {
+                                log(`  图片尺寸: ${sprite.image.width} x ${sprite.image.height}`);
+                            }
+                        }
+                    });
+                }
+            } else {
+                log('❌ sprites数组未定义');
+            }
+        }
+
+        function checkCanvas() {
+            log('=== 检查Canvas ===');
+            
+            const stageCanvas = document.getElementById('stage');
+            if (stageCanvas) {
+                log(`Canvas元素存在，ID: ${stageCanvas.id}`);
+                log(`Canvas尺寸: ${stageCanvas.width} x ${stageCanvas.height}`);
+                log(`Canvas样式尺寸: ${stageCanvas.style.width} x ${stageCanvas.style.height}`);
+                
+                const ctx = stageCanvas.getContext('2d');
+                if (ctx) {
+                    log('Canvas上下文存在');
+                    
+                    // 尝试绘制一个测试矩形
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(10, 10, 20, 20);
+                    log('✅ 测试绘制成功（红色矩形在左上角）');
+                } else {
+                    log('❌ Canvas上下文获取失败');
+                }
+            } else {
+                log('❌ Canvas元素不存在');
+            }
+        }
+
+        function createTestSprite() {
+            log('=== 创建测试Sprite ===');
+            
+            try {
+                // 检查Sprite类是否存在
+                if (typeof Sprite === 'undefined') {
+                    log('❌ Sprite类未定义');
+                    return;
+                }
+                
+                // 创建测试Sprite
+                const spriteId = 'test_sprite_' + Date.now();
+                const sprite = new Sprite(spriteId, '测试精灵', null);
+                
+                // 设置位置
+                sprite.x = 240;
+                sprite.y = 180;
+                sprite.visible = true;
+                
+                // 添加到sprites数组
+                if (typeof sprites !== 'undefined') {
+                    sprites.push(sprite);
+                    log(`✅ 测试Sprite创建成功，ID: ${spriteId}`);
+                    log(`当前Sprite数量: ${sprites.length}`);
+                    
+                    // 尝试重绘
+                    if (typeof redrawCanvas === 'function') {
+                        redrawCanvas();
+                        log('✅ 重绘Canvas成功');
+                    } else {
+                        log('❌ redrawCanvas函数未定义');
+                    }
+                    
+                    // 尝试更新界面
+                    if (typeof renderSpritesList === 'function') {
+                        renderSpritesList();
+                        log('✅ 更新Sprite列表成功');
+                    } else {
+                        log('❌ renderSpritesList函数未定义');
+                    }
+                } else {
+                    log('❌ sprites数组未定义');
+                }
+            } catch (error) {
+                log(`❌ 创建测试Sprite失败: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        function forceRedraw() {
+            log('=== 强制重绘 ===');
+            
+            try {
+                if (typeof redrawCanvas === 'function') {
+                    redrawCanvas();
+                    log('✅ 强制重绘成功');
+                } else {
+                    log('❌ redrawCanvas函数未定义');
+                }
+            } catch (error) {
+                log(`❌ 强制重绘失败: ${error.message}`);
+                console.error(error);
+            }
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', function() {
+            log('页面加载完成，开始调试...');
+            setTimeout(() => {
+                checkGlobalVariables();
+            }, 2000); // 等待2秒让应用初始化
+        });
+    </script>
+</body>
+</html> 

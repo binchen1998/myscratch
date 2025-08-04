@@ -1,151 +1,95 @@
-# 儿童编程工具 - 基于Google Blockly
+# 儿童编程工具 - 基于Blockly
 
-一个类似于MIT Scratch的可视化编程工具，专为儿童设计，基于Google Blockly构建。
+一个基于Blockly的儿童编程工具，支持可视化编程和代码生成。
 
-## 功能特点
+## 功能特性
 
-### 🎯 核心功能
-- **可视化编程**：拖拽式代码块编程，无需输入代码
-- **精灵系统**：支持多个精灵，每个精灵可以上传PNG图片
-- **动画执行**：实时观看代码执行效果
-- **独立代码**：每个精灵拥有独立的代码空间
+### 核心功能
+- **可视化编程**: 使用Blockly积木进行拖拽式编程
+- **精灵系统**: 支持多个精灵，每个精灵可以有自己的代码
+- **背景管理**: 支持多个背景切换
+- **实时执行**: 代码可以实时在舞台上执行
+- **代码生成**: 将积木代码转换为JavaScript代码
 
-### 🧩 支持的代码块
-1. **移动到x,y** - 将精灵移动到指定坐标
-2. **旋转多少度** - 旋转精灵指定角度
-3. **控制结构** - 支持循环和条件控制
+### 新增功能
 
-### 🎨 界面布局
-- **左侧**：代码块工具箱
-- **中间**：代码编辑区域（Blockly workspace）
-- **右侧上方**：Canvas舞台（400x300像素）
-- **右侧下方**：精灵列表和管理
+#### XML编辑器
+- **XML按钮**: 在"合并代码"按钮旁边新增了"XML"按钮
+- **XML格式化**: 显示当前精灵的Blockly XML代码，并进行格式化
+- **可编辑功能**: XML代码可以直接在对话框中编辑
+- **应用功能**: 编辑后的XML可以应用回工作区
+- **重置功能**: 可以重置到原始XML内容
+- **复制功能**: 支持一键复制XML代码到剪贴板
+- **实时更新**: 当精灵代码改变时，XML内容会自动更新
 
-## 使用说明
+## 使用方法
 
-### 1. 添加精灵
-1. 点击右侧"+ 添加精灵"按钮
-2. 输入精灵名称
-3. 选择PNG格式的图片文件
-4. 点击"确认添加"
+### XML编辑器使用
+1. 选择一个精灵
+2. 点击"📋 XML"按钮
+3. 在弹出的对话框中查看和编辑格式化的XML代码
+4. 点击"应用"按钮将编辑后的XML应用到工作区
+5. 点击"重置"按钮恢复到原始XML内容
+6. 点击"复制"按钮可以复制XML代码到剪贴板
 
-### 2. 编写代码
-1. 在精灵列表中点击选择要编程的精灵
-2. 从左侧工具箱拖拽代码块到中间编辑区
-3. 设置代码块的参数（坐标、角度等）
-4. 组合多个代码块创建程序
+### 基本使用
+1. 添加精灵和背景
+2. 选择精灵，在左侧工作区拖拽积木进行编程
+3. 点击"开始"按钮执行代码
+4. 使用"保存"和"加载"功能管理项目
 
-### 3. 运行程序
-1. 点击顶部"▶ 开始"按钮执行所有精灵的代码
-2. 观看精灵在Canvas上的动画效果
-3. 点击"⏹ 停止"按钮停止执行
+## 技术栈
 
-### 4. 管理精灵
-- **切换精灵**：点击精灵列表中的精灵切换编辑对象
-- **删除精灵**：点击精灵右上角的"×"按钮
-- **查看位置**：在精灵列表中实时显示精灵位置
+- **前端**: HTML5, CSS3, JavaScript
+- **可视化编程**: Google Blockly
+- **图形渲染**: HTML5 Canvas
+- **代码执行**: Web Workers
 
-## 技术架构
+## 文件结构
 
-### 前端技术栈
-- **HTML5** - 页面结构
-- **CSS3** - 现代化样式设计
-- **JavaScript ES6+** - 核心逻辑
-- **Google Blockly** - 可视化编程框架
-- **Canvas API** - 图形渲染
-
-### 核心模块
-- **Sprite类** - 精灵对象管理
-- **Blockly集成** - 自定义代码块和工具箱
-- **执行引擎** - 代码解析和动画执行
-- **Canvas渲染器** - 图形绘制和动画
-
-### 自定义代码块
-```javascript
-// 移动代码块
-Blockly.Blocks['move_to'] = {
-    init: function() {
-        this.appendDummyInput().appendField("移动到");
-        this.appendValueInput("X").setCheck("Number").appendField("x:");
-        this.appendValueInput("Y").setCheck("Number").appendField("y:");
-        // ...
-    }
-};
-
-// 旋转代码块
-Blockly.Blocks['rotate'] = {
-    init: function() {
-        this.appendDummyInput().appendField("旋转");
-        this.appendValueInput("DEGREES").setCheck("Number");
-        this.appendDummyInput().appendField("度");
-        // ...
-    }
-};
-```
-
-## 安装和运行
-
-### 本地运行
-1. 下载项目文件
-2. 使用Web服务器打开`index.html`文件
-   ```bash
-   # 使用Python启动本地服务器
-   python -m http.server 8000
-   
-   # 或使用Node.js的http-server
-   npx http-server
-   ```
-3. 在浏览器中访问 `http://localhost:8000`
-
-### 文件结构
 ```
 worker-thread/
 ├── index.html          # 主页面
 ├── style.css           # 样式文件
-├── script.js           # 核心逻辑
-└── README.md          # 项目说明
+├── script.js           # 主脚本
+├── core.js             # 核心功能
+├── sprite.js           # 精灵管理
+├── canvas.js           # 画布渲染
+├── background.js       # 背景管理
+├── blockly-config.js   # Blockly配置
+├── execution.js        # 代码执行
+├── ui.js              # 用户界面
+├── project.js         # 项目管理
+├── ai-chat.js         # AI聊天功能
+├── code-editor.js     # 代码编辑器
+├── xml-viewer.js      # XML查看器 (新增)
+├── blockly.min.js     # Blockly库
+├── zh-hans.js         # 中文语言包
+└── README.md          # 说明文档
 ```
 
-## 浏览器兼容性
+## 开发说明
+
+### 添加新功能
+1. 在HTML中添加必要的DOM元素
+2. 在CSS中添加样式
+3. 创建JavaScript文件实现功能
+4. 在HTML中引入新的JavaScript文件
+5. 更新README文档
+
+### XML查看器实现
+- 使用`Blockly.Xml.workspaceToDom()`获取工作区XML
+- 使用`Blockly.utils.xml.domToPrettyText()`格式化XML
+- 支持复制到剪贴板功能
+- 响应式设计，适配不同屏幕尺寸
+
+## 浏览器支持
+
 - Chrome 60+
 - Firefox 55+
 - Safari 12+
 - Edge 79+
 
-## 特色功能
-
-### 🎮 实时动画
-- 平滑的移动和旋转动画
-- 60FPS的流畅渲染
-- 可中断的动画执行
-
-### 🎨 现代化UI
-- 渐变背景和毛玻璃效果
-- 响应式设计
-- 优雅的交互动画
-
-### 🔒 安全执行
-- 沙箱化代码执行环境
-- 参数验证和边界检查
-- 错误处理和异常捕获
-
-## 扩展可能
-
-未来可以添加的功能：
-- 更多代码块（声音、颜色变化等）
-- 碰撞检测
-- 变量和函数支持
-- 项目保存和加载
-- 社区分享功能
-
 ## 许可证
 
-MIT License - 可自由使用和修改
-
-## 贡献
-
-欢迎提交Issue和Pull Request来改进这个项目！
-
----
-
-让孩子们在编程的世界中自由创造和学习！🚀 
+MIT License 

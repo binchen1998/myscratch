@@ -15,6 +15,54 @@ let currentBackgroundIndex = 0; // 当前背景索引
 let currentBackgroundId = null; // 当前选中的背景ID（用于代码编辑）
 let mousePosition = { x: 240, y: 180 }; // 默认鼠标位置（画布中心）
 
+// 安全的sprite添加函数，确保每次添加后都会重绘
+function addSpriteSafely(sprite) {
+    sprites.push(sprite);
+    console.log(`Sprite已添加: ${sprite.name} (ID: ${sprite.id})，当前总数: ${sprites.length}`);
+    
+    // 更新界面
+    if (typeof renderSpritesList === 'function') {
+        renderSpritesList();
+    }
+    
+    // 强制重绘canvas - 添加延迟确保所有组件都已初始化
+    setTimeout(() => {
+        if (typeof redrawCanvas === 'function') {
+            redrawCanvas();
+            console.log('Canvas已重绘');
+        } else {
+            console.warn('redrawCanvas函数未定义');
+            // 尝试手动重绘
+            if (typeof canvas !== 'undefined' && canvas && typeof ctx !== 'undefined' && ctx) {
+                console.log('尝试手动重绘...');
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制网格
+                if (typeof drawGrid === 'function') {
+                    drawGrid();
+                }
+                
+                // 绘制所有精灵
+                sprites.forEach(sprite => {
+                    if (sprite && typeof sprite.draw === 'function') {
+                        sprite.draw(ctx);
+                    }
+                });
+                
+                console.log('手动重绘完成');
+            }
+        }
+    }, 100);
+    
+    // 同步到Worker
+    if (typeof syncSpritesToWorker === 'function') {
+        syncSpritesToWorker();
+    }
+    
+    return sprite;
+}
+
 // 消息通讯系统
 let messageSystem = {
     listeners: new Map(), // 存储消息监听器
@@ -296,13 +344,19 @@ async function initializeDefaultSprite() {
     
     try {
         // 尝试加载led.png图片
+        console.log('开始加载led.png图片...');
         const imageData = await loadImageAsBase64('led.png');
+        console.log('图片加载成功，数据长度:', imageData.length);
         
         // 创建图片对象
         const img = new Image();
+        
         img.onload = function() {
+            console.log('图片onload触发，图片尺寸:', img.width, 'x', img.height);
+            
             // 检查图片尺寸，如果太大则进行裁剪
             const resizedImg = resizeImageIfNeeded(img);
+            console.log('图片处理完成');
             
             // 创建默认精灵
             const spriteId = 'sprite_' + Date.now();
@@ -312,12 +366,8 @@ async function initializeDefaultSprite() {
             sprite.x = 240;
             sprite.y = 180;
             
-            // 添加到精灵列表
-            sprites.push(sprite);
-            
-            // 更新界面
-            renderSpritesList();
-            redrawCanvas();
+            // 使用安全的添加函数
+            addSpriteSafely(sprite);
             
             // 选择这个精灵
             selectSprite(spriteId);
@@ -327,19 +377,50 @@ async function initializeDefaultSprite() {
                 updateCollisionDetectionOptions();
             }
             
-            // 同步到Worker
-            if (typeof syncSpritesToWorker === 'function') {
-                syncSpritesToWorker();
-            }
-            
             console.log('默认LED精灵创建成功');
             showNotification('默认LED精灵已创建');
         };
+        
+        img.onerror = function(error) {
+            console.error('图片加载失败:', error);
+            // 如果图片加载失败，使用默认的LED图标
+            createDefaultLEDImage().then(imageData => {
+                const img = new Image();
+                img.onload = function() {
+                    const spriteId = 'sprite_' + Date.now();
+                    const sprite = new Sprite(spriteId, 'Led', img);
+                    sprite.x = 240;
+                    sprite.y = 180;
+                    addSpriteSafely(sprite);
+                    selectSprite(spriteId);
+                    console.log('使用默认LED图标创建精灵成功');
+                    showNotification('默认LED精灵已创建（使用默认图标）');
+                };
+                img.src = imageData;
+            }).catch(error => {
+                console.error('创建默认LED图标也失败:', error);
+                showNotification('创建默认精灵失败');
+            });
+        };
+        
         img.src = imageData;
         
     } catch (error) {
         console.error('创建默认精灵失败:', error);
-        showNotification('创建默认精灵失败');
+        // 如果所有方法都失败，创建一个简单的默认精灵
+        try {
+            const spriteId = 'sprite_' + Date.now();
+            const sprite = new Sprite(spriteId, 'Led', null);
+            sprite.x = 240;
+            sprite.y = 180;
+            addSpriteSafely(sprite);
+            selectSprite(spriteId);
+            console.log('创建简单默认精灵成功');
+            showNotification('默认LED精灵已创建（简单版本）');
+        } catch (fallbackError) {
+            console.error('创建简单默认精灵也失败:', fallbackError);
+            showNotification('创建默认精灵失败');
+        }
     }
 }
 
@@ -351,6 +432,8 @@ function initializeApp() {
         return;
     }
     
+    console.log('开始初始化应用程序...');
+    
     checkBlocklyCompatibility();
     initializeCanvas();
     initializeBlockly();
@@ -361,14 +444,21 @@ function initializeApp() {
     
     // 延迟初始化默认精灵，确保其他组件都已加载
     setTimeout(() => {
+        console.log('开始初始化默认精灵...');
         initializeDefaultSprite();
-    }, 500);
-    
-
+        
+        // 在精灵创建后再次确保重绘
+        setTimeout(() => {
+            if (typeof redrawCanvas === 'function') {
+                console.log('初始化完成后强制重绘...');
+                redrawCanvas();
+            }
+        }, 500);
+    }, 1000); // 增加延迟时间
     
     // 标记初始化完成
     window.appInitialized = true;
-    console.log('儿童编程工具已初始化完成');
+    console.log('儿童编程工具初始化完成，等待默认精灵创建...');
 }
 
 // 页面加载后初始化

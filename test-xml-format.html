@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML格式化测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .xml-output {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .test-button {
+            background: #9C27B0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #7B1FA2;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>XML格式化功能测试</h1>
+        
+        <div class="test-section">
+            <h3>测试1: 基本XML格式化</h3>
+            <button class="test-button" onclick="testBasicXml()">测试基本XML</button>
+            <div id="basicXmlOutput" class="xml-output"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试2: Blockly XML格式化</h3>
+            <button class="test-button" onclick="testBlocklyXml()">测试Blockly XML</button>
+            <div id="blocklyXmlOutput" class="xml-output"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试3: 复杂XML格式化</h3>
+            <button class="test-button" onclick="testComplexXml()">测试复杂XML</button>
+            <div id="complexXmlOutput" class="xml-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // XML格式化函数（从xml-viewer.js复制）
+        function formatXml(xmlString) {
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+                
+                const parseError = xmlDoc.getElementsByTagName('parsererror');
+                if (parseError.length > 0) {
+                    console.warn('XML解析错误:', parseError[0].textContent);
+                    return xmlString;
+                }
+                
+                return prettyPrintXml(xmlDoc);
+            } catch (error) {
+                console.error('XML格式化失败:', error);
+                return xmlString;
+            }
+        }
+
+        function prettyPrintXml(xmlDoc) {
+            const serializer = new XMLSerializer();
+            const xmlString = serializer.serializeToString(xmlDoc);
+            
+            let formatted = xmlString
+                .replace(/></g, '>\n<')
+                .replace(/\n\s*\n/g, '\n')
+                .split('\n');
+            
+            let indentLevel = 0;
+            formatted = formatted.map(line => {
+                const trimmedLine = line.trim();
+                
+                if (!trimmedLine) return '';
+                
+                if (trimmedLine.startsWith('</')) {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                }
+                
+                const indent = '  '.repeat(indentLevel);
+                const result = indent + trimmedLine;
+                
+                if (trimmedLine.startsWith('<') && !trimmedLine.startsWith('</') && !trimmedLine.endsWith('/>')) {
+                    indentLevel++;
+                }
+                
+                return result;
+            }).filter(line => line !== '');
+            
+            return formatted.join('\n');
+        }
+
+        function testBasicXml() {
+            const unformattedXml = '<xml><root><item>test</item><item>test2</item></root></xml>';
+            const formattedXml = formatXml(unformattedXml);
+            
+            document.getElementById('basicXmlOutput').textContent = 
+                '原始XML:\n' + unformattedXml + '\n\n格式化后:\n' + formattedXml;
+        }
+
+        function testBlocklyXml() {
+            const unformattedXml = `<xml xmlns="https://developers.google.com/blockly/xml"><block type="when_program_starts" x="50" y="50"><next><block type="move_to"><field name="X">100</field><field name="Y">100</field></block></next></block></xml>`;
+            const formattedXml = formatXml(unformattedXml);
+            
+            document.getElementById('blocklyXmlOutput').textContent = 
+                '原始XML:\n' + unformattedXml + '\n\n格式化后:\n' + formattedXml;
+        }
+
+        function testComplexXml() {
+            const unformattedXml = `<xml xmlns="https://developers.google.com/blockly/xml"><block type="when_program_starts" x="50" y="50"><next><block type="controls_repeat_ext"><field name="TIMES">10</field><statement name="DO"><block type="move_to_animated"><field name="X">100</field><field name="Y">100</field><field name="DURATION">2</field></block></statement></block></next></block><block type="when_key_pressed" x="200" y="50"><field name="KEY_OPTION">space</field><next><block type="rotate"><field name="DEGREES">90</field></block></next></block></xml>`;
+            const formattedXml = formatXml(unformattedXml);
+            
+            document.getElementById('complexXmlOutput').textContent = 
+                '原始XML:\n' + unformattedXml + '\n\n格式化后:\n' + formattedXml;
+        }
+
+        // 页面加载完成后自动运行第一个测试
+        window.addEventListener('load', function() {
+            testBasicXml();
+        });
+    </script>
+</body>
+</html> 

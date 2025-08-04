@@ -1,0 +1,5 @@
+帮我导出所有的块对应的js代码，用这个json格式表示：
+
+{"api":" await moveTo(x,y)", "description":"move sprite to a point, x and y is the coordiantes"}
+
+输出是一个json的数组，包含目前所有的block对应的代码。

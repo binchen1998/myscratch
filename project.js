@@ -1,6 +1,6 @@
 // 项目管理相关功能
 
-// 保存项目
+// 保存项目（包含合并代码）
 function saveProject() {
     // 检查是否有精灵可以保存
     if (sprites.length === 0) {
@@ -11,10 +11,14 @@ function saveProject() {
     // 保存当前精灵的代码
     saveCurrentSpriteCode();
     
+    // 生成合并的JS代码
+    const mergedCode = generateMergedCode();
+    
     // 准备项目数据
     const projectData = {
-        version: "1.0",
+        version: "2.0", // 更新版本号
         timestamp: new Date().toISOString(),
+        mergedCode: mergedCode, // 包含合并的JS代码
         sprites: sprites.map(sprite => ({
             id: sprite.id,
             name: sprite.name,
@@ -44,6 +48,9 @@ function saveProject() {
         currentBackgroundIndex: currentBackgroundIndex
     };
     
+    // 保存项目数据到全局变量，供执行时使用
+    window.currentProjectData = projectData;
+    
     // 转换为JSON字符串
     const jsonString = JSON.stringify(projectData, null, 2);
     
@@ -58,8 +65,569 @@ function saveProject() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showNotification(`项目已保存，包含 ${sprites.length} 个精灵`);
-    console.log('项目已保存');
+    showNotification(`项目已保存，包含 ${sprites.length} 个精灵和合并代码`);
+    console.log('项目已保存，包含合并代码');
+}
+
+// 保存合并的JS代码文件
+function saveMergedCode() {
+    // 检查是否有精灵可以保存
+    if (sprites.length === 0) {
+        showNotification('没有精灵可以保存，请先添加精灵');
+        return;
+    }
+    
+    // 保存当前精灵的代码
+    saveCurrentSpriteCode();
+    
+    // 生成合并的JS代码
+    const mergedCode = generateMergedCode();
+    
+    // 创建下载链接
+    const blob = new Blob([mergedCode], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `合并代码_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.js`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification(`合并代码已保存，包含 ${sprites.length} 个精灵的代码`);
+    console.log('合并代码已保存');
+}
+
+// 生成合并的JS代码
+function generateMergedCode() {
+    // 确保生成器在执行前可用
+    ensureGeneratorsRegistered();
+    
+    let mergedCode = `// 合并的精灵代码 - 自动生成
+// 生成时间: ${new Date().toISOString()}
+// 包含 ${sprites.length} 个精灵
+
+(function() {
+    // 全局变量
+    let sprites = [];
+    let variables = {};
+    let isRunning = false;
+    let messageSystem = {
+        listeners: new Map(),
+        pendingMessages: new Map(),
+        messageHistory: [],
+        maxHistory: 100
+    };
+    let keyEventSystem = {
+        listeners: new Map(),
+        pressedKeys: new Set()
+    };
+    let spriteClickEventSystem = {
+        listeners: new Map()
+    };
+    
+    // 工具函数
+    function sleep(seconds) {
+        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    }
+    
+    function addMessageListener(messageName, callback) {
+        if (!messageSystem.listeners.has(messageName)) {
+            messageSystem.listeners.set(messageName, []);
+        }
+        messageSystem.listeners.get(messageName).push(callback);
+    }
+    
+    function broadcastMessage(messageName) {
+        const listeners = messageSystem.listeners.get(messageName) || [];
+        listeners.forEach(callback => {
+            try {
+                callback(messageName);
+            } catch (error) {
+                console.error('消息处理错误:', error);
+            }
+        });
+    }
+    
+    function registerKeyEvent(key, callback) {
+        if (!keyEventSystem.listeners.has(key)) {
+            keyEventSystem.listeners.set(key, []);
+        }
+        keyEventSystem.listeners.get(key).push(callback);
+    }
+    
+    function registerSpriteClickEvent(callback) {
+        spriteClickEventSystem.listeners.set('click', callback);
+    }
+    
+    // 精灵操作函数
+    function moveTo(x, y) {
+        // 这里需要与主线程通信来更新精灵位置
+        postMessage({
+            type: 'SPRITE_UPDATE',
+            spriteId: currentSpriteId,
+            state: { x: x, y: y }
+        });
+    }
+    
+    function moveToAnimated(x, y, duration) {
+        return new Promise(async (resolve) => {
+            const sprite = sprites.find(s => s.id === currentSpriteId);
+            if (!sprite) {
+                resolve();
+                return;
+            }
+            
+            const startX = sprite.x;
+            const startY = sprite.y;
+            const startTime = Date.now();
+            
+            while (Date.now() - startTime < duration * 1000) {
+                const progress = (Date.now() - startTime) / (duration * 1000);
+                const newX = startX + (x - startX) * progress;
+                const newY = startY + (y - startY) * progress;
+                
+                postMessage({
+                    type: 'SPRITE_UPDATE',
+                    spriteId: currentSpriteId,
+                    state: { x: newX, y: newY }
+                });
+                
+                await sleep(0.016); // 约60fps
+            }
+            
+            // 确保最终位置准确
+            postMessage({
+                type: 'SPRITE_UPDATE',
+                spriteId: currentSpriteId,
+                state: { x: x, y: y }
+            });
+            
+            resolve();
+        });
+    }
+    
+    function moveToRandom() {
+        const x = Math.random() * 480 - 240;
+        const y = Math.random() * 360 - 180;
+        return moveTo(x, y);
+    }
+    
+    function moveToMouse() {
+        // 这里需要获取鼠标位置，暂时使用随机位置
+        return moveToRandom();
+    }
+    
+    function pointInDirection(direction) {
+        postMessage({
+            type: 'SPRITE_UPDATE',
+            spriteId: currentSpriteId,
+            state: { rotation: direction }
+        });
+    }
+    
+    function pointTowardsMouse() {
+        // 暂时使用随机方向
+        const direction = Math.random() * 360;
+        pointInDirection(direction);
+    }
+    
+    function pointTowardsSprite(targetSprite) {
+        // 暂时使用随机方向
+        const direction = Math.random() * 360;
+        pointInDirection(direction);
+    }
+    
+    function changeX(dx) {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        if (sprite) {
+            moveTo(sprite.x + dx, sprite.y);
+        }
+    }
+    
+    function changeY(dy) {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        if (sprite) {
+            moveTo(sprite.x, sprite.y - dy);
+        }
+    }
+    
+    function bounceIfOnEdge() {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        if (sprite) {
+            let newX = sprite.x;
+            let newY = sprite.y;
+            
+            if (sprite.x > 240) newX = 240;
+            if (sprite.x < -240) newX = -240;
+            if (sprite.y > 180) newY = 180;
+            if (sprite.y < -180) newY = -180;
+            
+            if (newX !== sprite.x || newY !== sprite.y) {
+                moveTo(newX, newY);
+            }
+        }
+    }
+    
+    function setRotationStyle(style) {
+        // 旋转样式设置，暂时不实现
+        console.log('设置旋转样式:', style);
+    }
+    
+    function createClone() {
+        // 克隆功能，暂时不实现
+        console.log('创建克隆');
+    }
+    
+    function deleteClone() {
+        // 删除克隆功能，暂时不实现
+        console.log('删除克隆');
+    }
+    
+    function isClone() {
+        // 检查是否为克隆体，暂时返回false
+        return false;
+    }
+    
+    function checkTouchingColor(color) {
+        // 颜色检测，暂时返回false
+        return false;
+    }
+    
+    function checkColorTouchingColor(color1, color2) {
+        // 颜色碰撞检测，暂时返回false
+        return false;
+    }
+    
+    function getDistance(target) {
+        // 距离计算，暂时返回随机值
+        return Math.random() * 100;
+    }
+    
+    function isKeyPressed(key) {
+        // 键盘检测，暂时返回false
+        return false;
+    }
+    
+    function isMouseDown() {
+        // 鼠标检测，暂时返回false
+        return false;
+    }
+    
+    function getTimer() {
+        // 计时器，返回从开始到现在的时间
+        return (Date.now() - startTime) / 1000;
+    }
+    
+    function checkCollision(target) {
+        // 碰撞检测，暂时返回false
+        return false;
+    }
+    
+    function waitSeconds(seconds) {
+        return sleep(seconds);
+    }
+    
+    function waitUntil(condition) {
+        return new Promise(async (resolve) => {
+            while (!condition()) {
+                await sleep(0.001);
+            }
+            resolve();
+        });
+    }
+    
+    // 记录开始时间
+    const startTime = Date.now();
+    
+    function moveXSteps(steps) {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        if (sprite) {
+            const newX = sprite.x + steps;
+            moveTo(newX, sprite.y);
+        }
+    }
+    
+    function moveYSteps(steps) {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        if (sprite) {
+            const newY = sprite.y - steps;
+            moveTo(sprite.x, newY);
+        }
+    }
+    
+    function rotate(degrees) {
+        postMessage({
+            type: 'SPRITE_UPDATE',
+            spriteId: currentSpriteId,
+            state: { rotation: degrees }
+        });
+    }
+    
+    function setX(x) {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        if (sprite) {
+            moveTo(x, sprite.y);
+        }
+    }
+    
+    function setY(y) {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        if (sprite) {
+            moveTo(sprite.x, y);
+        }
+    }
+    
+    function getX() {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        return sprite ? sprite.x : 0;
+    }
+    
+    function getY() {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        return sprite ? sprite.y : 0;
+    }
+    
+    function say(message) {
+        postMessage({
+            type: 'SPRITE_SAY',
+            spriteId: currentSpriteId,
+            message: message,
+            bubbleType: 'say'
+        });
+    }
+    
+    function think(message) {
+        postMessage({
+            type: 'SPRITE_SAY',
+            spriteId: currentSpriteId,
+            message: message,
+            bubbleType: 'think'
+        });
+    }
+    
+    function sayForSecs(message, duration) {
+        postMessage({
+            type: 'SPRITE_SAY_FOR_SECS',
+            spriteId: currentSpriteId,
+            message: message,
+            duration: duration * 1000,
+            bubbleType: 'say'
+        });
+    }
+    
+    function switchCostume(costumeId) {
+        postMessage({
+            type: 'SPRITE_COSTUME_CHANGED',
+            spriteId: currentSpriteId,
+            costumeId: costumeId
+        });
+    }
+    
+    function nextCostume() {
+        postMessage({
+            type: 'SPRITE_NEXT_COSTUME',
+            spriteId: currentSpriteId
+        });
+    }
+    
+    function getCostumeNumber() {
+        const sprite = sprites.find(s => s.id === currentSpriteId);
+        return sprite ? (sprite.currentCostumeIndex || 0) + 1 : 1;
+    }
+    
+    function showVariable(varName) {
+        postMessage({
+            type: 'SHOW_VARIABLE',
+            varName: varName,
+            value: variables[varName] || 0
+        });
+    }
+    
+    function hideVariable(varName) {
+        postMessage({
+            type: 'HIDE_VARIABLE',
+            varName: varName
+        });
+    }
+    
+    function updateVariableDisplay(varName, variables) {
+        postMessage({
+            type: 'UPDATE_VARIABLE',
+            varName: varName,
+            value: variables[varName] || 0
+        });
+    }
+    
+    function switchBackground(backgroundId) {
+        postMessage({
+            type: 'SWITCH_BACKGROUND',
+            backgroundId: backgroundId
+        });
+    }
+    
+    function stopProgram() {
+        postMessage({
+            type: 'STOP_EXECUTION'
+        });
+    }
+    
+    function stopExecution(option) {
+        if (option === 'this script') {
+            // 停止当前脚本
+            throw new Error('脚本已停止');
+        } else {
+            stopProgram();
+        }
+    }
+    
+    // 数学函数
+    function abs(x) { return Math.abs(x); }
+    function floor(x) { return Math.floor(x); }
+    function ceil(x) { return Math.ceil(x); }
+    function round(x) { return Math.round(x); }
+    function sqrt(x) { return Math.sqrt(x); }
+    function sin(x) { return Math.sin(x * Math.PI / 180); }
+    function cos(x) { return Math.cos(x * Math.PI / 180); }
+    function tan(x) { return Math.tan(x * Math.PI / 180); }
+    function asin(x) { return Math.asin(x) * 180 / Math.PI; }
+    function acos(x) { return Math.acos(x) * 180 / Math.PI; }
+    function atan(x) { return Math.atan(x) * 180 / Math.PI; }
+    function ln(x) { return Math.log(x); }
+    function log(x) { return Math.log10(x); }
+    function exp(x) { return Math.exp(x); }
+    function pow10(x) { return Math.pow(10, x); }
+    
+    // 常量
+    const PI = Math.PI;
+    const E = Math.E;
+    const GOLDEN_RATIO = 1.618033988749895;
+    const SQRT2 = Math.SQRT2;
+    const SQRT1_2 = Math.SQRT1_2;
+    const INFINITY = Infinity;
+    
+    // 当前执行的精灵ID
+    let currentSpriteId = null;
+    
+    // 精灵代码函数
+`;
+
+    // 初始化精灵数据
+    mergedCode += `    // 初始化精灵数据\n`;
+    sprites.forEach((sprite, index) => {
+        mergedCode += `    sprites.push({\n`;
+        mergedCode += `        id: '${sprite.id}',\n`;
+        mergedCode += `        name: '${sprite.name}',\n`;
+        mergedCode += `        x: ${sprite.x},\n`;
+        mergedCode += `        y: ${sprite.y},\n`;
+        mergedCode += `        rotation: ${sprite.rotation},\n`;
+        mergedCode += `        scale: ${sprite.scale},\n`;
+        mergedCode += `        visible: ${sprite.visible},\n`;
+        mergedCode += `        currentCostumeIndex: ${sprite.currentCostumeIndex || 0}\n`;
+        mergedCode += `    });\n`;
+    });
+    mergedCode += `\n`;
+    
+    // 为每个精灵生成代码
+    sprites.forEach((sprite, index) => {
+        if (sprite.xmlCode) {
+            try {
+                const xml = Blockly.utils.xml.textToDom(sprite.xmlCode);
+                const tempWorkspace = new Blockly.Workspace();
+                Blockly.Xml.domToWorkspace(xml, tempWorkspace);
+                
+                // 生成精灵的代码
+                let spriteCode = '';
+                
+                // 处理程序开始块
+                const startBlocks = tempWorkspace.getBlocksByType('when_program_starts');
+                startBlocks.forEach((startBlock, blockIndex) => {
+                    spriteCode += `    // 精灵 ${sprite.name} - 程序开始块 ${blockIndex + 1}\n`;
+                    spriteCode += `    (async function() {\n`;
+                    spriteCode += `        currentSpriteId = '${sprite.id}';\n`;
+                    
+                    let currentBlock = startBlock.getNextBlock();
+                    while (currentBlock) {
+                        const blockCode = generateBlockCode(currentBlock, tempWorkspace);
+                        spriteCode += `        ${blockCode}`;
+                        currentBlock = currentBlock.getNextBlock();
+                    }
+                    
+                    spriteCode += `    })();\n\n`;
+                });
+                
+                // 处理消息接收块
+                const messageBlocks = tempWorkspace.getBlocksByType('when_message_received');
+                messageBlocks.forEach((messageBlock, blockIndex) => {
+                    const messageName = messageBlock.getFieldValue('MESSAGE_NAME') || '消息';
+                    spriteCode += `    // 精灵 ${sprite.name} - 消息接收块 ${blockIndex + 1}\n`;
+                    spriteCode += `    addMessageListener('${messageName}', async function() {\n`;
+                    spriteCode += `        currentSpriteId = '${sprite.id}';\n`;
+                    
+                    let currentBlock = messageBlock.getNextBlock();
+                    while (currentBlock) {
+                        const blockCode = generateBlockCode(currentBlock, tempWorkspace);
+                        spriteCode += `        ${blockCode}`;
+                        currentBlock = currentBlock.getNextBlock();
+                    }
+                    
+                    spriteCode += `    });\n\n`;
+                });
+                
+
+                
+                // 处理键盘事件块
+                const keyBlocks = tempWorkspace.getBlocksByType('when_key_pressed');
+                keyBlocks.forEach((keyBlock, blockIndex) => {
+                    const keyOption = keyBlock.getFieldValue('KEY_OPTION') || 'space';
+                    spriteCode += `    // 精灵 ${sprite.name} - 键盘事件块 ${blockIndex + 1}\n`;
+                    spriteCode += `    registerKeyEvent('${keyOption}', async function() {\n`;
+                    spriteCode += `        currentSpriteId = '${sprite.id}';\n`;
+                    
+                    let currentBlock = keyBlock.getNextBlock();
+                    while (currentBlock) {
+                        const blockCode = generateBlockCode(currentBlock, tempWorkspace);
+                        spriteCode += `        ${blockCode}`;
+                        currentBlock = currentBlock.getNextBlock();
+                    }
+                    
+                    spriteCode += `    });\n\n`;
+                });
+                
+                // 处理精灵点击事件块
+                const clickBlocks = tempWorkspace.getBlocksByType('when_sprite_clicked');
+                clickBlocks.forEach((clickBlock, blockIndex) => {
+                    spriteCode += `    // 精灵 ${sprite.name} - 点击事件块 ${blockIndex + 1}\n`;
+                    spriteCode += `    registerSpriteClickEvent(async function() {\n`;
+                    spriteCode += `        currentSpriteId = '${sprite.id}';\n`;
+                    
+                    let currentBlock = clickBlock.getNextBlock();
+                    while (currentBlock) {
+                        const blockCode = generateBlockCode(currentBlock, tempWorkspace);
+                        spriteCode += `        ${blockCode}`;
+                        currentBlock = currentBlock.getNextBlock();
+                    }
+                    
+                    spriteCode += `    });\n\n`;
+                });
+                
+                mergedCode += spriteCode;
+                tempWorkspace.dispose();
+                
+            } catch (error) {
+                console.error(`生成精灵 ${sprite.name} 代码失败:`, error);
+                mergedCode += `    // 精灵 ${sprite.name} - 代码生成失败\n`;
+                mergedCode += `    console.error('精灵 ${sprite.name} 代码生成失败:', '${error.message}');\n\n`;
+            }
+        }
+    });
+    
+    // 添加初始化代码
+    mergedCode += `    // 初始化完成
+    console.log('合并代码初始化完成，包含 ${sprites.length} 个精灵');
+})();`;
+    
+    return mergedCode;
 }
 
 // 加载项目
@@ -78,6 +646,9 @@ function loadProject() {
         reader.onload = function(e) {
             try {
                 const projectData = JSON.parse(e.target.result);
+                
+                // 保存项目数据到全局变量，供执行时使用
+                window.currentProjectData = projectData;
                 
                 // 验证项目数据格式
                 if (!projectData.version || !projectData.sprites) {
@@ -192,7 +763,7 @@ function loadProject() {
                                 });
                             }
                             
-                            sprites.push(sprite);
+                            addSpriteSafely(sprite);
                             resolve();
                         };
                         img.src = spriteData.imageData;
@@ -201,6 +772,10 @@ function loadProject() {
                 
                 // 等待所有精灵加载完成
                 Promise.all(loadPromises).then(() => {
+                    // 更新界面
+                    renderSpritesList();
+                    redrawCanvas();
+                    
                     // 加载背景数据
                     if (projectData.backgrounds) {
                         backgrounds = projectData.backgrounds;
@@ -246,7 +821,13 @@ function loadProject() {
                         selectSprite(sprites[0].id);
                     }
                     
-                    showNotification(`项目已加载，包含 ${sprites.length} 个精灵`);
+                    // 如果项目包含合并代码，显示提示
+                    if (projectData.mergedCode) {
+                        console.log('项目包含合并代码，可以直接运行');
+                        showNotification(`项目已加载，包含 ${sprites.length} 个精灵和合并代码`);
+                    } else {
+                        showNotification(`项目已加载，包含 ${sprites.length} 个精灵`);
+                    }
                     console.log(`项目已加载，包含 ${sprites.length} 个精灵`);
                 });
                 
@@ -511,7 +1092,7 @@ function loadAutoSave() {
                                 jsCode: spriteData.jsCode || ''
                             });
                             
-                            sprites.push(sprite);
+                            addSpriteSafely(sprite);
                             resolve();
                         };
                         img.onerror = function() {
@@ -543,7 +1124,7 @@ function loadAutoSave() {
                                 jsCode: spriteData.jsCode || ''
                             });
                             
-                            sprites.push(sprite);
+                            addSpriteSafely(sprite);
                             resolve();
                         };
                         img.src = spriteData.imageData;

@@ -39,25 +39,53 @@ class Sprite {
         ctx.rotate((this.rotation * Math.PI) / 180);
         ctx.scale(this.scale, this.scale);
         
-        // 获取图片的原始尺寸
-        let imgWidth, imgHeight;
-        
-        if (this.image instanceof HTMLCanvasElement) {
-            imgWidth = this.image.width;
-            imgHeight = this.image.height;
-        } else if (this.image instanceof HTMLImageElement) {
-            imgWidth = this.image.naturalWidth || this.image.width;
-            imgHeight = this.image.naturalHeight || this.image.height;
+        // 检查是否有图片
+        if (this.image) {
+            // 获取图片的原始尺寸
+            let imgWidth, imgHeight;
+            
+            if (this.image instanceof HTMLCanvasElement) {
+                imgWidth = this.image.width;
+                imgHeight = this.image.height;
+            } else if (this.image instanceof HTMLImageElement) {
+                imgWidth = this.image.naturalWidth || this.image.width;
+                imgHeight = this.image.naturalHeight || this.image.height;
+            } else {
+                // 默认尺寸
+                imgWidth = 40;
+                imgHeight = 40;
+            }
+            
+            // 使用原始尺寸绘制，保持图片的原始比例
+            ctx.drawImage(this.image, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
         } else {
-            // 默认尺寸
-            imgWidth = 40;
-            imgHeight = 40;
+            // 如果没有图片，绘制一个默认的LED图标
+            this.drawDefaultLED(ctx);
         }
         
-        // 使用原始尺寸绘制，保持图片的原始比例
-        ctx.drawImage(this.image, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
-        
         ctx.restore();
+    }
+
+    // 绘制默认LED图标
+    drawDefaultLED(ctx) {
+        const size = 20; // 默认大小
+        
+        // 绘制LED灯泡
+        ctx.fillStyle = '#FFD700'; // 金黄色
+        ctx.beginPath();
+        ctx.arc(0, -5, 12, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // 绘制LED文字
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('LED', 0, 0);
+        
+        // 绘制底座
+        ctx.fillStyle = '#888';
+        ctx.fillRect(-5, 5, 10, 8);
+        ctx.fillRect(-3, 13, 6, 4);
     }
 
     moveTo(x, y) {
@@ -214,6 +242,13 @@ function selectSprite(spriteId) {
         codeEditor.setCurrentSprite(spriteId);
     } else {
         console.log('Code编辑器系统未初始化');
+    }
+
+    if (typeof xmlViewer !== 'undefined' && xmlViewer) {
+        console.log('通知XML查看器系统精灵更改');
+        xmlViewer.setCurrentSprite(spriteId);
+    } else {
+        console.log('XML查看器系统未初始化');
     }
     currentBackgroundId = null; // 清除背景选择
     const sprite = sprites.find(s => s.id === spriteId);

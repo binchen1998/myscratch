@@ -52,160 +52,53 @@ class CodeEditor {
 
     setCurrentSprite(spriteId) {
         this.currentSpriteId = spriteId;
+        // Code按钮总是显示，用于显示合并代码
         const codeBtn = document.getElementById('codeBtn');
-        if (spriteId && codeBtn) {
+        if (codeBtn) {
             codeBtn.style.display = 'inline-block';
-        } else if (codeBtn) {
-            codeBtn.style.display = 'none';
+        }
+    }
+
+    // 初始化时显示Code按钮
+    initializeCodeButton() {
+        const codeBtn = document.getElementById('codeBtn');
+        if (codeBtn) {
+            codeBtn.style.display = 'inline-block';
         }
     }
 
     showCodeEditor() {
-        if (!this.currentSpriteId) {
-            console.log('没有选中的精灵');
-            return;
-        }
-
-        const sprite = sprites.find(s => s.id === this.currentSpriteId);
-        if (!sprite) {
-            console.log('未找到精灵:', this.currentSpriteId);
-            return;
-        }
-
         // 更新对话框标题
         const codeSpriteName = document.getElementById('codeSpriteName');
         if (codeSpriteName) {
-            codeSpriteName.textContent = sprite.name;
+            codeSpriteName.textContent = '合并代码';
         }
 
-        // 获取当前精灵的代码
+        // 获取合并的JS代码
         let currentCode = '';
         
-        // 首先尝试从当前工作区获取代码（优先）
-        if (typeof workspace !== 'undefined' && workspace) {
+        // 实时生成合并代码
+        if (typeof generateMergedCode === 'function') {
             try {
-                console.log('从当前工作区获取代码...');
-                
-                // 获取所有"有头"的代码块（事件驱动的代码）
-                const eventBlocks = workspace.getBlocksByType('when_program_starts');
-                console.log('从工作区找到事件块数量:', eventBlocks.length);
-                
-                if (eventBlocks.length > 0) {
-                    // 为每个事件块生成完整代码
-                    currentCode = eventBlocks.map((eventBlock, index) => {
-                        let eventCode = '';
-                        
-                        // 添加事件头注释
-                        eventCode += `// ===== 事件 ${index + 1}: 当程序开始时 =====\n`;
-                        
-                        // 生成事件块本身的代码（事件头）
-                        eventCode += `当程序开始时 {\n`;
-                        
-                        // 获取连接到事件块的所有子块
-                        let currentBlock = eventBlock.getNextBlock();
-                        while (currentBlock) {
-                            console.log('处理连接的块:', currentBlock.type);
-                            if (typeof generateBlockCode === 'function') {
-                                const blockCode = generateBlockCode(currentBlock, workspace);
-                                // 为每行代码添加缩进
-                                const indentedCode = blockCode.split('\n').map(line => 
-                                    line.trim() ? '    ' + line : line
-                                ).join('\n');
-                                eventCode += indentedCode;
-                            } else if (Blockly.JavaScript[currentBlock.type]) {
-                                const blockCode = Blockly.JavaScript[currentBlock.type](currentBlock);
-                                // 为每行代码添加缩进
-                                const indentedCode = blockCode.split('\n').map(line => 
-                                    line.trim() ? '    ' + line : line
-                                ).join('\n');
-                                eventCode += indentedCode;
-                            }
-                            currentBlock = currentBlock.getNextBlock();
-                        }
-                        
-                        eventCode += `}\n\n`;
-                        return eventCode;
-                    }).join('');
-                }
+                currentCode = generateMergedCode();
             } catch (error) {
-                console.error('从工作区生成代码失败:', error);
+                console.error('生成合并代码失败:', error);
+                currentCode = `// 生成合并代码失败: ${error.message}
+// 请确保项目中有精灵和代码`;
             }
-        }
-        
-        // 如果从工作区没有获取到代码，尝试从精灵的XML代码获取
-        if (!currentCode && sprite.xmlCode) {
-            try {
-                console.log('从精灵XML代码获取...');
-                const xml = Blockly.utils.xml.textToDom(sprite.xmlCode);
-                const tempWorkspace = new Blockly.Workspace();
-                Blockly.Xml.domToWorkspace(xml, tempWorkspace);
-                
-                // 获取所有"有头"的代码块（事件驱动的代码）
-                const eventBlocks = tempWorkspace.getBlocksByType('when_program_starts');
-                console.log('从XML找到事件块数量:', eventBlocks.length);
-                
-                // 为每个事件块生成完整代码
-                currentCode = eventBlocks.map((eventBlock, index) => {
-                    let eventCode = '';
-                    
-                    // 添加事件头注释
-                    eventCode += `// ===== 事件 ${index + 1}: 当程序开始时 =====\n`;
-                    
-                    // 生成事件块本身的代码（事件头）
-                    eventCode += `当程序开始时 {\n`;
-                    
-                    // 获取连接到事件块的所有子块
-                    let currentBlock = eventBlock.getNextBlock();
-                    while (currentBlock) {
-                        console.log('处理连接的块:', currentBlock.type);
-                        if (typeof generateBlockCode === 'function') {
-                            const blockCode = generateBlockCode(currentBlock, tempWorkspace);
-                            // 为每行代码添加缩进
-                            const indentedCode = blockCode.split('\n').map(line => 
-                                line.trim() ? '    ' + line : line
-                            ).join('\n');
-                            eventCode += indentedCode;
-                        } else if (Blockly.JavaScript[currentBlock.type]) {
-                            const blockCode = Blockly.JavaScript[currentBlock.type](currentBlock);
-                            // 为每行代码添加缩进
-                            const indentedCode = blockCode.split('\n').map(line => 
-                                line.trim() ? '    ' + line : line
-                            ).join('\n');
-                            eventCode += indentedCode;
-                        }
-                        currentBlock = currentBlock.getNextBlock();
-                    }
-                    
-                    eventCode += `}\n\n`;
-                    return eventCode;
-                }).join('');
-                
-                tempWorkspace.dispose();
-            } catch (error) {
-                console.error('从XML生成代码失败:', error);
-            }
-        }
-        
-        // 如果还是没有代码，尝试从精灵的JavaScript代码获取
-        if (!currentCode && sprite.jsCode) {
-            currentCode = sprite.jsCode;
-        }
-        
-        // 如果所有方法都没有获取到代码，显示提示
-        if (!currentCode) {
-            currentCode = `// 当前精灵没有代码
-// 请添加"当程序开始时"等事件块来开始编程
-// 注意：请确保积木已正确连接
-`;
+        } else {
+            currentCode = `// 无法生成合并代码
+// 请确保项目中有精灵和代码`;
         }
 
         // 保存原始代码
         this.originalCode = currentCode;
 
-        // 显示代码编辑器
+        // 显示代码编辑器（只读）
         const codeEditor = document.getElementById('codeEditor');
         if (codeEditor) {
             codeEditor.value = currentCode;
+            codeEditor.readOnly = true; // 设置为只读
         }
 
         const codeModal = document.getElementById('codeModal');
@@ -213,7 +106,7 @@ class CodeEditor {
             codeModal.style.display = 'flex';
         }
 
-        console.log('Code编辑器已打开，精灵:', sprite.name);
+        console.log('Code编辑器已打开，显示合并代码');
     }
 
     hideCodeEditor() {
@@ -225,102 +118,7 @@ class CodeEditor {
     }
 
     applyCode() {
-        if (!this.currentSpriteId) {
-            console.log('没有选中的精灵');
-            return;
-        }
-
-        const codeEditor = document.getElementById('codeEditor');
-        if (!codeEditor) {
-            console.log('未找到代码编辑器');
-            return;
-        }
-
-        const newCode = codeEditor.value.trim();
-        console.log('应用新代码:', newCode);
-
-        if (!newCode || newCode.trim() === '') {
-            console.log('代码为空，跳过应用');
-            if (typeof showNotification === 'function') {
-                showNotification('代码为空，未进行任何更改');
-            }
-            this.hideCodeEditor();
-            return;
-        }
-
-        // 检查是否只有注释（去除注释后是否为空）
-        const codeWithoutComments = newCode
-            .split('\n')
-            .filter(line => !line.trim().startsWith('//') && line.trim() !== '')
-            .join('\n')
-            .trim();
-            
-        if (!codeWithoutComments) {
-            console.log('代码只包含注释，跳过应用');
-            if (typeof showNotification === 'function') {
-                showNotification('代码只包含注释，未进行任何更改');
-            }
-            this.hideCodeEditor();
-            return;
-        }
-
-        // 尝试将代码转换为积木
-        try {
-            const sprite = sprites.find(s => s.id === this.currentSpriteId);
-            if (!sprite) {
-                console.log('未找到精灵');
-                return;
-            }
-
-            // 创建新的工作区来构建积木
-            const newWorkspace = new Blockly.Workspace();
-            
-            // 解析代码并创建积木
-            const blocks = this.parseCodeToBlocks(newCode, newWorkspace);
-            
-            if (blocks.length > 0) {
-                // 将新积木转换为XML
-                const xml = Blockly.Xml.workspaceToDom(newWorkspace);
-                const xmlText = Blockly.Xml.domToText(xml);
-                
-                // 更新精灵的XML代码
-                sprite.xmlCode = xmlText;
-                sprite.jsCode = newCode;
-                
-                // 更新当前工作区的积木
-                if (typeof workspace !== 'undefined' && workspace) {
-                    // 清空当前工作区
-                    workspace.clear();
-                    
-                    // 加载新的积木
-                    Blockly.Xml.domToWorkspace(xml, workspace);
-                }
-                
-                console.log('代码已成功转换为积木并应用');
-                if (typeof showNotification === 'function') {
-                    showNotification('代码已成功转换为积木并应用');
-                }
-            } else {
-                console.log('无法解析代码，仅保存代码');
-                sprite.jsCode = newCode;
-                if (typeof showNotification === 'function') {
-                    showNotification('代码已保存，但无法转换为积木');
-                }
-            }
-            
-            newWorkspace.dispose();
-        } catch (error) {
-            console.error('应用代码时出错:', error);
-            // 如果转换失败，至少保存代码
-            const sprite = sprites.find(s => s.id === this.currentSpriteId);
-            if (sprite) {
-                sprite.jsCode = newCode;
-            }
-            if (typeof showNotification === 'function') {
-                showNotification('代码已保存，但转换失败: ' + error.message);
-            }
-        }
-
+        // 只是关闭对话框
         this.hideCodeEditor();
     }
 
@@ -561,16 +359,8 @@ class CodeEditor {
     }
 
     revertCode() {
-        const codeEditor = document.getElementById('codeEditor');
-        if (codeEditor) {
-            codeEditor.value = this.originalCode;
-            console.log('代码已恢复到原始状态');
-            
-            // 显示通知
-            if (typeof showNotification === 'function') {
-                showNotification('代码已恢复到原始状态');
-            }
-        }
+        // 合并代码不需要回退功能
+        // 这个方法现在不会被调用，因为Revert按钮已经被移除
     }
 }
 
@@ -580,4 +370,6 @@ const codeEditor = new CodeEditor();
 // 在页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Code编辑器系统初始化');
+    // 确保Code按钮显示
+    codeEditor.initializeCodeButton();
 }); 

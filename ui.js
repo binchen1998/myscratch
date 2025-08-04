@@ -141,16 +141,11 @@ function confirmAddSprite() {
             const spriteId = 'sprite_' + Date.now();
             const sprite = new Sprite(spriteId, name, resizedImg);
             
-            sprites.push(sprite);
-            renderSpritesList();
+            addSpriteSafely(sprite);
             selectSprite(spriteId);
-            redrawCanvas();
             
             // 更新碰撞检测选项
             updateCollisionDetectionOptions();
-            
-            // 同步到Worker
-            syncSpritesToWorker();
             
             hideAddSpriteModal();
             showNotification(`精灵 "${name}" 已添加`);

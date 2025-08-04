@@ -234,7 +234,14 @@ function syncSpritesToWorker() {
             rotation: sprite.rotation,
             scale: sprite.scale,
             visible: sprite.visible,
-            code: sprite.jsCode // 发送JavaScript代码给Worker
+            code: sprite.jsCode, // 发送JavaScript代码给Worker
+            costumes: (sprite.costumes || []).map(costume => ({
+                id: costume.id,
+                name: costume.name,
+                // 排除image对象，因为它不能被克隆
+                dataURL: costume.dataURL
+            })), // 发送造型数据给Worker（排除image对象）
+            currentCostumeIndex: sprite.currentCostumeIndex || 0 // 发送当前造型索引给Worker
         }));
         
         spriteWorker.postMessage({
@@ -250,6 +257,227 @@ function autoStopExecution() {
         console.log('[主线程] 自动停止执行');
         stopExecution();
     }
+}
+
+// 获取当前项目的合并代码
+function getCurrentMergedCode() {
+    // 检查是否有合并代码可用
+    if (window.currentProjectData && window.currentProjectData.mergedCode) {
+        return window.currentProjectData.mergedCode;
+    }
+    return null;
+}
+
+// 从字符串运行合并代码
+function runMergedCodeFromString(mergedCode) {
+    try {
+        // 停止当前执行
+        if (isRunning) {
+            stopExecution();
+        }
+        
+        // 清除所有可见变量
+        if (typeof visibleVariables !== 'undefined' && visibleVariables) {
+            visibleVariables.clear();
+            redrawCanvas();
+        }
+        
+        // 打印合并代码到控制台供调试
+        console.log('=== 合并代码开始 ===');
+        console.log(mergedCode);
+        console.log('=== 合并代码结束 ===');
+        
+        // 创建一个新的Worker来运行合并的代码
+        const mergedCodeBlob = new Blob([mergedCode], { type: 'application/javascript' });
+        const mergedCodeUrl = URL.createObjectURL(mergedCodeBlob);
+        
+        const mergedWorker = new Worker(mergedCodeUrl);
+        
+        // 设置消息处理器
+        mergedWorker.onmessage = function(e) {
+            const { type, spriteId, state, error, message } = e.data;
+            
+            switch (type) {
+                case 'SPRITE_UPDATE':
+                    updateSpriteFromWorker(spriteId, state);
+                    break;
+                    
+                case 'ERROR':
+                    showNotification(`执行错误: ${error}`);
+                    break;
+                    
+                case 'STOP_EXECUTION':
+                    stopExecution();
+                    break;
+                    
+                case 'SPRITE_SAY':
+                    handleSpriteSay(spriteId, message, e.data.bubbleType);
+                    break;
+                    
+                case 'SPRITE_SAY_FOR_SECS':
+                    handleSpriteSayForSecs(spriteId, message, e.data.duration, e.data.bubbleType);
+                    break;
+                    
+                case 'SPRITE_COSTUME_CHANGED':
+                    handleSpriteCostumeChanged(spriteId, e.data.costumeIndex, e.data.costumeName);
+                    break;
+                    
+
+                    
+                case 'SHOW_VARIABLE':
+                    showVariable(e.data.varName, e.data.spriteId);
+                    updateVariableValue(e.data.varName, e.data.value);
+                    break;
+                    
+                case 'HIDE_VARIABLE':
+                    hideVariable(e.data.varName);
+                    break;
+                    
+                case 'UPDATE_VARIABLE':
+                    updateVariableValue(e.data.varName, e.data.value);
+                    break;
+                    
+                case 'SWITCH_BACKGROUND':
+                    switchBackgroundById(e.data.backgroundId);
+                    break;
+            }
+        };
+        
+        mergedWorker.onerror = function(error) {
+            console.error('合并代码执行错误:', error);
+            showNotification('合并代码执行出错，请检查代码格式');
+            stopExecution();
+        };
+        
+        // 开始执行
+        isRunning = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        
+        // 开始动画循环
+        animationLoop();
+        
+        showNotification('合并代码开始执行');
+        console.log('合并代码开始执行');
+        
+    } catch (error) {
+        console.error('运行合并代码失败:', error);
+        showNotification('运行合并代码失败: ' + error.message);
+    }
+}
+
+// 运行合并的代码文件
+function runMergedCode() {
+    // 创建文件输入元素
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.js';
+    fileInput.style.display = 'none';
+    
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                // 停止当前执行
+                if (isRunning) {
+                    stopExecution();
+                }
+                
+                // 清除所有可见变量
+                if (typeof visibleVariables !== 'undefined' && visibleVariables) {
+                    visibleVariables.clear();
+                    redrawCanvas();
+                }
+                
+                // 创建一个新的Worker来运行合并的代码
+                const mergedCodeBlob = new Blob([e.target.result], { type: 'application/javascript' });
+                const mergedCodeUrl = URL.createObjectURL(mergedCodeBlob);
+                
+                const mergedWorker = new Worker(mergedCodeUrl);
+                
+                // 设置消息处理器
+                mergedWorker.onmessage = function(e) {
+                    const { type, spriteId, state, error, message } = e.data;
+                    
+                    switch (type) {
+                        case 'SPRITE_UPDATE':
+                            updateSpriteFromWorker(spriteId, state);
+                            break;
+                            
+                        case 'ERROR':
+                            showNotification(`执行错误: ${error}`);
+                            break;
+                            
+                        case 'STOP_EXECUTION':
+                            stopExecution();
+                            break;
+                            
+                        case 'SPRITE_SAY':
+                            handleSpriteSay(spriteId, message, e.data.bubbleType);
+                            break;
+                            
+                        case 'SPRITE_SAY_FOR_SECS':
+                            handleSpriteSayForSecs(spriteId, message, e.data.duration, e.data.bubbleType);
+                            break;
+                            
+                        case 'SPRITE_COSTUME_CHANGED':
+                            handleSpriteCostumeChanged(spriteId, e.data.costumeIndex, e.data.costumeName);
+                            break;
+                            
+
+                            
+                        case 'SHOW_VARIABLE':
+                            showVariable(e.data.varName, e.data.spriteId);
+                            updateVariableValue(e.data.varName, e.data.value);
+                            break;
+                            
+                        case 'HIDE_VARIABLE':
+                            hideVariable(e.data.varName);
+                            break;
+                            
+                        case 'UPDATE_VARIABLE':
+                            updateVariableValue(e.data.varName, e.data.value);
+                            break;
+                            
+                        case 'SWITCH_BACKGROUND':
+                            switchBackgroundById(e.data.backgroundId);
+                            break;
+                    }
+                };
+                
+                mergedWorker.onerror = function(error) {
+                    console.error('合并代码执行错误:', error);
+                    showNotification('合并代码执行出错，请检查代码格式');
+                    stopExecution();
+                };
+                
+                // 开始执行
+                isRunning = true;
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                
+                // 开始动画循环
+                animationLoop();
+                
+                showNotification('合并代码开始执行');
+                console.log('合并代码开始执行');
+                
+            } catch (error) {
+                console.error('运行合并代码失败:', error);
+                showNotification('运行合并代码失败: ' + error.message);
+            }
+        };
+        
+        reader.readAsText(file);
+    });
+    
+    // 触发文件选择
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
 }
 
 // 开始执行
@@ -271,6 +499,17 @@ async function startExecution() {
     
     // 保存当前背景代码
     saveCurrentBackgroundCode();
+    
+    // 检查是否有合并代码可用
+    const mergedCode = getCurrentMergedCode();
+    if (mergedCode) {
+        console.log('[主线程] 使用合并代码执行');
+        runMergedCodeFromString(mergedCode);
+        return;
+    }
+    
+    // 如果没有合并代码，使用原有的执行方式
+    console.log('[主线程] 使用原有方式执行');
     
     // 确保生成器在执行前可用
     console.log('[主线程] 开始执行前检查生成器...');
@@ -337,6 +576,8 @@ async function startExecution() {
                         jsCode += messageCode;
                         console.log(`[主线程] 生成的消息监听器代码:`, messageCode);
                     });
+                    
+
                     
                     // 第三步：处理所有 "when_key_pressed" 块（消息监听器注册）
                     const keyPressedBlocks = tempWorkspace.getBlocksByType('when_key_pressed');
@@ -460,6 +701,8 @@ async function startExecution() {
                         console.log(`[主线程] 背景 ${background.name} 生成的消息监听器代码:`, messageCode);
                     });
                     
+
+                    
                     // 第三步：处理所有 "when_key_pressed" 块（键盘事件监听器注册）
                     const keyPressedBlocks = tempWorkspace.getBlocksByType('when_key_pressed');
                     console.log(`[主线程] 背景 ${background.name} 找到 ${keyPressedBlocks.length} 个键盘按下块`);
@@ -543,7 +786,14 @@ async function startExecution() {
             rotation: sprite.rotation,
             scale: sprite.scale,
             visible: sprite.visible,
-            code: sprite.jsCode // 发送JavaScript代码给Worker
+            code: sprite.jsCode, // 发送JavaScript代码给Worker
+            costumes: (sprite.costumes || []).map(costume => ({
+                id: costume.id,
+                name: costume.name,
+                // 排除image对象，因为它不能被克隆
+                dataURL: costume.dataURL
+            })), // 发送造型数据给Worker（排除image对象）
+            currentCostumeIndex: sprite.currentCostumeIndex || 0 // 发送当前造型索引给Worker
         }));
         
         // 准备背景数据
@@ -552,7 +802,7 @@ async function startExecution() {
             name: background.name,
             type: background.type,
             color: background.color,
-            image: background.image,
+            // 排除image对象，因为它不能被克隆
             code: background.jsCode // 发送JavaScript代码给Worker
         }));
         
@@ -959,8 +1209,9 @@ function generateCodeManually(block, workspace = null, depth = 0) {
             const stopOption = block.getFieldValue('STOP_OPTION') || 'this script';
             return `await stopExecution('${stopOption}');\n`;
             
-        case 'controls_clone':
-            return `await createClone();\n`;
+
+            
+
             
         case 'sensing_coloristouchingcolor':
             const color1 = block.getFieldValue('COLOR1') || '#ff0000';
@@ -1447,4 +1698,6 @@ function handleSpriteCostumeChanged(spriteId, costumeIndex, costumeName) {
     if (typeof showNotification === 'function') {
         showNotification(`精灵 ${sprite.name} 切换到造型 "${costumeName}"`);
     }
-} 
+}
+
+ 

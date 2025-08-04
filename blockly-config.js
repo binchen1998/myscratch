@@ -137,7 +137,8 @@ function initializeBlockly() {
                     { kind: "block", type: "stop_program" },
                     { kind: "block", type: "when_message_received" },
                     { kind: "block", type: "broadcast_message" },
-                    { kind: "block", type: "broadcast_message_and_wait" }
+                    { kind: "block", type: "broadcast_message_and_wait" },
+
                 ]
             },
             {
@@ -221,8 +222,7 @@ function initializeBlockly() {
                     { kind: "block", type: "controls_if_else" },
                     { kind: "block", type: "controls_wait" },
                     { kind: "block", type: "controls_wait_until" },
-                    { kind: "block", type: "controls_stop" },
-                    { kind: "block", type: "controls_clone" }
+                    { kind: "block", type: "controls_stop" }
                 ]
             },
             {
@@ -1015,18 +1015,9 @@ function defineCustomBlocks() {
         }
     };
     
-    // 克隆
-    Blockly.Blocks['controls_clone'] = {
-        init: function() {
-            this.appendDummyInput()
-                .appendField("克隆");
-            this.setPreviousStatement(true);
-            this.setNextStatement(true);
-            this.setColour(120);
-            this.setTooltip("创建精灵的克隆");
-            this.setHelpUrl("");
-        }
-    };
+
+    
+
     
     // ===== 侦测块定义 =====
     

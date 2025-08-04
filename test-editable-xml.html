@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可编辑XML测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .xml-editor {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            resize: vertical;
+            background: #ffffff;
+            color: #333;
+        }
+        .xml-editor:focus {
+            outline: none;
+            border-color: #9C27B0;
+            box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.2);
+        }
+        .button-group {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .test-button {
+            background: #9C27B0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            background: #7B1FA2;
+            transform: translateY(-1px);
+        }
+        .test-button.apply {
+            background: #4CAF50;
+        }
+        .test-button.apply:hover {
+            background: #45a049;
+        }
+        .test-button.reset {
+            background: #FF9800;
+        }
+        .test-button.reset:hover {
+            background: #F57C00;
+        }
+        .test-button.copy {
+            background: #2196F3;
+        }
+        .test-button.copy:hover {
+            background: #1976D2;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #9C27B0;
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: #E8F5E8;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #FFEBEE;
+        }
+        .warning {
+            border-left-color: #FF9800;
+            background: #FFF3E0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>可编辑XML功能测试</h1>
+        
+        <div class="test-section">
+            <h3>XML编辑器测试</h3>
+            <p>在下面的编辑器中编辑XML代码，然后测试各种功能：</p>
+            
+            <textarea id="xmlEditor" class="xml-editor" placeholder="在这里输入或编辑XML代码...">
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="when_program_starts" x="50" y="50">
+    <next>
+      <block type="move_to">
+        <field name="X">100</field>
+        <field name="Y">100</field>
+      </block>
+    </next>
+  </block>
+</xml></textarea>
+            
+            <div class="button-group">
+                <button class="test-button copy" onclick="copyXml()">复制XML</button>
+                <button class="test-button apply" onclick="applyXml()">应用XML</button>
+                <button class="test-button reset" onclick="resetXml()">重置XML</button>
+                <button class="test-button" onclick="formatXml()">格式化XML</button>
+                <button class="test-button" onclick="validateXml()">验证XML</button>
+            </div>
+            
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试说明</h3>
+            <ul>
+                <li><strong>复制XML</strong>：将XML代码复制到剪贴板</li>
+                <li><strong>应用XML</strong>：模拟将XML应用到工作区（这里只是验证XML格式）</li>
+                <li><strong>重置XML</strong>：恢复到原始XML内容</li>
+                <li><strong>格式化XML</strong>：重新格式化XML代码</li>
+                <li><strong>验证XML</strong>：检查XML语法是否正确</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let originalXml = '';
+
+        // 页面加载时保存原始XML
+        window.addEventListener('load', function() {
+            originalXml = document.getElementById('xmlEditor').value;
+        });
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function copyXml() {
+            const xmlEditor = document.getElementById('xmlEditor');
+            try {
+                xmlEditor.select();
+                xmlEditor.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                showResult('XML代码已复制到剪贴板', 'success');
+            } catch (error) {
+                showResult('复制失败: ' + error.message, 'error');
+            }
+        }
+
+        function applyXml() {
+            const xmlContent = document.getElementById('xmlEditor').value.trim();
+            
+            if (!xmlContent) {
+                showResult('XML内容为空，无法应用', 'error');
+                return;
+            }
+
+            try {
+                // 验证XML格式
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+                
+                const parseError = xmlDoc.getElementsByTagName('parsererror');
+                if (parseError.length > 0) {
+                    showResult('XML格式错误，无法应用', 'error');
+                    return;
+                }
+
+                // 检查是否是Blockly XML
+                if (!xmlContent.includes('xmlns="https://developers.google.com/blockly/xml"')) {
+                    showResult('警告：这可能不是有效的Blockly XML格式', 'warning');
+                }
+
+                showResult('XML格式正确，可以应用到工作区', 'success');
+            } catch (error) {
+                showResult('应用XML失败: ' + error.message, 'error');
+            }
+        }
+
+        function resetXml() {
+            document.getElementById('xmlEditor').value = originalXml;
+            showResult('XML已重置到原始内容', 'success');
+        }
+
+        function formatXml() {
+            const xmlContent = document.getElementById('xmlEditor').value.trim();
+            
+            if (!xmlContent) {
+                showResult('XML内容为空，无法格式化', 'error');
+                return;
+            }
+
+            try {
+                const formattedXml = formatXmlContent(xmlContent);
+                document.getElementById('xmlEditor').value = formattedXml;
+                showResult('XML已格式化', 'success');
+            } catch (error) {
+                showResult('格式化失败: ' + error.message, 'error');
+            }
+        }
+
+        function validateXml() {
+            const xmlContent = document.getElementById('xmlEditor').value.trim();
+            
+            if (!xmlContent) {
+                showResult('XML内容为空', 'error');
+                return;
+            }
+
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
+                
+                const parseError = xmlDoc.getElementsByTagName('parsererror');
+                if (parseError.length > 0) {
+                    showResult('XML语法错误: ' + parseError[0].textContent, 'error');
+                    return;
+                }
+
+                // 检查Blockly特定元素
+                const blocks = xmlDoc.getElementsByTagName('block');
+                if (blocks.length === 0) {
+                    showResult('警告：没有找到Blockly积木元素', 'warning');
+                } else {
+                    showResult(`XML验证通过，找到 ${blocks.length} 个积木元素`, 'success');
+                }
+            } catch (error) {
+                showResult('验证失败: ' + error.message, 'error');
+            }
+        }
+
+        function formatXmlContent(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+            
+            const parseError = xmlDoc.getElementsByTagName('parsererror');
+            if (parseError.length > 0) {
+                throw new Error('XML解析错误');
+            }
+            
+            return prettyPrintXml(xmlDoc);
+        }
+
+        function prettyPrintXml(xmlDoc) {
+            const serializer = new XMLSerializer();
+            const xmlString = serializer.serializeToString(xmlDoc);
+            
+            let formatted = xmlString
+                .replace(/></g, '>\n<')
+                .replace(/\n\s*\n/g, '\n')
+                .split('\n');
+            
+            let indentLevel = 0;
+            formatted = formatted.map(line => {
+                const trimmedLine = line.trim();
+                
+                if (!trimmedLine) return '';
+                
+                if (trimmedLine.startsWith('</')) {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                }
+                
+                const indent = '  '.repeat(indentLevel);
+                const result = indent + trimmedLine;
+                
+                if (trimmedLine.startsWith('<') && !trimmedLine.startsWith('</') && !trimmedLine.endsWith('/>')) {
+                    indentLevel++;
+                }
+                
+                return result;
+            }).filter(line => line !== '');
+            
+            return formatted.join('\n');
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合并代码功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.error {
+            background: #dc3545;
+        }
+        .code-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>合并代码功能测试</h1>
+    
+    <div class="test-section">
+        <h2>功能说明</h2>
+        <p>这个测试页面用于验证合并代码功能的正确性。合并代码功能可以将所有sprite的代码合并到一个JavaScript文件中。</p>
+        
+        <div class="status info">
+            <strong>测试步骤：</strong>
+            <ol>
+                <li>点击"生成测试代码"按钮生成示例合并代码</li>
+                <li>查看生成的代码结构</li>
+                <li>点击"下载测试代码"保存文件</li>
+                <li>在主应用中测试运行合并代码</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试代码生成</h2>
+        <button class="test-button" onclick="generateTestCode()">生成测试代码</button>
+        <button class="test-button" onclick="downloadTestCode()" id="downloadBtn" disabled>下载测试代码</button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div id="codePreview" class="code-preview" style="display: none;">
+            <h3>生成的合并代码预览：</h3>
+            <pre id="codeContent"></pre>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>功能特点</h2>
+        <ul>
+            <li><strong>性能优化</strong> - 减少代码生成时间，执行更高效</li>
+            <li><strong>调试友好</strong> - 所有代码在一个文件中，便于查看和调试</li>
+            <li><strong>分享便利</strong> - 可以生成独立的JS文件，便于分享和部署</li>
+            <li><strong>简化部署</strong> - 减少文件依赖，更容易部署</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>使用方法</h2>
+        <ol>
+            <li>在主应用中创建项目，添加精灵并编写代码</li>
+            <li>点击顶部工具栏的 <strong>"📄 保存代码"</strong> 按钮</li>
+            <li>系统会自动生成包含所有精灵代码的JavaScript文件</li>
+            <li>点击 <strong>"▶ 运行代码"</strong> 按钮选择并运行合并代码文件</li>
+        </ol>
+    </div>
+
+    <script>
+        let generatedCode = '';
+        
+        function generateTestCode() {
+            // 模拟生成合并代码
+            generatedCode = `// 合并的精灵代码 - 自动生成
+// 生成时间: ${new Date().toISOString()}
+// 包含 2 个精灵
+
+(function() {
+    // 全局变量
+    let sprites = [];
+    let variables = {};
+    let isRunning = false;
+    let messageSystem = {
+        listeners: new Map(),
+        pendingMessages: new Map(),
+        messageHistory: [],
+        maxHistory: 100
+    };
+    let keyEventSystem = {
+        listeners: new Map(),
+        pressedKeys: new Set()
+    };
+    let spriteClickEventSystem = {
+        listeners: new Map()
+    };
+    
+    // 工具函数
+    function sleep(seconds) {
+        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    }
+    
+    function addMessageListener(messageName, callback) {
+        if (!messageSystem.listeners.has(messageName)) {
+            messageSystem.listeners.set(messageName, []);
+        }
+        messageSystem.listeners.get(messageName).push(callback);
+    }
+    
+    function broadcastMessage(messageName) {
+        const listeners = messageSystem.listeners.get(messageName) || [];
+        listeners.forEach(callback => {
+            try {
+                callback(messageName);
+            } catch (error) {
+                console.error('消息处理错误:', error);
+            }
+        });
+    }
+    
+    function registerKeyEvent(key, callback) {
+        if (!keyEventSystem.listeners.has(key)) {
+            keyEventSystem.listeners.set(key, []);
+        }
+        keyEventSystem.listeners.get(key).push(callback);
+    }
+    
+    function registerSpriteClickEvent(callback) {
+        spriteClickEventSystem.listeners.set('click', callback);
+    }
+    
+    // 精灵操作函数
+    function moveTo(x, y) {
+        postMessage({
+            type: 'SPRITE_UPDATE',
+            spriteId: currentSpriteId,
+            state: { x: x, y: y }
+        });
+    }
+    
+    function rotate(degrees) {
+        postMessage({
+            type: 'SPRITE_UPDATE',
+            spriteId: currentSpriteId,
+            state: { rotation: degrees }
+        });
+    }
+    
+    function say(message) {
+        postMessage({
+            type: 'SPRITE_SAY',
+            spriteId: currentSpriteId,
+            message: message,
+            bubbleType: 'say'
+        });
+    }
+    
+    function think(message) {
+        postMessage({
+            type: 'SPRITE_SAY',
+            spriteId: currentSpriteId,
+            message: message,
+            bubbleType: 'think'
+        });
+    }
+    
+    function showVariable(varName) {
+        postMessage({
+            type: 'SHOW_VARIABLE',
+            varName: varName,
+            value: variables[varName] || 0
+        });
+    }
+    
+    function updateVariableDisplay(varName, variables) {
+        postMessage({
+            type: 'UPDATE_VARIABLE',
+            varName: varName,
+            value: variables[varName] || 0
+        });
+    }
+    
+    // 数学函数
+    function abs(x) { return Math.abs(x); }
+    function floor(x) { return Math.floor(x); }
+    function ceil(x) { return Math.ceil(x); }
+    function round(x) { return Math.round(x); }
+    function sqrt(x) { return Math.sqrt(x); }
+    function sin(x) { return Math.sin(x * Math.PI / 180); }
+    function cos(x) { return Math.cos(x * Math.PI / 180); }
+    function tan(x) { return Math.tan(x * Math.PI / 180); }
+    
+    // 常量
+    const PI = Math.PI;
+    const E = Math.E;
+    
+    // 当前执行的精灵ID
+    let currentSpriteId = null;
+    
+    // 初始化精灵数据
+    sprites.push({
+        id: 'sprite1',
+        name: '测试精灵1',
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scale: 1.0,
+        visible: true,
+        currentCostumeIndex: 0
+    });
+    
+    sprites.push({
+        id: 'sprite2',
+        name: '测试精灵2',
+        x: 100,
+        y: 100,
+        rotation: 0,
+        scale: 1.0,
+        visible: true,
+        currentCostumeIndex: 0
+    });
+    
+    // 精灵代码
+    // 精灵 测试精灵1 - 程序开始块 1
+    (async function() {
+        currentSpriteId = 'sprite1';
+        await say('你好，我是精灵1！');
+        await sleep(1);
+        await moveTo(100, 0);
+        await sleep(1);
+        await rotate(90);
+        await say('我移动了！');
+    })();
+    
+    // 精灵 测试精灵2 - 程序开始块 1
+    (async function() {
+        currentSpriteId = 'sprite2';
+        await sleep(0.5);
+        await say('你好，我是精灵2！');
+        await sleep(1);
+        await moveTo(0, 100);
+        await sleep(1);
+        await rotate(-90);
+        await say('我也移动了！');
+    })();
+    
+    // 消息监听器
+    addMessageListener('测试消息', async function() {
+        currentSpriteId = 'sprite1';
+        await say('收到消息了！');
+    });
+    
+    // 键盘事件监听器
+    registerKeyEvent('space', async function() {
+        currentSpriteId = 'sprite1';
+        await say('空格键被按下了！');
+    });
+    
+    // 初始化完成
+    console.log('合并代码初始化完成，包含 2 个精灵');
+})();`;
+            
+            // 显示状态
+            const status = document.getElementById('status');
+            status.className = 'status success';
+            status.innerHTML = '<strong>成功！</strong> 测试代码已生成。';
+            status.style.display = 'block';
+            
+            // 显示代码预览
+            const codePreview = document.getElementById('codePreview');
+            const codeContent = document.getElementById('codeContent');
+            codeContent.textContent = generatedCode;
+            codePreview.style.display = 'block';
+            
+            // 启用下载按钮
+            document.getElementById('downloadBtn').disabled = false;
+        }
+        
+        function downloadTestCode() {
+            if (!generatedCode) {
+                alert('请先生成测试代码！');
+                return;
+            }
+            
+            // 创建下载链接
+            const blob = new Blob([generatedCode], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `测试合并代码_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.js`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // 显示状态
+            const status = document.getElementById('status');
+            status.className = 'status success';
+            status.innerHTML = '<strong>成功！</strong> 测试代码文件已下载。';
+            status.style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

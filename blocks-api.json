@@ -1,0 +1,306 @@
+[
+  {
+    "api": "await moveTo(x, y)",
+    "description": "move sprite to a point, x and y are the coordinates"
+  },
+  {
+    "api": "await moveToAnimated(x, y, duration)",
+    "description": "move sprite to a point with animation, x and y are coordinates, duration is animation time in seconds"
+  },
+  {
+    "api": "await moveXSteps(steps)",
+    "description": "move sprite horizontally by specified number of steps"
+  },
+  {
+    "api": "await moveYSteps(steps)",
+    "description": "move sprite vertically by specified number of steps"
+  },
+  {
+    "api": "await moveToRandom()",
+    "description": "move sprite to a random position on the stage"
+  },
+  {
+    "api": "await moveToMouse()",
+    "description": "move sprite to the current mouse pointer position"
+  },
+  {
+    "api": "await rotate(degrees)",
+    "description": "rotate sprite by specified degrees"
+  },
+  {
+    "api": "await pointInDirection(direction)",
+    "description": "point sprite in specified direction in degrees"
+  },
+  {
+    "api": "await pointTowardsMouse()",
+    "description": "point sprite towards the mouse pointer"
+  },
+  {
+    "api": "await pointTowardsSprite(targetSprite)",
+    "description": "point sprite towards another sprite"
+  },
+  {
+    "api": "await setX(x)",
+    "description": "set sprite's x coordinate"
+  },
+  {
+    "api": "await setY(y)",
+    "description": "set sprite's y coordinate"
+  },
+  {
+    "api": "await changeX(x)",
+    "description": "change sprite's x coordinate by specified amount"
+  },
+  {
+    "api": "await changeY(y)",
+    "description": "change sprite's y coordinate by specified amount"
+  },
+  {
+    "api": "getX()",
+    "description": "get sprite's current x coordinate"
+  },
+  {
+    "api": "getY()",
+    "description": "get sprite's current y coordinate"
+  },
+  {
+    "api": "await bounceIfOnEdge()",
+    "description": "bounce sprite if it touches the stage edge"
+  },
+  {
+    "api": "await setRotationStyle(style)",
+    "description": "set sprite's rotation style (all around, left-right, don't rotate)"
+  },
+  {
+    "api": "await waitSeconds(seconds)",
+    "description": "wait for specified number of seconds"
+  },
+  {
+    "api": "await switchBackground(backgroundId)",
+    "description": "switch to specified background"
+  },
+  {
+    "api": "await say(message)",
+    "description": "make sprite say a message"
+  },
+  {
+    "api": "await sayForSecs(message, duration)",
+    "description": "make sprite say a message for specified seconds"
+  },
+  {
+    "api": "await think(message)",
+    "description": "make sprite think a message"
+  },
+  {
+    "api": "await thinkForSecs(message, duration)",
+    "description": "make sprite think a message for specified seconds"
+  },
+  {
+    "api": "await switchCostume(costumeId)",
+    "description": "switch sprite to specified costume"
+  },
+  {
+    "api": "await nextCostume()",
+    "description": "switch sprite to next costume"
+  },
+  {
+    "api": "getCostumeNumber()",
+    "description": "get current costume number"
+  },
+  {
+    "api": "checkTouchingColor(color)",
+    "description": "check if sprite is touching specified color"
+  },
+  {
+    "api": "checkColorTouchingColor(color1, color2)",
+    "description": "check if one color is touching another color"
+  },
+  {
+    "api": "getDistance(target)",
+    "description": "get distance to specified target (mouse-pointer, edge)"
+  },
+  {
+    "api": "isKeyPressed(key)",
+    "description": "check if specified key is pressed"
+  },
+  {
+    "api": "isMouseDown()",
+    "description": "check if mouse button is pressed"
+  },
+  {
+    "api": "getTimer()",
+    "description": "get timer value"
+  },
+  {
+    "api": "checkCollision(target)",
+    "description": "check if sprite is colliding with specified target"
+  },
+  {
+    "api": "addMessageListener(messageName, callback)",
+    "description": "add listener for when message is received"
+  },
+  {
+    "api": "await broadcastMessage(messageName)",
+    "description": "broadcast a message to all sprites"
+  },
+  {
+    "api": "await broadcastMessageAndWait(messageName, duration)",
+    "description": "broadcast message and wait for specified duration"
+  },
+  {
+    "api": "variables[varName] = value",
+    "description": "set variable value"
+  },
+  {
+    "api": "variables[varName] = (variables[varName] || 0) + value",
+    "description": "change variable value by adding specified amount"
+  },
+  {
+    "api": "(variables[varName] || 0)",
+    "description": "get variable value"
+  },
+  {
+    "api": "showVariable(varName, variables)",
+    "description": "show variable on stage"
+  },
+  {
+    "api": "hideVariable(varName, variables)",
+    "description": "hide variable from stage"
+  },
+  {
+    "api": "updateVariableDisplay(varName, variables)",
+    "description": "update variable display on stage"
+  },
+  {
+    "api": "await stopProgram()",
+    "description": "stop program execution"
+  },
+  {
+    "api": "await stopExecution(option)",
+    "description": "stop execution (this script, this sprite, or all)"
+  },
+  {
+    "api": "await createClone()",
+    "description": "create a clone of the current sprite"
+  },
+  {
+    "api": "await deleteClone()",
+    "description": "delete the current clone"
+  },
+  {
+    "api": "addMessageListener('克隆启动', async function(messageName, senderId) { ... })",
+    "description": "when clone starts (using message system)"
+  },
+  {
+    "api": "for (let i = 0; i < times; i++) { ... }",
+    "description": "repeat code block specified number of times"
+  },
+  {
+    "api": "while (!(condition)) { ... }",
+    "description": "repeat code block until condition is true"
+  },
+  {
+    "api": "while (true) { ... }",
+    "description": "repeat code block forever"
+  },
+  {
+    "api": "if (condition) { ... }",
+    "description": "execute code block if condition is true"
+  },
+  {
+    "api": "if (condition) { ... } else { ... }",
+    "description": "execute first code block if condition is true, otherwise execute second code block"
+  },
+  {
+    "api": "while (!(condition)) { await sleep(0.001); }",
+    "description": "wait until condition is true"
+  },
+  {
+    "api": "await sleep(0.001)",
+    "description": "sleep for a short time to prevent blocking"
+  },
+  {
+    "api": "true/false",
+    "description": "boolean values"
+  },
+  {
+    "api": "a === b, a !== b, a < b, a <= b, a > b, a >= b",
+    "description": "comparison operators"
+  },
+  {
+    "api": "a && b, a || b",
+    "description": "logical operators (AND, OR)"
+  },
+  {
+    "api": "!(condition)",
+    "description": "logical NOT operator"
+  },
+  {
+    "api": "(condition ? value1 : value2)",
+    "description": "ternary conditional operator"
+  },
+  {
+    "api": "a + b, a - b, a * b, a / b",
+    "description": "arithmetic operators"
+  },
+  {
+    "api": "Math.floor(Math.random() * (to - from + 1)) + from",
+    "description": "generate random integer between from and to"
+  },
+  {
+    "api": "Math.random()",
+    "description": "generate random float between 0 and 1"
+  },
+  {
+    "api": "abs(x), floor(x), ceil(x), round(x), sqrt(x)",
+    "description": "mathematical functions"
+  },
+  {
+    "api": "sin(x), cos(x), tan(x), asin(x), acos(x), atan(x)",
+    "description": "trigonometric functions"
+  },
+  {
+    "api": "ln(x), log(x), exp(x), pow10(x)",
+    "description": "logarithmic and exponential functions"
+  },
+  {
+    "api": "PI, E, GOLDEN_RATIO, SQRT2, SQRT1_2, INFINITY",
+    "description": "mathematical constants"
+  },
+  {
+    "api": "a % b",
+    "description": "modulo operator"
+  },
+  {
+    "api": "Math.max(low, Math.min(high, value))",
+    "description": "constrain value between low and high"
+  },
+  {
+    "api": "(value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow",
+    "description": "map value from one range to another"
+  },
+  {
+    "api": "string.length",
+    "description": "get string length"
+  },
+  {
+    "api": "string.includes(substring)",
+    "description": "check if string contains substring"
+  },
+  {
+    "api": "string1 + string2",
+    "description": "concatenate strings"
+  },
+  {
+    "api": "string.charAt(index)",
+    "description": "get character at specified index"
+  },
+  {
+    "api": "\"text\"",
+    "description": "string literal"
+  },
+  {
+    "api": "number",
+    "description": "number literal"
+  }
+] 

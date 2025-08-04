@@ -123,6 +123,7 @@ function addCanvasEventListeners() {
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mouseleave', handleMouseUp);
     canvas.addEventListener('mouseenter', handleMouseEnter);
+    canvas.addEventListener('mousemove', handleMouseHover); // 添加鼠标悬停检测
     
     // 键盘事件
     document.addEventListener('keydown', handleKeyDown);
@@ -333,12 +334,25 @@ function getSpriteAtPosition(x, y) {
         const sprite = sprites[i];
         if (!sprite.visible) continue;
         
-        // 简单的矩形碰撞检测
-        const size = 40 * sprite.scale;
-        const halfSize = size / 2;
+        // 获取精灵图像的实际尺寸
+        let imgWidth = 40, imgHeight = 40; // 默认尺寸
+        if (sprite.image && typeof sprite.image.width === 'number' && typeof sprite.image.height === 'number') {
+            imgWidth = sprite.image.width;
+            imgHeight = sprite.image.height;
+        } else if (sprite.image && typeof sprite.image.naturalWidth === 'number' && typeof sprite.image.naturalHeight === 'number') {
+            imgWidth = sprite.image.naturalWidth;
+            imgHeight = sprite.image.naturalHeight;
+        }
         
-        if (x >= sprite.x - halfSize && x <= sprite.x + halfSize &&
-            y >= sprite.y - halfSize && y <= sprite.y + halfSize) {
+        // 计算缩放后的实际尺寸
+        const actualWidth = imgWidth * sprite.scale;
+        const actualHeight = imgHeight * sprite.scale;
+        const halfWidth = actualWidth / 2;
+        const halfHeight = actualHeight / 2;
+        
+        // 精确的矩形碰撞检测
+        if (x >= sprite.x - halfWidth && x <= sprite.x + halfWidth &&
+            y >= sprite.y - halfHeight && y <= sprite.y + halfHeight) {
             return sprite;
         }
     }

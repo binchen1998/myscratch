@@ -29,7 +29,8 @@
             <div class="sprite-info">
                 <span id="currentSpriteName">请选择一个精灵</span>
                 <div class="sprite-buttons">
-                    <button id="codeBtn" class="code-btn" style="display: none;">📝 Code</button>
+                    <button id="codeBtn" class="code-btn">📄 查看合并代码</button>
+                    <button id="xmlBtn" class="xml-btn">📋 XML</button>
                     <button id="chatBtn" class="chat-btn" style="display: none;">💬 Chat</button>
                 </div>
             </div>
@@ -150,16 +151,36 @@
             <div class="code-header">
                 <h3>代码编辑器 - <span id="codeSpriteName"></span></h3>
                 <div class="code-controls">
-                    <button class="code-btn apply-btn" id="codeApplyBtn">Apply</button>
-                    <button class="code-btn revert-btn" id="codeRevertBtn">Revert</button>
+                    <button class="code-btn apply-btn" id="codeApplyBtn">关闭</button>
                     <button class="code-close" id="codeCloseBtn">&times;</button>
                 </div>
             </div>
             <div class="code-body">
                 <div class="code-info">
-                    <p>当前精灵的可执行代码（可编辑）：</p>
+                    <p>项目的合并JavaScript代码（只读）：</p>
                 </div>
                 <textarea id="codeEditor" placeholder="代码将在这里显示..." rows="20"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- XML查看窗口 -->
+    <div id="xmlModal" class="xml-modal" style="display: none;">
+        <div class="xml-content">
+            <div class="xml-header">
+                <h3>XML编辑器 - <span id="xmlSpriteName"></span></h3>
+                <div class="xml-controls">
+                    <button class="xml-btn copy-btn" id="xmlCopyBtn">复制</button>
+                    <button class="xml-btn apply-btn" id="xmlApplyBtn">应用</button>
+                    <button class="xml-btn reset-btn" id="xmlResetBtn">重置</button>
+                    <button class="xml-close" id="xmlCloseBtn">&times;</button>
+                </div>
+            </div>
+            <div class="xml-body">
+                <div class="xml-info">
+                    <p>当前精灵的Blockly XML代码（可编辑）：</p>
+                </div>
+                <textarea id="xmlEditor" placeholder="XML将在这里显示..." rows="20"></textarea>
             </div>
         </div>
     </div>
@@ -195,6 +216,7 @@
     <script src="project.js"></script>
     <script src="ai-chat.js"></script>
     <script src="code-editor.js"></script>
+    <script src="xml-viewer.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 
