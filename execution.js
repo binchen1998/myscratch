@@ -173,7 +173,7 @@ function setupWorkerMessageHandlers() {
                     }
                     
                     // 显示通知
-                    showNotification(`消息广播: ${e.data.messageName}`, 2000, 'info');
+                    // showNotification(`消息广播: ${e.data.messageName}`, 2000, 'info');
                     break;
                     
                 case 'MESSAGE_HISTORY':
@@ -1532,7 +1532,7 @@ let keyEventListeners = new Map();
 
 // 处理键盘事件
 function handleKeyEvent(key) {
-    console.log('[主线程] 处理键盘事件:', key);
+            // console.log('[主线程] 处理键盘事件:', key);
     
     if (keyEventListeners.has(key)) {
         const listeners = keyEventListeners.get(key);
@@ -1548,7 +1548,7 @@ function handleKeyEvent(key) {
 
 // 注册键盘事件监听器
 function registerKeyEvent(key, callback) {
-    console.log('[主线程] 注册键盘事件监听器:', key);
+            // console.log('[主线程] 注册键盘事件监听器:', key);
     
     if (!keyEventListeners.has(key)) {
         keyEventListeners.set(key, []);
@@ -1557,19 +1557,19 @@ function registerKeyEvent(key, callback) {
     const listeners = keyEventListeners.get(key);
     listeners.push(callback);
     
-    console.log('[主线程] 键盘事件监听器注册成功，当前监听器数量:', listeners.length);
+            // console.log('[主线程] 键盘事件监听器注册成功，当前监听器数量:', listeners.length);
 }
 
 // 移除键盘事件监听器
 function removeKeyEvent(key, callback) {
-    console.log('[主线程] 移除键盘事件监听器:', key);
+            // console.log('[主线程] 移除键盘事件监听器:', key);
     
     if (keyEventListeners.has(key)) {
         const listeners = keyEventListeners.get(key);
         const index = listeners.indexOf(callback);
         if (index > -1) {
             listeners.splice(index, 1);
-            console.log('[主线程] 键盘事件监听器移除成功');
+            // console.log('[主线程] 键盘事件监听器移除成功');
         }
     }
 }

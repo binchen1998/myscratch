@@ -143,12 +143,12 @@ function removeSpriteClickEvent(spriteId = null) {
 
 // 广播消息
 function broadcastMessage(messageName, senderId = null) {
-    console.log(`[Worker] 📢 广播消息: ${messageName}, 发送者: ${senderId}`);
-    console.log(`[Worker] 📢 当前所有监听器:`, Array.from(messageSystem.listeners.entries()).map(([name, listeners]) => ({
-        messageName: name,
-        listenerCount: listeners.length,
-        listeners: listeners.map(l => ({ spriteId: l.spriteId, timestamp: l.timestamp }))
-    })));
+            // console.log(`[Worker] 📢 广播消息: ${messageName}, 发送者: ${senderId}`);
+    // console.log(`[Worker] 📢 当前所有监听器:`, Array.from(messageSystem.listeners.entries()).map(([name, listeners]) => ({
+    //     messageName: name,
+    //     listenerCount: listeners.length,
+    //     listeners: listeners.map(l => ({ spriteId: l.spriteId, timestamp: l.timestamp }))
+    // })));
     
     // 记录消息历史
     const messageRecord = {
@@ -168,21 +168,21 @@ function broadcastMessage(messageName, senderId = null) {
     // 通知所有监听器
     if (messageSystem.listeners.has(messageName)) {
         const listeners = messageSystem.listeners.get(messageName);
-        console.log(`[Worker] 📢 找到 ${listeners.length} 个监听器用于消息: ${messageName}`);
+        // console.log(`[Worker] 📢 找到 ${listeners.length} 个监听器用于消息: ${messageName}`);
         
         listeners.forEach((listener, index) => {
-            console.log(`[Worker] 📢 执行监听器 ${index + 1}/${listeners.length}:`, {
-                spriteId: listener.spriteId,
-                callbackType: typeof listener.callback
-            });
+            // console.log(`[Worker] 📢 执行监听器 ${index + 1}/${listeners.length}:`, {
+            //     spriteId: listener.spriteId,
+            //     callbackType: typeof listener.callback
+            // });
             
             try {
                 // 检查回调函数是否有效
                 if (typeof listener.callback === 'function') {
-                    console.log(`[Worker] 📢 调用监听器回调函数`);
+                    // console.log(`[Worker] 📢 调用监听器回调函数`);
                     listener.callback(messageName, senderId);
                     messageRecord.receivedBy.push(listener.spriteId);
-                    console.log(`[Worker] 📢 监听器回调执行成功`);
+                    // console.log(`[Worker] 📢 监听器回调执行成功`);
                 } else {
                     console.error(`[Worker] 📢 监听器回调不是函数:`, listener.callback);
                 }
@@ -192,14 +192,14 @@ function broadcastMessage(messageName, senderId = null) {
             }
         });
     } else {
-        console.log(`[Worker] 📢 消息 ${messageName} 没有监听器`);
+        // console.log(`[Worker] 📢 消息 ${messageName} 没有监听器`);
         
         // 如果是同一个精灵内部的消息，尝试延迟处理
         if (senderId) {
-            console.log(`[Worker] 📢 尝试延迟处理同一精灵内部消息: ${messageName}`);
+            // console.log(`[Worker] 📢 尝试延迟处理同一精灵内部消息: ${messageName}`);
             setTimeout(() => {
                 if (messageSystem.listeners.has(messageName)) {
-                    console.log(`[Worker] 📢 延迟后找到监听器，重新广播消息: ${messageName}`);
+                    // console.log(`[Worker] 📢 延迟后找到监听器，重新广播消息: ${messageName}`);
                     broadcastMessage(messageName, senderId);
                 }
             }, 50);
@@ -214,13 +214,13 @@ function broadcastMessage(messageName, senderId = null) {
         timestamp: Date.now()
     });
     
-    console.log(`[Worker] 📢 消息广播完成: ${messageName}, 接收者数量: ${messageRecord.receivedBy.length}`);
+    // console.log(`[Worker] 📢 消息广播完成: ${messageName}, 接收者数量: ${messageRecord.receivedBy.length}`);
     return messageRecord;
 }
 
 // 广播消息并等待
 async function broadcastMessageAndWait(messageName, duration = 1, senderId = null) {
-    console.log(`[Worker] 广播消息并等待: ${messageName}, 等待时间: ${duration}秒`);
+    // console.log(`[Worker] 广播消息并等待: ${messageName}, 等待时间: ${duration}秒`);
     
     // 广播消息
     const messageRecord = broadcastMessage(messageName, senderId);
@@ -228,7 +228,7 @@ async function broadcastMessageAndWait(messageName, duration = 1, senderId = nul
     // 等待指定时间
     await new Promise(resolve => setTimeout(resolve, duration * 1000));
     
-    console.log(`[Worker] 消息等待完成: ${messageName}`);
+    // console.log(`[Worker] 消息等待完成: ${messageName}`);
     return messageRecord;
 }
 
@@ -1200,19 +1200,19 @@ function createExecutionContext(sprite) {
         
         // 广播消息
         broadcastMessage: function(messageName) {
-            console.log(`[Worker] 精灵 ${sprite.name} 广播消息: ${messageName}`);
+            // console.log(`[Worker] 精灵 ${sprite.name} 广播消息: ${messageName}`);
             return broadcastMessage(messageName, sprite.id);
         },
         
         // 广播消息并等待
         broadcastMessageAndWait: function(messageName, duration) {
-            console.log(`[Worker] 精灵 ${sprite.name} 广播消息并等待: ${messageName}, 等待时间: ${duration}秒`);
+            // console.log(`[Worker] 精灵 ${sprite.name} 广播消息并等待: ${messageName}, 等待时间: ${duration}秒`);
             return broadcastMessageAndWait(messageName, duration, sprite.id);
         },
         
         // 添加消息监听器
         addMessageListener: function(messageName, callback) {
-            console.log(`[Worker] 精灵 ${sprite.name} 添加消息监听器: ${messageName}`);
+            // console.log(`[Worker] 精灵 ${sprite.name} 添加消息监听器: ${messageName}`);
             console.log(`[Worker] 精灵 ${sprite.name} 回调函数:`, typeof callback);
             // 使用全局的addMessageListener函数
             addMessageListener(messageName, callback, sprite.id);
@@ -1220,7 +1220,7 @@ function createExecutionContext(sprite) {
         
         // 移除消息监听器
         removeMessageListener: function(messageName) {
-            console.log(`[Worker] 精灵 ${sprite.name} 移除消息监听器: ${messageName}`);
+            // console.log(`[Worker] 精灵 ${sprite.name} 移除消息监听器: ${messageName}`);
             removeMessageListener(messageName, sprite.id);
         },
         
@@ -1228,13 +1228,13 @@ function createExecutionContext(sprite) {
         
         // 注册键盘事件
         registerKeyEvent: function(key, callback) {
-            console.log(`[Worker] 精灵 ${sprite.name} 注册键盘事件: ${key}`);
+            // console.log(`[Worker] 精灵 ${sprite.name} 注册键盘事件: ${key}`);
             registerKeyEvent(key, callback, sprite.id);
         },
         
         // 移除键盘事件
         removeKeyEvent: function(key) {
-            console.log(`[Worker] 精灵 ${sprite.name} 移除键盘事件: ${key}`);
+            // console.log(`[Worker] 精灵 ${sprite.name} 移除键盘事件: ${key}`);
             removeKeyEvent(key, sprite.id);
         },
         
@@ -1719,7 +1719,7 @@ function checkExecutionLimits() {
 // 消息处理
 self.onmessage = function(e) {
     const { type, data } = e.data;
-    console.log('[Worker] 收到消息:', type, e.data);
+            // console.log('[Worker] 收到消息:', type, e.data);
     
     switch (type) {
         case 'TEST':
@@ -1948,17 +1948,17 @@ self.onmessage = function(e) {
             break;
             
         case 'BROADCAST_MESSAGE':
-            console.log('[Worker] 收到广播消息请求:', e.data);
+            // console.log('[Worker] 收到广播消息请求:', e.data);
             broadcastMessage(e.data.messageName, e.data.senderId);
             break;
             
         case 'ADD_MESSAGE_LISTENER':
-            console.log('[Worker] 添加消息监听器:', data);
+            // console.log('[Worker] 添加消息监听器:', data);
             addMessageListener(data.messageName, data.callback, data.spriteId);
             break;
             
         case 'REMOVE_MESSAGE_LISTENER':
-            console.log('[Worker] 移除消息监听器:', data);
+            // console.log('[Worker] 移除消息监听器:', data);
             removeMessageListener(data.messageName, data.spriteId);
             break;
             
@@ -1987,7 +1987,7 @@ self.onmessage = function(e) {
             break;
             
         case 'KEY_EVENT':
-            console.log('[Worker] 键盘事件:', e.data.key, e.data.action);
+            // console.log('[Worker] 键盘事件:', e.data.key, e.data.action);
             handleKeyEventInWorker(e.data.key, e.data.action);
             break;
             
@@ -2251,7 +2251,7 @@ function executeMessageListenerRegistration(sprite, listenerCode, context) {
 
 // 处理Worker中的键盘事件
 function handleKeyEventInWorker(key, action) {
-    console.log(`[Worker] 处理键盘事件: ${key}, 动作: ${action}`);
+    // console.log(`[Worker] 处理键盘事件: ${key}, 动作: ${action}`);
     
     if (action === 'down') {
         keyEventSystem.pressedKeys.add(key);
@@ -2259,13 +2259,13 @@ function handleKeyEventInWorker(key, action) {
         // 每次keydown都触发键盘事件监听器（实现按住连续效果）
         if (keyEventSystem.listeners.has(key)) {
             const listeners = keyEventSystem.listeners.get(key);
-            console.log(`[Worker] 找到键盘事件监听器: ${key}, 监听器数量: ${listeners.length}`);
+            // console.log(`[Worker] 找到键盘事件监听器: ${key}, 监听器数量: ${listeners.length}`);
             listeners.forEach((listener, index) => {
                 try {
-                    console.log(`[Worker] 执行键盘事件监听器 ${index + 1}/${listeners.length}: ${key}, 精灵ID: ${listener.spriteId}`);
+                    // console.log(`[Worker] 执行键盘事件监听器 ${index + 1}/${listeners.length}: ${key}, 精灵ID: ${listener.spriteId}`);
                     if (typeof listener.callback === 'function') {
                         listener.callback();
-                        console.log(`[Worker] 键盘事件监听器执行完成: ${key}, 精灵ID: ${listener.spriteId}`);
+                        // console.log(`[Worker] 键盘事件监听器执行完成: ${key}, 精灵ID: ${listener.spriteId}`);
                     } else {
                         console.error(`[Worker] 键盘事件监听器回调不是函数:`, listener.callback);
                     }
@@ -2274,12 +2274,12 @@ function handleKeyEventInWorker(key, action) {
                 }
             });
         } else {
-            console.log(`[Worker] 没有找到键盘事件监听器: ${key}`);
+            // console.log(`[Worker] 没有找到键盘事件监听器: ${key}`);
         }
     } else if (action === 'up') {
         // keyup时只更新按键状态，不执行回调
         keyEventSystem.pressedKeys.delete(key);
-        console.log(`[Worker] 键盘释放: ${key}, 只更新状态，不执行回调`);
+        // console.log(`[Worker] 键盘释放: ${key}, 只更新状态，不执行回调`);
     }
 }
 

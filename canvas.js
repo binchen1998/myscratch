@@ -790,6 +790,11 @@ let pressedKeys = new Set();
 
 // 键盘按下事件处理
 function handleKeyDown(event) {
+    // 检查程序是否在运行状态
+    if (typeof isRunning !== 'undefined' && !isRunning) {
+        return; // 如果程序不在运行状态，不处理键盘事件
+    }
+    
     let key = event.key.toLowerCase();
     
     // 特殊键映射
@@ -805,7 +810,7 @@ function handleKeyDown(event) {
         key = 'right arrow';
     }
     
-    console.log('[Canvas] 键盘按下:', key);
+            // console.log('[Canvas] 键盘按下:', key);
     
     // 记录按键状态（用于isKeyPressed函数）
     pressedKeys.add(key);
@@ -821,6 +826,11 @@ function handleKeyDown(event) {
 
 // 键盘释放事件处理
 function handleKeyUp(event) {
+    // 检查程序是否在运行状态
+    if (typeof isRunning !== 'undefined' && !isRunning) {
+        return; // 如果程序不在运行状态，不处理键盘事件
+    }
+    
     let key = event.key.toLowerCase();
     
     // 特殊键映射
@@ -836,7 +846,7 @@ function handleKeyUp(event) {
         key = 'right arrow';
     }
     
-    console.log('[Canvas] 键盘释放:', key);
+            // console.log('[Canvas] 键盘释放:', key);
     
     pressedKeys.delete(key);
     

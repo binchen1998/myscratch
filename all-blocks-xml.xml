@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xml xmlns="https://developers.google.com/blockly/xml">
-  
+
   <!-- ===== 事件块 ===== -->
-  
+
   <!-- 当程序开始时 -->
   <block type="when_program_starts" x="50" y="50">
     <next>
@@ -12,7 +12,7 @@
       </block>
     </next>
   </block>
-  
+
   <!-- 当按下键时 -->
   <block type="when_key_pressed" x="200" y="50">
     <field name="KEY_OPTION">space</field>
@@ -22,7 +22,7 @@
       </block>
     </next>
   </block>
-  
+
   <!-- 当角色被点击时 -->
   <block type="when_sprite_clicked" x="350" y="50">
     <next>
@@ -31,10 +31,10 @@
       </block>
     </next>
   </block>
-  
+
   <!-- 停止程序 -->
   <block type="stop_program" x="500" y="50"></block>
-  
+
   <!-- 当消息接收时 -->
   <block type="when_message_received" x="650" y="50">
     <field name="MESSAGE_NAME">消息</field>
@@ -44,12 +44,12 @@
       </block>
     </next>
   </block>
-  
+
   <!-- 广播消息 -->
   <block type="broadcast_message" x="800" y="50">
     <field name="MESSAGE_NAME">消息</field>
   </block>
-  
+
   <!-- 广播消息并等待 -->
   <block type="broadcast_message_and_wait" x="950" y="50">
     <field name="MESSAGE_NAME">消息</field>
@@ -59,142 +59,142 @@
       </block>
     </value>
   </block>
-  
+
   <!-- ===== 动作块 ===== -->
-  
+
   <!-- 移动到指定位置 -->
   <block type="move_to" x="50" y="150">
     <field name="X">100</field>
     <field name="Y">100</field>
   </block>
-  
+
   <!-- 移动到指定位置（动画） -->
   <block type="move_to_animated" x="200" y="150">
     <field name="X">100</field>
     <field name="Y">100</field>
     <field name="DURATION">2</field>
   </block>
-  
+
   <!-- 移动X步 -->
   <block type="move_x_steps" x="350" y="150">
     <field name="STEPS">10</field>
   </block>
-  
+
   <!-- 移动Y步 -->
   <block type="move_y_steps" x="500" y="150">
     <field name="STEPS">10</field>
   </block>
-  
+
   <!-- 移动到随机位置 -->
   <block type="move_to_random" x="650" y="150"></block>
-  
+
   <!-- 移动到鼠标位置 -->
   <block type="move_to_mouse" x="800" y="150"></block>
-  
+
   <!-- 旋转 -->
   <block type="rotate" x="950" y="150">
     <field name="DEGREES">90</field>
   </block>
-  
+
   <!-- 指向方向 -->
   <block type="point_in_direction" x="50" y="250">
     <field name="DIRECTION">90</field>
   </block>
-  
+
   <!-- 指向鼠标 -->
   <block type="point_towards_mouse" x="200" y="250"></block>
-  
+
   <!-- 指向精灵 -->
   <block type="point_towards_sprite" x="350" y="250">
     <field name="TARGET_SPRITE">none</field>
   </block>
-  
+
   <!-- 设置X坐标 -->
   <block type="set_x" x="500" y="250">
     <field name="X">0</field>
   </block>
-  
+
   <!-- 设置Y坐标 -->
   <block type="set_y" x="650" y="250">
     <field name="Y">0</field>
   </block>
-  
+
   <!-- 获取X坐标 -->
   <block type="get_x" x="800" y="250"></block>
-  
+
   <!-- 获取Y坐标 -->
   <block type="get_y" x="950" y="250"></block>
-  
+
   <!-- 改变X坐标 -->
   <block type="change_x" x="50" y="350">
     <field name="X">10</field>
   </block>
-  
+
   <!-- 改变Y坐标 -->
   <block type="change_y" x="200" y="350">
     <field name="Y">10</field>
   </block>
-  
+
   <!-- 碰到边缘就反弹 -->
   <block type="bounce_if_on_edge" x="350" y="350"></block>
-  
+
   <!-- 设置旋转样式 -->
   <block type="set_rotation_style" x="500" y="350">
     <field name="ROTATION_STYLE">all around</field>
   </block>
-  
+
   <!-- 等待 -->
   <block type="wait_seconds" x="650" y="350">
     <field name="SECONDS">1</field>
   </block>
-  
+
   <!-- 切换背景 -->
   <block type="switch_background" x="800" y="350">
     <field name="BACKGROUND">background_1</field>
   </block>
-  
+
   <!-- 切换到指定背景 -->
   <block type="switch_background_to" x="950" y="350">
     <field name="BACKGROUND">background_1</field>
   </block>
-  
+
   <!-- ===== 外观块 ===== -->
-  
+
   <!-- 说 -->
   <block type="looks_say" x="50" y="450">
     <field name="MESSAGE">你好!</field>
   </block>
-  
+
   <!-- 说几秒 -->
   <block type="looks_say_for_secs" x="200" y="450">
     <field name="MESSAGE">你好!</field>
     <field name="SECS">2</field>
   </block>
-  
+
   <!-- 思考 -->
   <block type="looks_think" x="350" y="450">
     <field name="MESSAGE">嗯</field>
   </block>
-  
+
   <!-- 思考几秒 -->
   <block type="looks_think_for_secs" x="500" y="450">
     <field name="MESSAGE">嗯</field>
     <field name="SECS">2</field>
   </block>
-  
+
   <!-- 切换到造型 -->
   <block type="looks_switch_costume" x="650" y="450">
     <field name="COSTUME">costume_1</field>
   </block>
-  
+
   <!-- 下一个造型 -->
   <block type="looks_next_costume" x="800" y="450"></block>
-  
+
   <!-- 造型编号 -->
   <block type="looks_costume_number" x="950" y="450"></block>
-  
+
   <!-- ===== 控制块 ===== -->
-  
+
   <!-- 重复指定次数 -->
   <block type="controls_repeat_ext" x="50" y="550">
     <field name="TIMES">10</field>
@@ -205,7 +205,7 @@
       </block>
     </statement>
   </block>
-  
+
   <!-- 重复直到 -->
   <block type="controls_whileUntil" x="200" y="550">
     <value name="CONDITION">
@@ -220,7 +220,7 @@
       </block>
     </statement>
   </block>
-  
+
   <!-- 重复执行 -->
   <block type="controls_repeat_forever" x="350" y="550">
     <statement name="DO">
@@ -230,7 +230,7 @@
       </block>
     </statement>
   </block>
-  
+
   <!-- 如果 -->
   <block type="controls_if" x="500" y="550">
     <value name="IF0">
@@ -245,7 +245,7 @@
       </block>
     </statement>
   </block>
-  
+
   <!-- 如果否则 -->
   <block type="controls_if_else" x="650" y="550">
     <value name="IF0">
@@ -266,12 +266,12 @@
       </block>
     </statement>
   </block>
-  
+
   <!-- 等待 -->
   <block type="controls_wait" x="800" y="550">
     <field name="SECONDS">1</field>
   </block>
-  
+
   <!-- 等待直到 -->
   <block type="controls_wait_until" x="950" y="550">
     <value name="CONDITION">
@@ -280,64 +280,56 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 停止 -->
   <block type="controls_stop" x="50" y="650">
     <field name="STOP_OPTION">this script</field>
   </block>
-  
+
   <!-- 克隆 -->
   <block type="controls_clone" x="200" y="650"></block>
-  
-  <!-- 删除克隆 -->
-  <block type="controls_delete_clone" x="350" y="650"></block>
-  
-  <!-- 当克隆体启动时 -->
-  <block type="control_start_as_clone" x="500" y="650">
-    <field name="MESSAGE_NAME">克隆启动</field>
-  </block>
-  
+
   <!-- ===== 侦测块 ===== -->
-  
+
   <!-- 碰到颜色 -->
   <block type="sensing_touchingcolor" x="350" y="650">
     <field name="COLOR">#ff0000</field>
   </block>
-  
+
   <!-- 颜色碰到颜色 -->
   <block type="sensing_coloristouchingcolor" x="500" y="650">
     <field name="COLOR1">#ff0000</field>
     <field name="COLOR2">#00ff00</field>
   </block>
-  
+
   <!-- 距离 -->
   <block type="sensing_distance" x="650" y="650">
     <field name="DISTANCETO">mouse-pointer</field>
   </block>
-  
+
   <!-- 按键被按下 -->
   <block type="sensing_keypressed" x="800" y="650">
     <field name="KEY_OPTION">space</field>
   </block>
-  
+
   <!-- 鼠标被按下 -->
   <block type="sensing_mousedown" x="950" y="650"></block>
-  
+
   <!-- 计时器 -->
   <block type="sensing_timer" x="50" y="750"></block>
-  
+
   <!-- 碰撞检测 -->
   <block type="collision_detection" x="200" y="750">
     <field name="TARGET_SPRITE">edge</field>
   </block>
-  
+
   <!-- ===== 运算块 ===== -->
-  
+
   <!-- 数字输入 -->
   <block type="math_number" x="350" y="750">
     <field name="NUM">0</field>
   </block>
-  
+
   <!-- 加法 -->
   <block type="math_arithmetic" x="500" y="750">
     <field name="OP">ADD</field>
@@ -352,16 +344,16 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 随机数 -->
   <block type="math_random_int" x="650" y="750">
     <field name="FROM">1</field>
     <field name="TO">10</field>
   </block>
-  
+
   <!-- 随机小数 -->
   <block type="math_random_float" x="800" y="750"></block>
-  
+
   <!-- 数学函数 -->
   <block type="math_single" x="950" y="750">
     <field name="OP">ABS</field>
@@ -371,7 +363,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 三角函数 -->
   <block type="math_trig" x="50" y="850">
     <field name="OP">SIN</field>
@@ -381,12 +373,12 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 常量 -->
   <block type="math_constant" x="200" y="850">
     <field name="CONSTANT">PI</field>
   </block>
-  
+
   <!-- 取余 -->
   <block type="math_modulo" x="350" y="850">
     <field name="DIVISOR">2</field>
@@ -396,7 +388,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 约束 -->
   <block type="math_constrain" x="500" y="850">
     <field name="LOW">0</field>
@@ -407,7 +399,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 映射 -->
   <block type="math_map" x="650" y="850">
     <field name="VALUE_TO_MAP">50</field>
@@ -416,7 +408,7 @@
     <field name="TO_LOW">0</field>
     <field name="TO_HIGH">255</field>
   </block>
-  
+
   <!-- 字符串长度 -->
   <block type="text_length" x="800" y="850">
     <value name="TEXT">
@@ -425,7 +417,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 字符串包含 -->
   <block type="text_contains" x="950" y="850">
     <value name="TEXT">
@@ -439,7 +431,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 字符串连接 -->
   <block type="text_join" x="50" y="950">
     <value name="TEXT1">
@@ -453,7 +445,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 字符串截取 -->
   <block type="text_char_at" x="200" y="950">
     <value name="TEXT">
@@ -467,19 +459,19 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 字符串输入 -->
   <block type="text" x="350" y="950">
     <field name="TEXT">Hello</field>
   </block>
-  
+
   <!-- ===== 逻辑块 ===== -->
-  
+
   <!-- 布尔值 -->
   <block type="logic_boolean" x="500" y="950">
     <field name="BOOL">TRUE</field>
   </block>
-  
+
   <!-- 比较运算 -->
   <block type="logic_compare" x="650" y="950">
     <field name="OP">EQ</field>
@@ -494,7 +486,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 逻辑运算 -->
   <block type="logic_operation" x="800" y="950">
     <field name="OP">AND</field>
@@ -509,7 +501,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 逻辑非 -->
   <block type="logic_negate" x="950" y="950">
     <value name="BOOL">
@@ -518,7 +510,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 条件判断 -->
   <block type="logic_ternary" x="50" y="1050">
     <value name="IF">
@@ -537,9 +529,9 @@
       </block>
     </value>
   </block>
-  
+
   <!-- ===== 变量块 ===== -->
-  
+
   <!-- 设置变量 -->
   <block type="variables_set" x="200" y="1050">
     <field name="VAR">变量</field>
@@ -549,7 +541,7 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 改变变量 -->
   <block type="variables_change" x="350" y="1050">
     <field name="VAR">变量</field>
@@ -559,20 +551,86 @@
       </block>
     </value>
   </block>
-  
+
   <!-- 获取变量 -->
   <block type="variables_get" x="500" y="1050">
     <field name="VAR">变量</field>
   </block>
-  
+
   <!-- 显示变量 -->
   <block type="variables_show" x="650" y="1050">
     <field name="VAR">变量</field>
   </block>
-  
+
   <!-- 隐藏变量 -->
   <block type="variables_hide" x="800" y="1050">
     <field name="VAR">变量</field>
   </block>
-  
-</xml> 
+
+</xml>
+用户的原始代码是：
+
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="when_program_starts" id=":1-xp6e=6hYVY(rMWiWR" x="190" y="50" />
+  <block type="controls_repeat_ext" id="$nunVFEipi$YO)/=Lh," x="430" y="70">
+    <field name="TIMES">5</field>
+  </block>
+  <block type="rotate" id="o}zd*5U^;LK}*ka!4l]*" x="450" y="150">
+    <field name="DEGREES">90</field>
+    <next>
+      <block type="wait_seconds" id="Mv0S?%|CQA*tfe0vv_Ei">
+        <field name="SECONDS">1</field>
+      </block>
+    </next>
+  </block>
+  <block type="when_message_received" id="ckabiqrwEl7)P|cFXc0Z" x="190" y="250">
+    <field name="MESSAGE_NAME">x</field>
+    <next>
+      <block type="controls_repeat_ext" id="7PUznmabe1C(R?(sHKi;">
+        <field name="TIMES">10</field>
+        <statement name="DO">
+          <block type="move_x_steps" id="3bCL^O_^lQrg{9|NQ%^">
+            <field name="STEPS">10</field>
+          </block>
+        </statement>
+      </block>
+    </next>
+  </block>
+  <block type="move_to_animated" id="+2L56.nHY!SB|xb6=u/" x="370" y="350">
+    <field name="X">100</field>
+    <field name="Y">180</field>
+    <field name="DURATION">2</field>
+  </block>
+  <block type="when_key_pressed" id="up_key_block" x="50" y="500">
+    <field name="KEY_OPTION">space</field>
+    <next>
+      <block type="move_y_steps" id="move_up_block">
+        <field name="STEPS">-10</field>
+      </block>
+    </next>
+  </block>
+  <block type="when_key_pressed" id="down_key_block" x="250" y="500">
+    <field name="KEY_OPTION">space</field>
+    <next>
+      <block type="move_y_steps" id="move_down_block">
+        <field name="STEPS">10</field>
+      </block>
+    </next>
+  </block>
+  <block type="when_key_pressed" id="left_key_block" x="50" y="600">
+    <field name="KEY_OPTION">space</field>
+    <next>
+      <block type="move_x_steps" id="move_left_block">
+        <field name="STEPS">-10</field>
+      </block>
+    </next>
+  </block>
+  <block type="when_key_pressed" id="right_key_block" x="250" y="600">
+    <field name="KEY_OPTION">space</field>
+    <next>
+      <block type="move_x_steps" id="move_right_block">
+        <field name="STEPS">10</field>
+      </block>
+    </next>
+  </block>
+</xml>

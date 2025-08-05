@@ -172,9 +172,9 @@ function broadcastMessage(messageName, senderId = null) {
     }
     
     // 显示通知
-    if (typeof showNotification === 'function') {
-        showNotification(`广播消息: ${messageName}`, 2000, 'info');
-    }
+    // if (typeof showNotification === 'function') {
+    //     showNotification(`广播消息: ${messageName}`, 2000, 'info');
+    // }
     
     return messageRecord;
 }

@@ -97,7 +97,9 @@ class AIChat {
         const history = this.chatHistory.get(this.currentSpriteId) || [];
         
         history.forEach(message => {
-            this.addMessageToUI(message.content, message.role, message.timestamp);
+            // 过滤掉消息中的XML内容
+            const filteredContent = this.filterXmlContent(message.content);
+            this.addMessageToUI(filteredContent, message.role, message.timestamp);
         });
 
         // 滚动到底部
@@ -111,25 +113,23 @@ class AIChat {
         
         if (!message || this.isLoading) return;
 
-        // 添加用户消息到UI
+        // 只添加到UI，不保存到历史
         this.addMessageToUI(message, 'user');
         input.value = '';
-
-        // 保存用户消息到历史记录
-        this.saveMessage(message, 'user');
 
         // 显示加载状态
         this.isLoading = true;
         this.setSendButtonState(true);
 
         try {
-            // 调用ChatGPT API
+            // 立即显示加载动画
+            this.updateAssistantMessage("");
+            
+            // 调用WebSocket API
             const response = await this.callChatGPT(message);
             
-            // 添加AI回复到UI
-            this.addMessageToUI(response, 'assistant');
-            
-            // 保存AI回复到历史记录
+            // 收到AI回复后，再保存本轮用户消息和AI回复到历史记录
+            this.saveMessage(message, 'user');
             this.saveMessage(response, 'assistant');
             
         } catch (error) {
@@ -143,39 +143,173 @@ class AIChat {
 
     // 调用ChatGPT API
     async callChatGPT(message) {
-        // 检查是否启用模拟模式或没有API密钥
-        if (CONFIG.ENABLE_MOCK_MODE || CONFIG.OPENAI_API_KEY === 'your-openai-api-key') {
-            return this.getMockResponse(message);
-        }
+        // 总是使用WebSocket连接，不再使用模拟模式
+        // if (CONFIG.ENABLE_MOCK_MODE || CONFIG.OPENAI_API_KEY === 'your-openai-api-key') {
+        //     return this.getMockResponse(message);
+        // }
 
-        // 构建系统提示词
-        const systemPrompt = CONFIG.SYSTEM_PROMPT + `\n\n当前精灵的名称是：${this.getCurrentSpriteName()}。`;
+        return new Promise(async (resolve, reject) => {
+            const url = "wss://ws.coding61.com";
+            // console.log("开始创建WebSocket连接到:", url);
+            
+            // 读取XML文件内容
+            let blocksXmlContent = "";
+            try {
+                const response = await fetch('all-blocks-xml.xml');
+                blocksXmlContent = await response.text();
+            } catch (error) {
+                console.error('读取XML文件失败:', error);
+                blocksXmlContent = "无法读取积木块定义文件";
+            }
+            
+            // 获取当前精灵的聊天历史
+            const history = this.chatHistory.get(this.currentSpriteId) || [];
+            
+            // 构建prompt数组
+            const prompt = [];
+            
+            // 添加system消息
+            const systemMessage = `你是一个google blockly的专家，现在需要根据用户的需要，更改代码。你可以使用的积木块和定义如下：
 
-        const requestBody = {
-            model: CONFIG.CHAT_MODEL,
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: message }
-            ],
-            max_tokens: 1000,
-            temperature: 0.7
-        };
+${blocksXmlContent}
 
-        const response = await fetch(CONFIG.OPENAI_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
-            },
-            body: JSON.stringify(requestBody)
+你根据用户的需求更改代码。
+
+请输出更改后的xml，并说明为什么做这样的更改。注意对于不运行的积木（未连接的积木），不用管它，放在原处。
+
+先输出原因，再输出更改后的xml，便于我用程序解析。
+
+当前用户的代码为：${this.getCurrentSpriteCode()}`;
+            
+            prompt.push({
+                role: "system",
+                content: systemMessage
+            });
+            
+            // 添加历史消息到prompt
+            history.forEach(msg => {
+                prompt.push({
+                    role: msg.role,
+                    content: msg.content
+                });
+            });
+            
+            // 添加当前用户消息到prompt
+            prompt.push({
+                role: "user",
+                content: message
+            });
+            
+            // console.log("getCompletion prompt: ", prompt);
+            
+            const data = {
+                command: "completion_with_vision",
+                prompt: JSON.stringify(prompt),
+            };
+
+            let single = "";
+            let isComplete = false;
+
+            // console.log("创建WebSocket实例...");
+            const websocket = new WebSocket(url);
+
+            websocket.onopen = () => {
+                // console.log("WebSocket连接已建立，发送数据:", data);
+                websocket.send(JSON.stringify(data));
+            };
+
+            websocket.onmessage = (event) => {
+                // console.log("收到WebSocket消息:", event.data);
+                if (event.data == "[CLOSE]") {
+                    // console.log("收到关闭信号，完成接收");
+                    isComplete = true;
+                    websocket.close();
+                    
+                    // 检查是否包含XML代码并应用
+                    this.processCompletedResponse(single);
+                    
+                    resolve(single);
+                    return;
+                }
+                
+                try {
+                    // 解析JSON对象
+                    const messageData = JSON.parse(event.data);
+                    if (messageData.completion !== undefined) {
+                        single += messageData.completion;
+                        // console.log("累积的回复内容:", single);
+                        
+                        // 检查是否包含XML代码
+                        if (this.containsXmlCode(single)) {
+                            // 过滤掉XML代码，只保留解释文字
+                            const filteredResponse = this.filterXmlContent(single);
+                            // 显示更改动画，但保留前面的解释文字
+                            this.showCodeChangingAnimationWithExplanation(filteredResponse);
+                        } else {
+                            // 实时更新UI显示，也要过滤掉可能的XML内容
+                            const filteredResponse = this.filterXmlContent(single);
+                            this.updateAssistantMessage(filteredResponse);
+                        }
+                    }
+                } catch (error) {
+                    console.error("解析WebSocket消息失败:", error, "原始数据:", event.data);
+                    // 如果解析失败，按原来的方式处理
+                    single += event.data;
+                    // console.log("累积的回复内容:", single);
+                    this.updateAssistantMessage(single);
+                }
+            };
+
+            websocket.onerror = (error) => {
+                console.error('WebSocket错误:', error);
+                reject(new Error('WebSocket连接错误'));
+            };
+
+            websocket.onclose = (event) => {
+                // console.log("WebSocket连接关闭，代码:", event.code, "原因:", event.reason);
+                if (!isComplete) {
+                    reject(new Error('WebSocket连接意外关闭'));
+                }
+            };
         });
+    }
 
-        if (!response.ok) {
-            throw new Error(`API请求失败: ${response.status}`);
+    // 更新助手消息的显示（用于progressive式显示）
+    updateAssistantMessage(content) {
+        const chatMessages = document.getElementById('chatMessages');
+        let assistantMessage = chatMessages.querySelector('.chat-message.assistant:last-child');
+        
+        if (!assistantMessage) {
+            // 如果没有助手消息，创建一个新的
+            assistantMessage = document.createElement('div');
+            assistantMessage.className = 'chat-message assistant';
+            assistantMessage.innerHTML = `
+                <div class="message-content">
+                    <div class="loading-animation">
+                        <div class="loading-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
+            `;
+            chatMessages.appendChild(assistantMessage);
         }
-
-        const data = await response.json();
-        return data.choices[0].message.content;
+        
+        // 更新消息内容
+        const messageContent = assistantMessage.querySelector('.message-content');
+        
+        // 如果有内容，移除加载动画并显示实际内容
+        if (content && content.trim()) {
+            // 过滤掉XML内容
+            const filteredContent = this.filterXmlContent(content);
+            messageContent.innerHTML = this.escapeHtml(filteredContent);
+        }
+        
+        // 滚动到底部
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
     // 模拟AI响应（用于测试）
@@ -221,6 +355,264 @@ class AIChat {
         return currentSprite ? currentSprite.name : '未知精灵';
     }
 
+    // 获取当前精灵的代码
+    getCurrentSpriteCode() {
+        if (!this.currentSpriteId) {
+            return '<xml xmlns="https://developers.google.com/blockly/xml"></xml>';
+        }
+        
+        const currentSprite = sprites.find(s => s.id === this.currentSpriteId);
+        if (!currentSprite) {
+            return '<xml xmlns="https://developers.google.com/blockly/xml"></xml>';
+        }
+        
+        // 获取sprite的XML代码
+        if (currentSprite.xmlCode) {
+            return currentSprite.xmlCode;
+        }
+        
+        // 如果没有XML代码，尝试从Blockly工作区获取
+        if (typeof workspace !== 'undefined' && workspace) {
+            try {
+                let xml;
+                let xmlText;
+                
+                // 从工作区获取XML DOM - 兼容新旧版本的Blockly API
+                if (Blockly.Xml && Blockly.Xml.workspaceToDom) {
+                    xml = Blockly.Xml.workspaceToDom(workspace);
+                } else if (Blockly.utils && Blockly.utils.xml) {
+                    xml = Blockly.utils.xml.workspaceToDom(workspace);
+                } else {
+                    throw new Error('Blockly workspaceToDom API not found');
+                }
+                
+                // 将DOM转换为文本 - 兼容新旧版本的Blockly API
+                if (Blockly.Xml && Blockly.Xml.domToText) {
+                    xmlText = Blockly.Xml.domToText(xml);
+                } else if (Blockly.utils && Blockly.utils.xml) {
+                    xmlText = Blockly.utils.xml.domToText(xml);
+                } else {
+                    throw new Error('Blockly domToText API not found');
+                }
+                
+                return xmlText;
+            } catch (error) {
+                console.error('获取工作区XML失败:', error);
+            }
+        }
+        
+        // 默认返回空XML
+        return '<xml xmlns="https://developers.google.com/blockly/xml"></xml>';
+    }
+
+    // 检测是否包含XML代码
+    containsXmlCode(text) {
+        // 检测{{{ }}}格式
+        if (text.includes('{{{') && text.includes('}}}')) {
+            return true;
+        }
+        
+        // 检测```xml格式
+        if (text.includes('```xml') && text.includes('```')) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    // 显示代码更改动画
+    showCodeChangingAnimation() {
+        const chatMessages = document.getElementById('chatMessages');
+        let assistantMessage = chatMessages.querySelector('.chat-message.assistant:last-child');
+        
+        if (!assistantMessage) {
+            assistantMessage = document.createElement('div');
+            assistantMessage.className = 'chat-message assistant';
+            chatMessages.appendChild(assistantMessage);
+        }
+        
+        assistantMessage.innerHTML = `
+            <div class="message-content">
+                <div class="code-changing-animation">
+                    <div class="changing-icon">⚙️</div>
+                    <div class="changing-text">正在帮你更改代码</div>
+                    <div class="changing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="message-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
+        `;
+        
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // 显示代码更改动画，并保留前面的解释文字
+    showCodeChangingAnimationWithExplanation(explanation) {
+        const chatMessages = document.getElementById('chatMessages');
+        let assistantMessage = chatMessages.querySelector('.chat-message.assistant:last-child');
+        
+        if (!assistantMessage) {
+            assistantMessage = document.createElement('div');
+            assistantMessage.className = 'chat-message assistant';
+            chatMessages.appendChild(assistantMessage);
+        }
+
+        // 更新消息内容，只显示解释文字和动画
+        assistantMessage.innerHTML = `
+            <div class="message-content">
+                ${explanation ? `<div class="code-changing-explanation">${this.escapeHtml(explanation)}</div>` : ''}
+                <div class="code-changing-animation">
+                    <div class="changing-icon">⚙️</div>
+                    <div class="changing-text">正在帮你更改代码</div>
+                    <div class="changing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="message-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
+        `;
+        
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // 处理完成的响应
+    processCompletedResponse(response) {
+        let xmlCode = null;
+        let explanation = "";
+        
+        // 尝试提取{{{ }}}格式的XML代码
+        const xmlMatch1 = response.match(/\{\{\{([\s\S]*?)\}\}\}/);
+        if (xmlMatch1) {
+            xmlCode = xmlMatch1[1].trim();
+            explanation = response.replace(/\{\{\{[\s\S]*?\}\}\}/, '').trim();
+        }
+        
+        // 如果没有找到，尝试提取```xml格式的XML代码
+        if (!xmlCode) {
+            const xmlMatch2 = response.match(/```xml\s*([\s\S]*?)\s*```/);
+            if (xmlMatch2) {
+                xmlCode = xmlMatch2[1].trim();
+                explanation = response.replace(/```xml\s*[\s\S]*?\s*```/, '').trim();
+            }
+        }
+        
+        if (xmlCode) {
+            // 应用XML代码到当前sprite
+            this.applyXmlToSprite(xmlCode);
+            
+            // 过滤解释文字，删除XML相关内容
+            const filteredExplanation = this.filterXmlContent(explanation);
+            
+            // 显示完成消息，保留过滤后的解释文字
+            this.showCompletionMessageWithExplanation(filteredExplanation);
+            
+            // 保存过滤后的解释文字到聊天历史
+            this.saveMessage(filteredExplanation, 'assistant');
+        } else {
+            // 如果没有XML代码，显示普通回复
+            this.updateAssistantMessage(response);
+            this.saveMessage(response, 'assistant');
+        }
+    }
+
+    // 应用XML代码到sprite
+    applyXmlToSprite(xmlCode) {
+        if (!this.currentSpriteId) {
+            console.error('没有选中的sprite');
+            return;
+        }
+        
+        const currentSprite = sprites.find(s => s.id === this.currentSpriteId);
+        if (!currentSprite) {
+            console.error('找不到当前sprite');
+            return;
+        }
+        
+        try {
+            // 更新sprite的XML代码
+            currentSprite.xmlCode = xmlCode;
+            
+            // 如果工作区存在，也更新工作区
+            if (typeof workspace !== 'undefined' && workspace) {
+                // 清空当前工作区
+                workspace.clear();
+                
+                // 解析并加载新的XML - 兼容新旧版本的Blockly API
+                let xml;
+                if (Blockly.utils && Blockly.utils.xml) {
+                    // 新版本Blockly
+                    xml = Blockly.utils.xml.textToDom(xmlCode);
+                } else if (Blockly.Xml && Blockly.Xml.textToDom) {
+                    // 旧版本Blockly
+                    xml = Blockly.Xml.textToDom(xmlCode);
+                } else {
+                    throw new Error('Blockly XML API not found');
+                }
+                
+                // 加载XML到工作区
+                if (Blockly.Xml && Blockly.Xml.domToWorkspace) {
+                    Blockly.Xml.domToWorkspace(xml, workspace);
+                } else if (Blockly.utils && Blockly.utils.xml) {
+                    Blockly.utils.xml.domToWorkspace(xml, workspace);
+                }
+            }
+            
+            console.log('XML代码已应用到sprite:', currentSprite.name);
+            
+        } catch (error) {
+            console.error('应用XML代码失败:', error);
+        }
+    }
+
+    // 显示完成消息
+    showCompletionMessage() {
+        const chatMessages = document.getElementById('chatMessages');
+        let assistantMessage = chatMessages.querySelector('.chat-message.assistant:last-child');
+        
+        if (assistantMessage) {
+            assistantMessage.innerHTML = `
+                <div class="message-content">
+                    <div class="completion-message">
+                        <div class="completion-icon">✅</div>
+                        <div class="completion-text">代码已经帮你改完了</div>
+                    </div>
+                </div>
+                <div class="message-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
+            `;
+        }
+        
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // 显示完成消息，并保留前面的解释文字
+    showCompletionMessageWithExplanation(explanation) {
+        const chatMessages = document.getElementById('chatMessages');
+        let assistantMessage = chatMessages.querySelector('.chat-message.assistant:last-child');
+        
+        if (assistantMessage) {
+            // 再次过滤掉可能的XML内容
+            const filteredExplanation = this.filterXmlContent(explanation);
+            
+            assistantMessage.innerHTML = `
+                <div class="message-content">
+                    ${filteredExplanation ? `<div class="completion-explanation">${this.escapeHtml(filteredExplanation)}</div>` : ''}
+                    <div class="completion-message">
+                        <div class="completion-icon">✅</div>
+                        <div class="completion-text">代码已经帮你改完了</div>
+                    </div>
+                </div>
+                <div class="message-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
+            `;
+        }
+        
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
     // 添加消息到UI
     addMessageToUI(content, role, timestamp = new Date()) {
         const chatMessages = document.getElementById('chatMessages');
@@ -231,8 +623,11 @@ class AIChat {
             timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : 
             timestamp;
 
+        // 过滤掉XML内容
+        const filteredContent = this.filterXmlContent(content);
+
         messageDiv.innerHTML = `
-            <div class="message-content">${this.escapeHtml(content)}</div>
+            <div class="message-content">${this.escapeHtml(filteredContent)}</div>
             <div class="message-time">${timeStr}</div>
         `;
         
@@ -299,6 +694,47 @@ class AIChat {
         link.href = URL.createObjectURL(dataBlob);
         link.download = `chat-history-${spriteId}.json`;
         link.click();
+    }
+
+    // 过滤掉XML代码，只保留解释文字
+    filterXmlContent(text) {
+        let explanation = text;
+        
+        // 尝试提取```xml格式的XML代码
+        const xmlMatch = text.match(/```xml\s*([\s\S]*?)\s*```/);
+        if (xmlMatch) {
+            // 获取XML代码之前的所有内容作为解释
+            const xmlStartIndex = text.indexOf('```xml');
+            explanation = text.substring(0, xmlStartIndex).trim();
+        } else {
+            // 尝试提取{{{ }}}格式的XML代码
+            const xmlMatch2 = text.match(/\{\{\{([\s\S]*?)\}\}\}/);
+            if (xmlMatch2) {
+                const xmlStartIndex = text.indexOf('{{{');
+                explanation = text.substring(0, xmlStartIndex).trim();
+            }
+        }
+        
+        // 删除常见的XML提示文字
+        explanation = explanation.replace(/更改后的xml如下：?/g, '');
+        explanation = explanation.replace(/更改后的代码如下：?/g, '');
+        explanation = explanation.replace(/修改后的xml如下：?/g, '');
+        explanation = explanation.replace(/修改后的代码如下：?/g, '');
+        explanation = explanation.replace(/更新后的xml如下：?/g, '');
+        explanation = explanation.replace(/更新后的代码如下：?/g, '');
+        explanation = explanation.replace(/最终的xml如下：?/g, '');
+        explanation = explanation.replace(/最终的代码如下：?/g, '');
+        explanation = explanation.replace(/代码如下：?/g, '');
+        explanation = explanation.replace(/xml如下：?/g, '');
+        
+        // 删除可能残留的XML内容
+        explanation = explanation.replace(/```xml[\s\S]*?```/g, '');
+        explanation = explanation.replace(/\{\{\{[\s\S]*?\}\}\}/g, '');
+        
+        // 清理多余的空行和空格
+        explanation = explanation.replace(/\n\s*\n/g, '\n').trim();
+        
+        return explanation;
     }
 }
 
