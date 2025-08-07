@@ -1,0 +1,589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <!-- 
+    Blockly 积木块 XML 定义文件
+    包含所有可用的积木块及其说明
+    按功能分类组织
+  -->
+  
+  <!-- ===== 事件类积木块 ===== -->
+  <category name="事件" colour="#FFBF00" custom="EVENTS">
+    <block type="when_program_starts">
+      <!-- 当程序开始时 - 程序开始执行时触发 -->
+    </block>
+    <block type="when_key_pressed">
+      <field name="KEY_OPTION">space</field>
+      <!-- 当按下键时 - 当指定按键被按下时触发 -->
+    </block>
+    <block type="when_sprite_clicked">
+      <!-- 当角色被点击时 - 当角色被点击时触发 -->
+    </block>
+    <block type="when_message_received">
+      <field name="MESSAGE_NAME">消息</field>
+      <!-- 当消息被接收时 - 当接收到指定消息时触发 -->
+    </block>
+  </category>
+
+  <!-- ===== 控制类积木块 ===== -->
+  <category name="控制" colour="#FF8C1A" custom="CONTROL">
+    <block type="stop_program">
+      <!-- 停止程序 - 停止程序执行 -->
+    </block>
+    <block type="wait_seconds">
+      <field name="SECONDS">1</field>
+      <!-- 等待秒数 - 等待指定秒数 -->
+    </block>
+    <block type="controls_repeat_ext">
+      <field name="TIMES">10</field>
+      <!-- 重复执行 - 重复执行指定次数 -->
+    </block>
+    <block type="controls_whileUntil">
+      <field name="MODE">WHILE</field>
+      <!-- 重复直到 - 重复执行直到条件为真 -->
+    </block>
+    <block type="controls_repeat_forever">
+      <!-- 重复执行 - 无限重复执行 -->
+    </block>
+    <block type="controls_if">
+      <!-- 如果 - 如果条件为真，执行代码 -->
+    </block>
+    <block type="controls_if_else">
+      <!-- 如果否则 - 如果条件为真执行代码，否则执行其他代码 -->
+    </block>
+    <block type="controls_wait">
+      <field name="SECONDS">1</field>
+      <!-- 等待 - 等待指定秒数 -->
+    </block>
+    <block type="controls_wait_until">
+      <!-- 等待直到 - 等待直到条件为真 -->
+    </block>
+    <block type="controls_stop">
+      <field name="STOP_OPTION">all</field>
+      <!-- 停止 - 停止执行 -->
+    </block>
+  </category>
+
+  <!-- ===== 运动类积木块 ===== -->
+  <category name="运动" colour="#4C97FF" custom="MOTION">
+    <block type="move_to">
+      <field name="X">0</field>
+      <field name="Y">0</field>
+      <!-- 移动到 - 移动到指定坐标 -->
+    </block>
+    <block type="move_to_animated">
+      <field name="X">0</field>
+      <field name="Y">0</field>
+      <field name="DURATION">2</field>
+      <!-- 动画移动到 - 动画移动到指定坐标 -->
+    </block>
+    <block type="move_x_steps">
+      <field name="STEPS">10</field>
+      <!-- 移动X步 - 在X方向移动指定步数 -->
+    </block>
+    <block type="move_y_steps">
+      <field name="STEPS">10</field>
+      <!-- 移动Y步 - 在Y方向移动指定步数 -->
+    </block>
+    <block type="move_to_random">
+      <!-- 移动到随机位置 - 移动到舞台上的随机位置 -->
+    </block>
+    <block type="move_to_mouse">
+      <!-- 移动到鼠标 - 移动到鼠标指针位置 -->
+    </block>
+    <block type="rotate">
+      <field name="DEGREES">90</field>
+      <!-- 旋转 - 旋转指定角度 -->
+    </block>
+    <block type="point_in_direction">
+      <field name="DIRECTION">90</field>
+      <!-- 指向方向 - 指向指定方向 -->
+    </block>
+    <block type="point_towards_mouse">
+      <!-- 指向鼠标 - 指向鼠标指针方向 -->
+    </block>
+    <block type="point_towards_sprite">
+      <field name="TARGET_SPRITE">精灵1</field>
+      <!-- 指向精灵 - 指向指定精灵 -->
+    </block>
+    <block type="set_x">
+      <field name="X">0</field>
+      <!-- 设置X坐标 - 设置X坐标 -->
+    </block>
+    <block type="set_y">
+      <field name="Y">0</field>
+      <!-- 设置Y坐标 - 设置Y坐标 -->
+    </block>
+    <block type="get_x">
+      <!-- 获取X坐标 - 获取当前X坐标 -->
+    </block>
+    <block type="get_y">
+      <!-- 获取Y坐标 - 获取当前Y坐标 -->
+    </block>
+    <block type="change_x">
+      <field name="X">10</field>
+      <!-- 改变X坐标 - 改变X坐标 -->
+    </block>
+    <block type="change_y">
+      <field name="Y">10</field>
+      <!-- 改变Y坐标 - 改变Y坐标 -->
+    </block>
+    <block type="bounce_if_on_edge">
+      <!-- 碰到边缘反弹 - 碰到舞台边缘时反弹 -->
+    </block>
+    <block type="set_rotation_style">
+      <field name="STYLE">all around</field>
+      <!-- 设置旋转样式 - 设置精灵的旋转样式 -->
+    </block>
+  </category>
+
+  <!-- ===== 外观类积木块 ===== -->
+  <category name="外观" colour="#9966FF" custom="LOOKS">
+    <block type="looks_say">
+      <field name="TEXT">你好！</field>
+      <!-- 说 - 让角色说话 -->
+    </block>
+    <block type="looks_say_for_secs">
+      <field name="TEXT">你好！</field>
+      <field name="SECONDS">2</field>
+      <!-- 说秒数 - 让角色说话指定秒数 -->
+    </block>
+    <block type="looks_think">
+      <field name="TEXT">嗯...</field>
+      <!-- 思考 - 让角色思考 -->
+    </block>
+    <block type="looks_think_for_secs">
+      <field name="TEXT">嗯...</field>
+      <field name="SECONDS">2</field>
+      <!-- 思考秒数 - 让角色思考指定秒数 -->
+    </block>
+    <block type="looks_switch_costume">
+      <field name="COSTUME">造型1</field>
+      <!-- 切换造型 - 切换到指定造型 -->
+    </block>
+    <block type="looks_next_costume">
+      <!-- 下一个造型 - 切换到下一个造型 -->
+    </block>
+    <block type="looks_costume_number">
+      <!-- 造型编号 - 获取当前造型的编号 -->
+    </block>
+    <block type="looks_changesizeby">
+      <field name="SIZE">10</field>
+      <!-- 改变大小 - 改变精灵的大小 -->
+    </block>
+    <block type="looks_setsizeto">
+      <field name="SIZE">100</field>
+      <!-- 设置大小 - 设置精灵的大小 -->
+    </block>
+    <block type="looks_changeeffectby">
+      <field name="EFFECT">color</field>
+      <field name="VALUE">25</field>
+      <!-- 改变特效 - 改变图形特效 -->
+    </block>
+    <block type="looks_seteffectto">
+      <field name="EFFECT">color</field>
+      <field name="VALUE">0</field>
+      <!-- 设置特效 - 设置图形特效 -->
+    </block>
+    <block type="looks_cleargraphiceffects">
+      <!-- 清除特效 - 清除所有图形特效 -->
+    </block>
+    <block type="looks_show">
+      <!-- 显示 - 显示精灵 -->
+    </block>
+    <block type="looks_hide">
+      <!-- 隐藏 - 隐藏精灵 -->
+    </block>
+    <block type="looks_gotofrontback">
+      <field name="FRONT_BACK">front</field>
+      <!-- 移到最前/最后 - 改变精灵的图层位置 -->
+    </block>
+    <block type="looks_goforwardbackwardlayers">
+      <field name="FORWARD_BACKWARD">forward</field>
+      <field name="NUM">1</field>
+      <!-- 向前/向后移动图层 - 向前或向后移动图层 -->
+    </block>
+  </category>
+
+  <!-- ===== 声音类积木块 ===== -->
+  <category name="声音" colour="#CF63CF" custom="SOUND">
+    <block type="sound_play">
+      <field name="SOUND">声音1</field>
+      <!-- 播放声音 - 播放指定的声音 -->
+    </block>
+    <block type="sound_play_wait">
+      <field name="SOUND">声音1</field>
+      <!-- 播放声音并等待 - 播放指定的声音并等待播完 -->
+    </block>
+    <block type="sound_stop_all">
+      <!-- 停止所有声音 - 停止所有正在播放的声音 -->
+    </block>
+    <block type="sound_change_effect">
+      <field name="EFFECT">pitch</field>
+      <field name="VALUE">10</field>
+      <!-- 改变音效 - 改变音效参数 -->
+    </block>
+    <block type="sound_set_effect">
+      <field name="EFFECT">pitch</field>
+      <field name="VALUE">100</field>
+      <!-- 设置音效 - 设置音效参数 -->
+    </block>
+    <block type="sound_clear_effects">
+      <!-- 清除音效 - 清除所有音效设置 -->
+    </block>
+    <block type="sound_change_volume">
+      <field name="VOLUME">-10</field>
+      <!-- 改变音量 - 改变音量 -->
+    </block>
+    <block type="sound_set_volume">
+      <field name="VOLUME">100</field>
+      <!-- 设置音量 - 设置音量百分比 -->
+    </block>
+    <block type="sound_volume">
+      <!-- 音量 - 获取当前音量 -->
+    </block>
+  </category>
+
+  <!-- ===== 侦测类积木块 ===== -->
+  <category name="侦测" colour="#5CB1D6" custom="SENSING">
+    <block type="sensing_touchingcolor">
+      <field name="COLOR">#ff0000</field>
+      <!-- 碰到颜色 - 检测是否碰到指定颜色 -->
+    </block>
+    <block type="sensing_coloristouchingcolor">
+      <field name="COLOR">#ff0000</field>
+      <field name="COLOR2">#00ff00</field>
+      <!-- 颜色碰到颜色 - 检测一种颜色是否碰到另一种颜色 -->
+    </block>
+    <block type="sensing_distance">
+      <field name="TARGET">mouse-pointer</field>
+      <!-- 距离 - 获取到指定目标的距离 -->
+    </block>
+    <block type="sensing_keypressed">
+      <field name="KEY_OPTION">space</field>
+      <!-- 按键被按下 - 检测指定按键是否被按下 -->
+    </block>
+    <block type="sensing_mousedown">
+      <!-- 鼠标被按下 - 检测鼠标是否被按下 -->
+    </block>
+    <block type="sensing_timer">
+      <!-- 计时器 - 获取计时器的值 -->
+    </block>
+    <block type="collision_detection">
+      <field name="TARGET_SPRITE">精灵1</field>
+      <!-- 碰撞检测 - 检测是否碰到指定目标 -->
+    </block>
+  </category>
+
+  <!-- ===== 背景类积木块 ===== -->
+  <category name="背景" colour="#4C97FF" custom="BACKGROUND">
+    <block type="switch_background">
+      <field name="BACKGROUND">背景1</field>
+      <!-- 切换背景 - 切换到指定背景 -->
+    </block>
+    <block type="switch_background_to">
+      <field name="BACKGROUND">背景1</field>
+      <!-- 切换到背景 - 切换到指定背景 -->
+    </block>
+  </category>
+
+  <!-- ===== 运算类积木块 ===== -->
+  <category name="运算" colour="#40BF4A" custom="OPERATORS">
+    <block type="math_number">
+      <field name="NUM">0</field>
+      <!-- 数字 - 数字值 -->
+    </block>
+    <block type="math_arithmetic">
+      <field name="OP">ADD</field>
+      <!-- 数学运算 - 基本数学运算 -->
+    </block>
+    <block type="math_random_int">
+      <field name="FROM">1</field>
+      <field name="TO">10</field>
+      <!-- 随机整数 - 生成指定范围内的随机整数 -->
+    </block>
+    <block type="math_random_float">
+      <!-- 随机小数 - 生成0到1之间的随机小数 -->
+    </block>
+    <block type="math_single">
+      <field name="OP">ROOT</field>
+      <!-- 数学函数 - 数学函数运算 -->
+    </block>
+    <block type="math_trig">
+      <field name="OP">SIN</field>
+      <!-- 三角函数 - 三角函数运算 -->
+    </block>
+    <block type="math_constant">
+      <field name="CONSTANT">PI</field>
+      <!-- 数学常数 - 数学常数 -->
+    </block>
+    <block type="math_modulo">
+      <field name="DIVIDEND">7</field>
+      <field name="DIVISOR">4</field>
+      <!-- 取余 - 取余运算 -->
+    </block>
+    <block type="math_constrain">
+      <field name="VALUE">50</field>
+      <field name="LOW">0</field>
+      <field name="HIGH">100</field>
+      <!-- 限制范围 - 将数值限制在指定范围内 -->
+    </block>
+    <block type="math_map">
+      <field name="VALUE">50</field>
+      <field name="LOW1">0</field>
+      <field name="HIGH1">100</field>
+      <field name="LOW2">0</field>
+      <field name="HIGH2">1</field>
+      <!-- 映射 - 将数值从一个范围映射到另一个范围 -->
+    </block>
+  </category>
+
+  <!-- ===== 文本类积木块 ===== -->
+  <category name="文本" colour="#40BF4A" custom="TEXT">
+    <block type="text_length">
+      <field name="TEXT">hello</field>
+      <!-- 文本长度 - 获取文本的长度 -->
+    </block>
+    <block type="text_contains">
+      <field name="TEXT">hello world</field>
+      <field name="SUBSTRING">world</field>
+      <!-- 包含 - 检查文本是否包含指定字符串 -->
+    </block>
+    <block type="text_join">
+      <field name="TEXT1">hello</field>
+      <field name="TEXT2">world</field>
+      <!-- 连接 - 连接两个文本 -->
+    </block>
+    <block type="text_char_at">
+      <field name="TEXT">hello</field>
+      <field name="AT">1</field>
+      <!-- 字符位置 - 获取指定位置的字符 -->
+    </block>
+    <block type="text">
+      <field name="TEXT">hello</field>
+      <!-- 文本 - 文本值 -->
+    </block>
+  </category>
+
+  <!-- ===== 逻辑类积木块 ===== -->
+  <category name="逻辑" colour="#40BF4A" custom="LOGIC">
+    <block type="logic_boolean">
+      <field name="BOOL">TRUE</field>
+      <!-- 布尔值 - 布尔值 -->
+    </block>
+    <block type="logic_compare">
+      <field name="OP">EQ</field>
+      <!-- 比较 - 比较运算 -->
+    </block>
+    <block type="logic_operation">
+      <field name="OP">AND</field>
+      <!-- 逻辑运算 - 逻辑运算 -->
+    </block>
+    <block type="logic_negate">
+      <!-- 逻辑非 - 逻辑非运算 -->
+    </block>
+    <block type="logic_ternary">
+      <!-- 三元运算 - 条件三元运算 -->
+    </block>
+  </category>
+
+  <!-- ===== 变量类积木块 ===== -->
+  <category name="变量" colour="#FF661A" custom="VARIABLES">
+    <block type="variables_set">
+      <field name="VAR">变量1</field>
+      <field name="VALUE">0</field>
+      <!-- 设置变量 - 设置变量的值 -->
+    </block>
+    <block type="variables_change">
+      <field name="VAR">变量1</field>
+      <field name="VALUE">1</field>
+      <!-- 改变变量 - 将变量增加指定值 -->
+    </block>
+    <block type="variables_get">
+      <field name="VAR">变量1</field>
+      <!-- 获取变量 - 获取变量的值 -->
+    </block>
+    <block type="variables_show">
+      <field name="VAR">变量1</field>
+      <!-- 显示变量 - 在舞台上显示变量 -->
+    </block>
+    <block type="variables_hide">
+      <field name="VAR">变量1</field>
+      <!-- 隐藏变量 - 在舞台上隐藏变量 -->
+    </block>
+  </category>
+
+  <!-- ===== 全局变量类积木块 ===== -->
+  <category name="全局变量" colour="#FF661A" custom="GLOBAL_VARIABLES">
+    <block type="global_variables_create">
+      <field name="VAR_NAME">全局变量1</field>
+      <!-- 创建全局变量 - 创建一个新的全局变量 -->
+    </block>
+    <block type="global_variables_set">
+      <field name="VAR_NAME">全局变量1</field>
+      <field name="VALUE">0</field>
+      <!-- 设置全局变量 - 设置全局变量的值 -->
+    </block>
+    <block type="global_variables_change">
+      <field name="VAR_NAME">全局变量1</field>
+      <field name="VALUE">1</field>
+      <!-- 改变全局变量 - 将全局变量增加指定值 -->
+    </block>
+    <block type="global_variables_get">
+      <field name="VAR_NAME">全局变量1</field>
+      <!-- 获取全局变量 - 获取全局变量的值 -->
+    </block>
+  </category>
+
+  <!-- ===== 消息类积木块 ===== -->
+  <category name="消息" colour="#00CCCC" custom="MESSAGING">
+    <block type="broadcast_message">
+      <field name="MESSAGE_NAME">消息</field>
+      <!-- 广播消息 - 广播指定消息 -->
+    </block>
+    <block type="broadcast_message_and_wait">
+      <field name="MESSAGE_NAME">消息</field>
+      <field name="DURATION">1</field>
+      <!-- 广播消息并等待 - 广播消息并等待指定秒数 -->
+    </block>
+  </category>
+
+  <!-- ===== 积木块说明文档 ===== -->
+  <comment>
+    <![CDATA[
+    Blockly 积木块说明文档
+    
+    === 事件类积木块 ===
+    - when_program_starts: 程序开始执行时触发，用于初始化代码
+    - when_key_pressed: 当指定按键被按下时触发，支持空格、方向键、字母键、数字键
+    - when_sprite_clicked: 当角色被点击时触发，用于交互响应
+    - when_message_received: 当接收到指定消息时触发，用于精灵间通信
+    
+    === 控制类积木块 ===
+    - stop_program: 停止程序执行
+    - wait_seconds: 等待指定秒数，用于延时
+    - controls_repeat_ext: 重复执行指定次数
+    - controls_whileUntil: 重复执行直到条件为真
+    - controls_repeat_forever: 无限重复执行
+    - controls_if: 条件判断，如果条件为真执行代码
+    - controls_if_else: 条件判断，如果条件为真执行代码，否则执行其他代码
+    - controls_wait: 等待指定秒数
+    - controls_wait_until: 等待直到条件为真
+    - controls_stop: 停止执行，可选择停止全部或当前脚本
+    
+    === 运动类积木块 ===
+    - move_to: 移动到指定坐标位置
+    - move_to_animated: 动画移动到指定坐标位置
+    - move_x_steps: 在X方向移动指定步数
+    - move_y_steps: 在Y方向移动指定步数
+    - move_to_random: 移动到舞台上的随机位置
+    - move_to_mouse: 移动到鼠标指针位置
+    - rotate: 旋转指定角度
+    - point_in_direction: 指向指定方向（0-360度）
+    - point_towards_mouse: 指向鼠标指针方向
+    - point_towards_sprite: 指向指定精灵方向
+    - set_x: 设置X坐标
+    - set_y: 设置Y坐标
+    - get_x: 获取当前X坐标
+    - get_y: 获取当前Y坐标
+    - change_x: 改变X坐标
+    - change_y: 改变Y坐标
+    - bounce_if_on_edge: 碰到舞台边缘时反弹
+    - set_rotation_style: 设置精灵的旋转样式（all around, left-right, don't rotate）
+    
+    === 外观类积木块 ===
+    - looks_say: 让角色说话，显示对话气泡
+    - looks_say_for_secs: 让角色说话指定秒数
+    - looks_think: 让角色思考，显示思考气泡
+    - looks_think_for_secs: 让角色思考指定秒数
+    - looks_switch_costume: 切换到指定造型
+    - looks_next_costume: 切换到下一个造型
+    - looks_costume_number: 获取当前造型的编号
+    - looks_changesizeby: 改变精灵的大小
+    - looks_setsizeto: 设置精灵的大小
+    - looks_changeeffectby: 改变图形特效（颜色、鱼眼、漩涡、像素化、马赛克、亮度、虚像）
+    - looks_seteffectto: 设置图形特效
+    - looks_cleargraphiceffects: 清除所有图形特效
+    - looks_show: 显示精灵
+    - looks_hide: 隐藏精灵
+    - looks_gotofrontback: 改变精灵的图层位置（移到最前/最后）
+    - looks_goforwardbackwardlayers: 向前或向后移动图层
+    
+    === 声音类积木块 ===
+    - sound_play: 播放指定的声音
+    - sound_play_wait: 播放指定的声音并等待播完
+    - sound_stop_all: 停止所有正在播放的声音
+    - sound_change_effect: 改变音效参数（音调、左右平衡、音量）
+    - sound_set_effect: 设置音效参数
+    - sound_clear_effects: 清除所有音效设置
+    - sound_change_volume: 改变音量
+    - sound_set_volume: 设置音量百分比
+    - sound_volume: 获取当前音量
+    
+    === 侦测类积木块 ===
+    - sensing_touchingcolor: 检测是否碰到指定颜色
+    - sensing_coloristouchingcolor: 检测一种颜色是否碰到另一种颜色
+    - sensing_distance: 获取到指定目标的距离
+    - sensing_keypressed: 检测指定按键是否被按下
+    - sensing_mousedown: 检测鼠标是否被按下
+    - sensing_timer: 获取计时器的值
+    - collision_detection: 检测是否碰到指定目标
+    
+    === 背景类积木块 ===
+    - switch_background: 切换到指定背景
+    - switch_background_to: 切换到指定背景
+    
+    === 运算类积木块 ===
+    - math_number: 数字值
+    - math_arithmetic: 基本数学运算（加、减、乘、除）
+    - math_random_int: 生成指定范围内的随机整数
+    - math_random_float: 生成0到1之间的随机小数
+    - math_single: 数学函数运算（平方根、绝对值、负值、向上取整、向下取整、四舍五入）
+    - math_trig: 三角函数运算（sin、cos、tan、asin、acos、atan）
+    - math_constant: 数学常数（π、e、φ、sqrt(2)、sqrt(½)、∞）
+    - math_modulo: 取余运算
+    - math_constrain: 将数值限制在指定范围内
+    - math_map: 将数值从一个范围映射到另一个范围
+    
+    === 文本类积木块 ===
+    - text_length: 获取文本的长度
+    - text_contains: 检查文本是否包含指定字符串
+    - text_join: 连接两个文本
+    - text_char_at: 获取指定位置的字符
+    - text: 文本值
+    
+    === 逻辑类积木块 ===
+    - logic_boolean: 布尔值（真/假）
+    - logic_compare: 比较运算（等于、不等于、小于、小于等于、大于、大于等于）
+    - logic_operation: 逻辑运算（与、或）
+    - logic_negate: 逻辑非运算
+    - logic_ternary: 条件三元运算
+    
+    === 变量类积木块 ===
+    - variables_set: 设置变量的值
+    - variables_change: 将变量增加指定值
+    - variables_get: 获取变量的值
+    - variables_show: 在舞台上显示变量
+    - variables_hide: 在舞台上隐藏变量
+    
+    === 全局变量类积木块 ===
+    - global_variables_create: 创建一个新的全局变量
+    - global_variables_set: 设置全局变量的值
+    - global_variables_change: 将全局变量增加指定值
+    - global_variables_get: 获取全局变量的值
+    
+    === 消息类积木块 ===
+    - broadcast_message: 广播指定消息，用于精灵间通信
+    - broadcast_message_and_wait: 广播消息并等待指定秒数
+    
+    使用说明：
+    1. 这些积木块可以组合使用，创建复杂的程序逻辑
+    2. 事件类积木块通常作为程序的入口点
+    3. 控制类积木块用于控制程序流程
+    4. 运动、外观、声音类积木块用于控制精灵的行为
+    5. 侦测类积木块用于获取环境信息
+    6. 运算、文本、逻辑类积木块用于数据处理和判断
+    7. 变量类积木块用于存储和管理数据
+    8. 消息类积木块用于精灵间通信
+    ]]>
+  </comment>
+</xml> 

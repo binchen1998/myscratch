@@ -155,7 +155,7 @@ class AIChat {
             // 读取XML文件内容
             let blocksXmlContent = "";
             try {
-                const response = await fetch('all-blocks-xml.xml');
+                const response = await fetch('/src/blockly/all-blocks-xml.xml');
                 blocksXmlContent = await response.text();
             } catch (error) {
                 console.error('读取XML文件失败:', error);
@@ -604,6 +604,7 @@ ${blocksXmlContent}
                     <div class="completion-message">
                         <div class="completion-icon">✅</div>
                         <div class="completion-text">代码已经帮你改完了</div>
+                        <button class="view-code-btn" onclick="aiChat.showGeneratedCode()">查看代码</button>
                     </div>
                 </div>
                 <div class="message-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</div>
@@ -694,6 +695,166 @@ ${blocksXmlContent}
         link.href = URL.createObjectURL(dataBlob);
         link.download = `chat-history-${spriteId}.json`;
         link.click();
+    }
+
+    // 显示生成的代码对话框
+    showGeneratedCode() {
+        if (!this.currentSpriteId) {
+            alert('没有选中的精灵');
+            return;
+        }
+        
+        const currentSprite = sprites.find(s => s.id === this.currentSpriteId);
+        if (!currentSprite || !currentSprite.xmlCode) {
+            alert('没有找到生成的代码');
+            return;
+        }
+        
+        // 创建代码查看对话框
+        this.createCodeViewDialog(currentSprite.xmlCode, currentSprite.name);
+    }
+    
+    // 创建代码查看对话框
+    createCodeViewDialog(xmlCode, spriteName) {
+        // 移除已存在的对话框
+        const existingDialog = document.getElementById('codeViewDialog');
+        if (existingDialog) {
+            existingDialog.remove();
+        }
+        
+        // 格式化XML代码
+        const formattedXml = this.formatXmlCode(xmlCode);
+        
+        // 创建对话框HTML
+        const dialogHTML = `
+            <div id="codeViewDialog" class="code-view-dialog">
+                <div class="code-view-content">
+                    <div class="code-view-header">
+                        <h3>生成的代码 - ${spriteName}</h3>
+                        <div class="code-view-controls">
+                            <button class="code-view-btn copy-btn" onclick="aiChat.copyGeneratedCode()">复制</button>
+                            <button class="code-view-btn close-btn" onclick="aiChat.closeCodeViewDialog()">关闭</button>
+                        </div>
+                    </div>
+                    <div class="code-view-body">
+                        <div class="code-view-info">
+                            <p>AI生成的格式化XML代码：</p>
+                        </div>
+                        <pre class="code-view-editor">${this.escapeHtml(formattedXml)}</pre>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 添加到页面
+        document.body.insertAdjacentHTML('beforeend', dialogHTML);
+        
+        // 显示对话框
+        const dialog = document.getElementById('codeViewDialog');
+        dialog.style.display = 'flex';
+    }
+    
+    // 格式化XML代码
+    formatXmlCode(xmlString) {
+        try {
+            // 使用DOMParser解析XML
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+            
+            // 检查解析错误
+            const parseError = xmlDoc.getElementsByTagName('parsererror');
+            if (parseError.length > 0) {
+                console.warn('XML解析错误:', parseError[0].textContent);
+                return xmlString; // 返回原始字符串
+            }
+            
+            // 格式化XML
+            return this.prettyPrintXml(xmlDoc);
+        } catch (error) {
+            console.error('XML格式化失败:', error);
+            return xmlString; // 返回原始字符串
+        }
+    }
+    
+    // 美化XML输出
+    prettyPrintXml(xmlDoc) {
+        const serializer = new XMLSerializer();
+        const xmlString = serializer.serializeToString(xmlDoc);
+        
+        // 更好的XML格式化
+        let formatted = xmlString
+            .replace(/></g, '>\n<')  // 在标签之间添加换行
+            .replace(/\n\s*\n/g, '\n')  // 移除多余的空行
+            .split('\n');
+        
+        let indentLevel = 0;
+        formatted = formatted.map(line => {
+            const trimmedLine = line.trim();
+            
+            // 跳过空行
+            if (!trimmedLine) return '';
+            
+            // 检查是否是结束标签
+            if (trimmedLine.startsWith('</')) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+            
+            // 添加缩进
+            const indent = '  '.repeat(indentLevel);
+            const result = indent + trimmedLine;
+            
+            // 检查是否是开始标签（不是自闭合标签）
+            if (trimmedLine.startsWith('<') && !trimmedLine.startsWith('</') && !trimmedLine.endsWith('/>')) {
+                indentLevel++;
+            }
+            
+            return result;
+        }).filter(line => line !== ''); // 移除空行
+        
+        return formatted.join('\n');
+    }
+    
+    // 复制生成的代码
+    copyGeneratedCode() {
+        const codeEditor = document.querySelector('.code-view-editor');
+        if (codeEditor) {
+            try {
+                // 选择文本
+                const range = document.createRange();
+                range.selectNodeContents(codeEditor);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // 复制到剪贴板
+                document.execCommand('copy');
+                
+                // 清除选择
+                selection.removeAllRanges();
+                
+                // 显示成功提示
+                if (typeof showNotification === 'function') {
+                    showNotification('代码已复制到剪贴板', 2000);
+                } else {
+                    alert('代码已复制到剪贴板');
+                }
+            } catch (error) {
+                console.error('复制失败:', error);
+                if (typeof showNotification === 'function') {
+                    showNotification('复制失败: ' + error.message, 3000);
+                } else {
+                    alert('复制失败: ' + error.message);
+                }
+            }
+        }
+    }
+    
+    // 关闭代码查看对话框
+    closeCodeViewDialog() {
+        const dialog = document.getElementById('codeViewDialog');
+        if (dialog) {
+            dialog.remove();
+        }
     }
 
     // 过滤掉XML代码，只保留解释文字

@@ -18,7 +18,7 @@ function initializeWorker() {
     try {
         console.log('尝试创建Worker...');
         // 尝试使用绝对路径
-        const workerPath = new URL('sprite-worker.js', window.location.href).href;
+        const workerPath = new URL('src/sprites/sprite-worker.js', window.location.href).href;
         console.log('Worker路径:', workerPath);
         spriteWorker = new Worker(workerPath);
         

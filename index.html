@@ -12,6 +12,7 @@
 <body>
     <!-- 顶部控制栏 -->
     <div class="top-bar">
+        <h1>Coga - AI儿童编程</h1>
         <div class="control-buttons">
             <button id="startBtn" class="control-btn start">▶ 开始</button>
             <button id="stopBtn" class="control-btn stop" disabled>⏹ 停止</button>
@@ -19,7 +20,6 @@
             <button id="loadBtn" class="control-btn load">📂 加载</button>
             <button id="soundManagerBtn" class="control-btn sound">🔊 声音管理</button>
         </div>
-        <h1>Coga - AI儿童编程</h1>
     </div>
 
     <!-- 主要内容区域 -->
@@ -29,7 +29,7 @@
             <div class="sprite-info">
                 <span id="currentSpriteName">请选择一个精灵</span>
                 <div class="sprite-buttons">
-                    <button id="codeBtn" class="code-btn" >📄 查看JS代码</button>
+                    <button id="codeBtn" class="code-btn" >📄 查看合并代码</button>
                     <button id="xmlBtn" class="xml-btn" >📋 XML</button>
                     <button id="chatBtn" class="chat-btn" >💬 Chat</button>
                 </div>
@@ -224,19 +224,22 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
-    <script src="core.js"></script>
-    <script src="sprite.js"></script>
-    <script src="canvas.js"></script>
-    <script src="background.js"></script>
-    <script src="blockly-config.js"></script>
-    <script src="execution.js"></script>
-    <script src="ui.js"></script>
-    <script src="project.js"></script>
-    <script src="ai-chat.js"></script>
-    <script src="code-editor.js"></script>
-    <script src="xml-viewer.js"></script>
-    <script src="sound-manager.js"></script>
+    <script src="src/config/config.js"></script>
+    <script src="src/config/zh-hans.js"></script>
+    <script src="src/core/core.js"></script>
+    <script src="src/core/execution.js"></script>
+    <script src="src/core/project.js"></script>
+    <script src="src/core/background.js"></script>
+    <script src="src/sprites/sprite.js"></script>
+    <script src="src/ui/canvas.js"></script>
+    <script src="src/blockly/blockly.min.js"></script>
+    <script src="src/blockly/blockly-config.js"></script>
+    <script src="src/ui/ui.js"></script>
+    <script src="src/ai/ai-chat.js"></script>
+    <script src="src/ui/code-editor.js"></script>
+    <script src="src/ui/xml-viewer.js"></script>
+    <script src="src/sound/sound-manager.js"></script>
+    <script src="src/themes/scratch-theme.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 

@@ -60,20 +60,19 @@ class XmlViewer {
 
     setCurrentSprite(spriteId) {
         this.currentSpriteId = spriteId;
-        // XML按钮已隐藏，不再强制显示
-        // const xmlBtn = document.getElementById('xmlBtn');
-        // if (xmlBtn) {
-        //     xmlBtn.style.display = 'inline-block';
-        // }
+        // XML按钮总是显示
+        const xmlBtn = document.getElementById('xmlBtn');
+        if (xmlBtn) {
+            xmlBtn.style.display = 'inline-block';
+        }
     }
 
-    // 初始化时显示XML按钮（已隐藏）
+    // 初始化时显示XML按钮
     initializeXmlButton() {
-        // XML按钮已隐藏，不再强制显示
-        // const xmlBtn = document.getElementById('xmlBtn');
-        // if (xmlBtn) {
-        //     xmlBtn.style.display = 'inline-block';
-        // }
+        const xmlBtn = document.getElementById('xmlBtn');
+        if (xmlBtn) {
+            xmlBtn.style.display = 'inline-block';
+        }
     }
 
     showXmlViewer() {
