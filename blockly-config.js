@@ -687,6 +687,14 @@ function initializeBlockly() {
             wheel: true
         }
     });
+
+    // 应用 Scratch 主题
+    if (typeof applyScratchTheme === 'function') {
+        applyScratchTheme(workspace);
+        console.log('Scratch 主题已应用');
+    } else {
+        console.log('Scratch 主题函数未找到，使用默认主题');
+    }
     
     // 初始化变量系统
     if (typeof Blockly.Variables !== 'undefined') {
@@ -774,11 +782,26 @@ function initializeBlockly() {
     window.blocklyInitialized = true;
 }
 
+// 获取 Scratch 主题颜色的辅助函数
+function getScratchColor(category) {
+    const colors = {
+        motion: '#4C97FF',
+        looks: '#9966FF', 
+        sound: '#CF63CF',
+        events: '#FFBF00',
+        control: '#FF8C1A',
+        sensing: '#5CB1D6',
+        operators: '#40BF4A',
+        variables: '#FF661A',
+        messaging: '#00CCCC'
+    };
+    return colors[category] || colors.control;
+}
+
 // 定义自定义块
 function defineCustomBlocks() {
     // 检查是否已经定义过
     if (window.blocksDefined) {
-    
         return;
     }
     
@@ -790,7 +813,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("当程序开始时");
             this.setNextStatement(true);
-            this.setColour(65);
+            this.setColour(getScratchColor('events'));
             this.setTooltip("程序开始执行时触发");
             this.setHelpUrl("");
         }
@@ -846,7 +869,7 @@ function defineCustomBlocks() {
                 ]), "KEY_OPTION")
                 .appendField("键");
             this.setNextStatement(true);
-            this.setColour(65);
+            this.setColour(getScratchColor('events'));
             this.setTooltip("当指定按键被按下时触发");
             this.setHelpUrl("");
         }
@@ -858,7 +881,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("当角色被点击");
             this.setNextStatement(true);
-            this.setColour(65);
+            this.setColour(getScratchColor('events'));
             this.setTooltip("当角色被点击时触发");
             this.setHelpUrl("");
         }
@@ -870,7 +893,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("停止程序");
             this.setPreviousStatement(true);
-            this.setColour(65);
+            this.setColour(getScratchColor('control'));
             this.setTooltip("停止程序执行");
             this.setHelpUrl("");
         }
@@ -884,7 +907,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldTextInput(""), "MESSAGE_NAME")
                 .appendField("被接收时");
             this.setNextStatement(true);
-            this.setColour(65);
+            this.setColour(getScratchColor('messaging'));
             this.setTooltip("当收到指定消息时触发");
             this.setHelpUrl("");
         }
@@ -897,7 +920,7 @@ function defineCustomBlocks() {
                 .appendField("广播消息")
                 .appendField(new Blockly.FieldTextInput(""), "MESSAGE_NAME");
             this.setPreviousStatement(true);
-            this.setColour(65);
+            this.setColour(getScratchColor('messaging'));
             this.setTooltip("广播指定消息");
             this.setHelpUrl("");
         }
@@ -913,7 +936,7 @@ function defineCustomBlocks() {
             this.appendValueInput("DURATION")
                 .setCheck("Number");
             this.setPreviousStatement(true);
-            this.setColour(65);
+            this.setColour(getScratchColor('messaging'));
             this.setTooltip("广播消息并等待指定秒数");
             this.setHelpUrl("");
         }
@@ -932,7 +955,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(0, -180, 180), "Y");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("移动到指定坐标");
             this.setHelpUrl("");
         }
@@ -952,7 +975,7 @@ function defineCustomBlocks() {
                 .appendField("秒");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("动画移动到指定坐标");
             this.setHelpUrl("");
         }
@@ -967,7 +990,7 @@ function defineCustomBlocks() {
                 .appendField("步");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("在X方向移动指定步数");
             this.setHelpUrl("");
         }
@@ -982,7 +1005,7 @@ function defineCustomBlocks() {
                 .appendField("步");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("在Y方向移动指定步数");
             this.setHelpUrl("");
         }
@@ -995,7 +1018,7 @@ function defineCustomBlocks() {
                 .appendField("移动到随机位置");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("移动到舞台上的随机位置");
             this.setHelpUrl("");
         }
@@ -1008,7 +1031,7 @@ function defineCustomBlocks() {
                 .appendField("移动到鼠标指针");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("移动到鼠标指针位置");
             this.setHelpUrl("");
         }
@@ -1023,7 +1046,7 @@ function defineCustomBlocks() {
                 .appendField("度");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("旋转指定角度");
             this.setHelpUrl("");
         }
@@ -1038,7 +1061,7 @@ function defineCustomBlocks() {
                 .appendField("度");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("指向指定方向");
             this.setHelpUrl("");
         }
@@ -1051,7 +1074,7 @@ function defineCustomBlocks() {
                 .appendField("指向鼠标指针");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("指向鼠标指针方向");
             this.setHelpUrl("");
         }
@@ -1065,7 +1088,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldDropdown([["无精灵", "none"]]), "TARGET_SPRITE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("指向指定精灵");
             this.setHelpUrl("");
         }
@@ -1079,7 +1102,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(0, -240, 240), "X");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("设置X坐标");
             this.setHelpUrl("");
         }
@@ -1093,7 +1116,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(0, -180, 180), "Y");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("设置Y坐标");
             this.setHelpUrl("");
         }
@@ -1105,7 +1128,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("x坐标");
             this.setOutput(true, "Number");
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("获取当前精灵的X坐标");
             this.setHelpUrl("");
         }
@@ -1117,7 +1140,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("y坐标");
             this.setOutput(true, "Number");
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("获取当前精灵的Y坐标");
             this.setHelpUrl("");
         }
@@ -1131,7 +1154,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(10, -240, 240), "X");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("改变X坐标");
             this.setHelpUrl("");
         }
@@ -1145,7 +1168,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(10, -180, 180), "Y");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("改变Y坐标");
             this.setHelpUrl("");
         }
@@ -1158,7 +1181,7 @@ function defineCustomBlocks() {
                 .appendField("碰到边缘就反弹");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("碰到舞台边缘时反弹");
             this.setHelpUrl("");
         }
@@ -1176,7 +1199,7 @@ function defineCustomBlocks() {
                 ]), "ROTATION_STYLE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("设置精灵的旋转样式");
             this.setHelpUrl("");
         }
@@ -1191,7 +1214,7 @@ function defineCustomBlocks() {
                 .appendField("秒");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("等待指定秒数");
             this.setHelpUrl("");
         }
@@ -1210,7 +1233,7 @@ function defineCustomBlocks() {
                 .setCheck(null);
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("重复执行指定次数");
             this.setHelpUrl("");
         }
@@ -1227,7 +1250,7 @@ function defineCustomBlocks() {
                 .setCheck(null);
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("重复执行直到条件为真");
             this.setHelpUrl("");
         }
@@ -1241,7 +1264,7 @@ function defineCustomBlocks() {
             this.appendStatementInput("DO")
                 .setCheck(null);
             this.setPreviousStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("无限重复执行");
             this.setHelpUrl("");
         }
@@ -1257,7 +1280,7 @@ function defineCustomBlocks() {
                 .appendField("那么");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("如果条件为真，执行代码");
             this.setHelpUrl("");
         }
@@ -1275,7 +1298,7 @@ function defineCustomBlocks() {
                 .appendField("否则");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("如果条件为真执行代码，否则执行其他代码");
             this.setHelpUrl("");
         }
@@ -1290,7 +1313,7 @@ function defineCustomBlocks() {
                 .appendField("秒");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("等待指定秒数");
             this.setHelpUrl("");
         }
@@ -1304,7 +1327,7 @@ function defineCustomBlocks() {
                 .appendField("等待直到");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("等待直到条件为真");
             this.setHelpUrl("");
         }
@@ -1321,7 +1344,7 @@ function defineCustomBlocks() {
                 .setCheck(null);
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("让角色说话，可以输入文字或变量");
             this.setHelpUrl("");
         }
@@ -1340,7 +1363,7 @@ function defineCustomBlocks() {
                 .appendField("秒");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("让角色说话指定秒数，可以输入文字或变量");
             this.setHelpUrl("");
         }
@@ -1355,7 +1378,7 @@ function defineCustomBlocks() {
                 .setCheck(null);
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("让角色思考，可以输入文字或变量");
             this.setHelpUrl("");
         }
@@ -1374,7 +1397,7 @@ function defineCustomBlocks() {
                 .appendField("秒");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("让角色思考指定秒数，可以输入文字或变量");
             this.setHelpUrl("");
         }
@@ -1388,7 +1411,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldDropdown(generateCostumeOptions), "COSTUME");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("切换到指定造型");
             this.setHelpUrl("");
         }
@@ -1401,7 +1424,7 @@ function defineCustomBlocks() {
                 .appendField("下一个造型");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("切换到下一个造型");
             this.setHelpUrl("");
         }
@@ -1413,7 +1436,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("造型编号");
             this.setOutput(true, "Number");
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("获取当前造型的编号");
             this.setHelpUrl("");
         }
@@ -1427,7 +1450,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(10, -1000, 1000, 1), "SIZE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("改变精灵的大小");
             this.setHelpUrl("");
         }
@@ -1441,7 +1464,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(100, 1, 1000, 1), "SIZE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("设置精灵的大小");
             this.setHelpUrl("");
         }
@@ -1465,7 +1488,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(25, -100, 100, 1), "VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("改变图形特效");
             this.setHelpUrl("");
         }
@@ -1489,7 +1512,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(0, -100, 100, 1), "VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("设置图形特效");
             this.setHelpUrl("");
         }
@@ -1502,7 +1525,7 @@ function defineCustomBlocks() {
                 .appendField("清除图形特效");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("清除所有图形特效");
             this.setHelpUrl("");
         }
@@ -1515,7 +1538,7 @@ function defineCustomBlocks() {
                 .appendField("显示");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("显示精灵");
             this.setHelpUrl("");
         }
@@ -1528,7 +1551,7 @@ function defineCustomBlocks() {
                 .appendField("隐藏");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("隐藏精灵");
             this.setHelpUrl("");
         }
@@ -1545,7 +1568,7 @@ function defineCustomBlocks() {
                 ]), "FRONT_BACK");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("改变精灵的图层位置");
             this.setHelpUrl("");
         }
@@ -1563,7 +1586,7 @@ function defineCustomBlocks() {
                 .appendField("层");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(153);
+            this.setColour(getScratchColor('sound'));
             this.setTooltip("向前或向后移动图层");
             this.setHelpUrl("");
         }
@@ -1580,7 +1603,7 @@ function defineCustomBlocks() {
                     ["全部", "all"]
                 ]), "STOP_OPTION");
             this.setPreviousStatement(true);
-            this.setColour(120);
+            this.setColour(getScratchColor('looks'));
             this.setTooltip("停止执行");
             this.setHelpUrl("");
         }
@@ -1608,7 +1631,7 @@ function defineCustomBlocks() {
                     ["白色", "#ffffff"]
                 ]), "COLOR");
             this.setOutput(true, "Boolean");
-            this.setColour(200);
+            this.setColour(getScratchColor('operators'));
             this.setTooltip("检测是否碰到指定颜色");
             this.setHelpUrl("");
         }
@@ -1641,7 +1664,7 @@ function defineCustomBlocks() {
                     ["白色", "#ffffff"]
                 ]), "COLOR2");
             this.setOutput(true, "Boolean");
-            this.setColour(200);
+            this.setColour(getScratchColor('operators'));
             this.setTooltip("检测一种颜色是否碰到另一种颜色");
             this.setHelpUrl("");
         }
@@ -1658,7 +1681,7 @@ function defineCustomBlocks() {
                 ]), "DISTANCETO")
                 .appendField("的距离");
             this.setOutput(true, "Number");
-            this.setColour(200);
+            this.setColour(getScratchColor('operators'));
             this.setTooltip("获取到指定目标的距离");
             this.setHelpUrl("");
         }
@@ -1679,7 +1702,7 @@ function defineCustomBlocks() {
                 ]), "KEY_OPTION")
                 .appendField("被按下？");
             this.setOutput(true, "Boolean");
-            this.setColour(200);
+            this.setColour(getScratchColor('operators'));
             this.setTooltip("检测指定按键是否被按下");
             this.setHelpUrl("");
         }
@@ -1691,7 +1714,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("鼠标被按下？");
             this.setOutput(true, "Boolean");
-            this.setColour(200);
+            this.setColour(getScratchColor('operators'));
             this.setTooltip("检测鼠标是否被按下");
             this.setHelpUrl("");
         }
@@ -1703,7 +1726,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("计时器");
             this.setOutput(true, "Number");
-            this.setColour(200);
+            this.setColour(getScratchColor('operators'));
             this.setTooltip("获取计时器的值");
             this.setHelpUrl("");
         }
@@ -1725,7 +1748,7 @@ function defineCustomBlocks() {
                     return options;
                 }), "TARGET_SPRITE");
             this.setOutput(true, "Boolean");
-            this.setColour(200);
+            this.setColour(getScratchColor('operators'));
             this.setTooltip("检测是否碰到指定目标");
             this.setHelpUrl("");
         }
@@ -1747,7 +1770,7 @@ function defineCustomBlocks() {
                 }), "BACKGROUND");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("切换到指定背景");
             this.setHelpUrl("");
         }
@@ -1769,7 +1792,7 @@ function defineCustomBlocks() {
                 }), "BACKGROUND");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("切换到指定背景");
             this.setHelpUrl("");
         }
@@ -2052,7 +2075,7 @@ function defineCustomBlocks() {
                     ["假", "FALSE"]
                 ]), "BOOL");
             this.setOutput(true, "Boolean");
-            this.setColour(210);
+            this.setColour(getScratchColor('sensing'));
             this.setTooltip("布尔值");
             this.setHelpUrl("");
         }
@@ -2075,7 +2098,7 @@ function defineCustomBlocks() {
             this.appendValueInput("B")
                 .setCheck(null);
             this.setOutput(true, "Boolean");
-            this.setColour(210);
+            this.setColour(getScratchColor('sensing'));
             this.setTooltip("比较运算");
             this.setHelpUrl("");
         }
@@ -2094,7 +2117,7 @@ function defineCustomBlocks() {
             this.appendValueInput("B")
                 .setCheck("Boolean");
             this.setOutput(true, "Boolean");
-            this.setColour(210);
+            this.setColour(getScratchColor('sensing'));
             this.setTooltip("逻辑运算");
             this.setHelpUrl("");
         }
@@ -2108,7 +2131,7 @@ function defineCustomBlocks() {
             this.appendValueInput("BOOL")
                 .setCheck("Boolean");
             this.setOutput(true, "Boolean");
-            this.setColour(210);
+            this.setColour(getScratchColor('sensing'));
             this.setTooltip("逻辑非");
             this.setHelpUrl("");
         }
@@ -2125,7 +2148,7 @@ function defineCustomBlocks() {
             this.appendValueInput("ELSE")
                 .appendField("否则");
             this.setOutput(true, null);
-            this.setColour(210);
+            this.setColour(getScratchColor('sensing'));
             this.setTooltip("条件判断");
             this.setHelpUrl("");
         }
@@ -2143,7 +2166,7 @@ function defineCustomBlocks() {
             this.appendValueInput("VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("设置变量的值");
             this.setHelpUrl("");
         }
@@ -2159,7 +2182,7 @@ function defineCustomBlocks() {
             this.appendValueInput("VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("将变量增加指定值");
             this.setHelpUrl("");
         }
@@ -2171,7 +2194,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldVariable("变量"), "VAR");
             this.setOutput(true, null);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("获取变量的值");
             this.setHelpUrl("");
         }
@@ -2185,7 +2208,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldVariable("变量"), "VAR");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("在舞台上显示变量");
             this.setHelpUrl("");
         }
@@ -2199,7 +2222,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldVariable("变量"), "VAR");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("在舞台上隐藏变量");
             this.setHelpUrl("");
         }
@@ -2215,7 +2238,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldTextInput("变量名"), "VAR_NAME");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("创建一个新的全局变量");
             this.setHelpUrl("");
         }
@@ -2231,7 +2254,7 @@ function defineCustomBlocks() {
             this.appendValueInput("VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("设置全局变量的值");
             this.setHelpUrl("");
         }
@@ -2247,7 +2270,7 @@ function defineCustomBlocks() {
             this.appendValueInput("VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("将全局变量增加指定值");
             this.setHelpUrl("");
         }
@@ -2260,7 +2283,7 @@ function defineCustomBlocks() {
                 .appendField("全局变量")
                 .appendField(new Blockly.FieldTextInput("变量名"), "VAR_NAME");
             this.setOutput(true, null);
-            this.setColour(330);
+            this.setColour(getScratchColor('variables'));
             this.setTooltip("获取全局变量的值");
             this.setHelpUrl("");
         }
@@ -2276,7 +2299,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldDropdown(generateSoundOptions), "SOUND_NAME");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("播放指定的声音");
             this.setHelpUrl("");
         }
@@ -2291,7 +2314,7 @@ function defineCustomBlocks() {
                 .appendField("等待播完");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("播放指定的声音并等待播完");
             this.setHelpUrl("");
         }
@@ -2304,7 +2327,7 @@ function defineCustomBlocks() {
                 .appendField("停止所有声音");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("停止所有正在播放的声音");
             this.setHelpUrl("");
         }
@@ -2323,7 +2346,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(10, -100, 100), "VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("改变音效参数");
             this.setHelpUrl("");
         }
@@ -2342,7 +2365,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(100, -100, 100), "VALUE");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("设置音效参数");
             this.setHelpUrl("");
         }
@@ -2355,7 +2378,7 @@ function defineCustomBlocks() {
                 .appendField("清除音效");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("清除所有音效设置");
             this.setHelpUrl("");
         }
@@ -2369,7 +2392,7 @@ function defineCustomBlocks() {
                 .appendField(new Blockly.FieldNumber(-10, -100, 100), "VOLUME");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("改变音量");
             this.setHelpUrl("");
         }
@@ -2384,7 +2407,7 @@ function defineCustomBlocks() {
                 .appendField("%");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("设置音量百分比");
             this.setHelpUrl("");
         }
@@ -2396,7 +2419,7 @@ function defineCustomBlocks() {
             this.appendDummyInput()
                 .appendField("音量");
             this.setOutput(true, "Number");
-            this.setColour(160);
+            this.setColour(getScratchColor('motion'));
             this.setTooltip("获取当前音量");
             this.setHelpUrl("");
         }

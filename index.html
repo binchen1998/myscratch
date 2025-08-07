@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>儿童编程工具 - 基于Blockly</title>
+    <title>Coga - AI儿童编程</title>
     <link rel="stylesheet" href="style.css">
     <script src="blockly.min.js"></script>
+    <script src="scratch-theme.js"></script>
     <script src="zh-hans.js"></script>
 </head>
 <body>
@@ -18,7 +19,7 @@
             <button id="loadBtn" class="control-btn load">📂 加载</button>
             <button id="soundManagerBtn" class="control-btn sound">🔊 声音管理</button>
         </div>
-        <h1>儿童编程工具</h1>
+        <h1>Coga - AI儿童编程</h1>
     </div>
 
     <!-- 主要内容区域 -->
@@ -28,9 +29,9 @@
             <div class="sprite-info">
                 <span id="currentSpriteName">请选择一个精灵</span>
                 <div class="sprite-buttons">
-                    <button id="codeBtn" class="code-btn">📄 查看合并代码</button>
-                    <button id="xmlBtn" class="xml-btn">📋 XML</button>
-                    <button id="chatBtn" class="chat-btn" style="display: none;">💬 Chat</button>
+                    <button id="codeBtn" class="code-btn" >📄 查看JS代码</button>
+                    <button id="xmlBtn" class="xml-btn" >📋 XML</button>
+                    <button id="chatBtn" class="chat-btn" >💬 Chat</button>
                 </div>
             </div>
             <div id="blocklyDiv" class="blockly-workspace"></div>
@@ -48,7 +49,6 @@
                         </label>
                     </div>
                     <button class="stage-btn" title="全屏模式">⛶</button>
-                    <button class="stage-btn" title="停止">⏹</button>
                 </div>
             </div>
             

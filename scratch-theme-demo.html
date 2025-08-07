@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch 风格主题演示</title>
+    <script src="blockly.min.js"></script>
+    <script src="scratch-theme.js"></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #FF8C1A;
+            font-size: 2.5em;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            color: #575E75;
+            font-size: 1.1em;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .demo-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .demo-section h2 {
+            color: #FF8C1A;
+            margin-top: 0;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .blockly-container {
+            height: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #FF8C1A, #FF6B35);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 140, 26, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 140, 26, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #4C97FF, #3373CC);
+            box-shadow: 0 4px 15px rgba(76, 151, 255, 0.3);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(76, 151, 255, 0.4);
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-item:hover {
+            border-color: #FF8C1A;
+            transform: scale(1.05);
+        }
+
+        .color-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .color-name {
+            font-weight: 600;
+            color: #575E75;
+            font-size: 14px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card h3 {
+            color: #FF8C1A;
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+
+        .feature-card p {
+            color: #575E75;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 Scratch 风格主题</h1>
+        <p>基于 Scratch 的鲜明配色和扁平化设计</p>
+    </div>
+
+    <div class="container">
+        <div class="demo-section">
+            <h2>🎯 主题特色</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <h3>🌈 鲜明配色</h3>
+                    <p>采用 Scratch 官方配色方案，每个类别都有独特的颜色标识，让编程更加直观有趣。</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📱 扁平化设计</h3>
+                    <p>现代化的扁平设计风格，去除多余的阴影和渐变，让界面更加简洁清爽。</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🎪 圆角设计</h3>
+                    <p>所有积木块都采用圆角设计，视觉效果更加柔和友好。</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔤 现代字体</h3>
+                    <p>使用 Helvetica Neue 字体，提供更好的可读性和现代感。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎨 配色方案</h2>
+            <div class="color-palette">
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #4C97FF;"></div>
+                    <span class="color-name">运动 - 蓝色</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #9966FF;"></div>
+                    <span class="color-name">外观 - 紫色</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #CF63CF;"></div>
+                    <span class="color-name">声音 - 粉色</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #FFBF00;"></div>
+                    <span class="color-name">事件 - 黄色</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #FF8C1A;"></div>
+                    <span class="color-name">控制 - 橙色</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #5CB1D6;"></div>
+                    <span class="color-name">侦测 - 浅蓝</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #40BF4A;"></div>
+                    <span class="color-name">运算 - 绿色</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-swatch" style="background: #FF661A;"></div>
+                    <span class="color-name">变量 - 红色</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 交互演示</h2>
+            <div class="controls">
+                <button class="btn" onclick="createSampleProject()">创建示例项目</button>
+                <button class="btn secondary" onclick="clearWorkspace()">清空工作区</button>
+                <button class="btn" onclick="toggleTheme()">切换主题</button>
+                <button class="btn secondary" onclick="exportCode()">导出代码</button>
+            </div>
+            <div id="blocklyDiv" class="blockly-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let workspace;
+        let currentTheme = 'scratch';
+
+        // 初始化 Blockly
+        function initBlockly() {
+            // 确保生成器已注册
+            ensureGeneratorsRegistered();
+            
+            // 创建工作区
+            workspace = Blockly.inject('blocklyDiv', {
+                toolbox: createScratchToolbox(),
+                scrollbars: true,
+                trashcan: true,
+                grid: {
+                    spacing: 20,
+                    length: 3,
+                    colour: '#E5E5E5',
+                    snap: true
+                },
+                zoom: {
+                    controls: true,
+                    wheel: true,
+                    startScale: 1.0,
+                    maxScale: 3,
+                    minScale: 0.3,
+                    scaleSpeed: 1.2
+                },
+                move: {
+                    scrollbars: true,
+                    drag: true,
+                    wheel: true
+                }
+            });
+
+            // 应用 Scratch 主题
+            applyScratchTheme(workspace);
+            
+            console.log('Blockly 工作区初始化完成，应用 Scratch 主题');
+        }
+
+        // 确保生成器已注册
+        function ensureGeneratorsRegistered() {
+            // 当程序开始时
+            Blockly.JavaScript['when_program_starts'] = function(block) {
+                return '';
+            };
+            
+            // 等待秒数
+            Blockly.JavaScript['wait_seconds'] = function(block) {
+                const seconds = block.getFieldValue('SECONDS') || '1';
+                return `await waitSeconds(${seconds});\n`;
+            };
+            
+            // 移动到指定位置
+            Blockly.JavaScript['motion_movesteps'] = function(block) {
+                const steps = block.getFieldValue('STEPS') || '10';
+                return `await moveSteps(${steps});\n`;
+            };
+            
+            // 转向
+            Blockly.JavaScript['motion_turnright'] = function(block) {
+                const degrees = block.getFieldValue('DEGREES') || '15';
+                return `await turnRight(${degrees});\n`;
+            };
+            
+            // 广播消息
+            Blockly.JavaScript['broadcast_message'] = function(block) {
+                const messageName = block.getFieldValue('MESSAGE_NAME') || '消息';
+                return `broadcastMessage('${messageName}');\n`;
+            };
+            
+            // 当消息接收时
+            Blockly.JavaScript['when_message_received'] = function(block) {
+                const messageName = block.getFieldValue('MESSAGE_NAME') || '消息';
+                return `addMessageListener('${messageName}', async function() {\n`;
+            };
+        }
+
+        // 创建示例项目
+        function createSampleProject() {
+            if (!workspace) return;
+            
+            workspace.clear();
+            
+            // 创建程序开始块
+            const startBlock = workspace.newBlock('when_program_starts');
+            startBlock.initSvg();
+            startBlock.render();
+            startBlock.moveBy(50, 50);
+            
+            // 创建等待块
+            const waitBlock = workspace.newBlock('wait_seconds');
+            waitBlock.setFieldValue('2', 'SECONDS');
+            waitBlock.initSvg();
+            waitBlock.render();
+            startBlock.getNextBlock = function() { return waitBlock; };
+            waitBlock.moveBy(0, 80);
+            
+            // 创建广播消息块
+            const broadcastBlock = workspace.newBlock('broadcast_message');
+            broadcastBlock.setFieldValue('hello', 'MESSAGE_NAME');
+            broadcastBlock.initSvg();
+            broadcastBlock.render();
+            waitBlock.getNextBlock = function() { return broadcastBlock; };
+            broadcastBlock.moveBy(0, 80);
+            
+            // 创建消息接收块
+            const messageBlock = workspace.newBlock('when_message_received');
+            messageBlock.setFieldValue('hello', 'MESSAGE_NAME');
+            messageBlock.initSvg();
+            messageBlock.render();
+            messageBlock.moveBy(300, 50);
+            
+            // 创建移动块
+            const moveBlock = workspace.newBlock('motion_movesteps');
+            moveBlock.setFieldValue('50', 'STEPS');
+            moveBlock.initSvg();
+            moveBlock.render();
+            messageBlock.getNextBlock = function() { return moveBlock; };
+            moveBlock.moveBy(0, 80);
+            
+            // 创建转向块
+            const turnBlock = workspace.newBlock('motion_turnright');
+            turnBlock.setFieldValue('90', 'DEGREES');
+            turnBlock.initSvg();
+            turnBlock.render();
+            moveBlock.getNextBlock = function() { return turnBlock; };
+            turnBlock.moveBy(0, 80);
+            
+            console.log('示例项目创建完成');
+        }
+
+        // 清空工作区
+        function clearWorkspace() {
+            if (workspace) {
+                workspace.clear();
+                console.log('工作区已清空');
+            }
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            if (!workspace) return;
+            
+            if (currentTheme === 'scratch') {
+                // 切换到默认主题
+                workspace.setTheme(Blockly.Themes.Classic);
+                currentTheme = 'classic';
+                console.log('切换到经典主题');
+            } else {
+                // 切换到 Scratch 主题
+                applyScratchTheme(workspace);
+                currentTheme = 'scratch';
+                console.log('切换到 Scratch 主题');
+            }
+        }
+
+        // 导出代码
+        function exportCode() {
+            if (!workspace) return;
+            
+            try {
+                const code = Blockly.JavaScript.workspaceToCode(workspace);
+                console.log('生成的代码:', code);
+                alert('代码已生成，请查看控制台输出');
+            } catch (error) {
+                console.error('代码生成失败:', error);
+                alert('代码生成失败，请查看控制台错误信息');
+            }
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('load', function() {
+            console.log('页面加载完成，初始化 Blockly...');
+            initBlockly();
+        });
+    </script>
+</body>
+</html> 

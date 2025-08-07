@@ -52,19 +52,20 @@ class CodeEditor {
 
     setCurrentSprite(spriteId) {
         this.currentSpriteId = spriteId;
-        // Code按钮总是显示，用于显示合并代码
-        const codeBtn = document.getElementById('codeBtn');
-        if (codeBtn) {
-            codeBtn.style.display = 'inline-block';
-        }
+        // Code按钮已隐藏，不再强制显示
+        // const codeBtn = document.getElementById('codeBtn');
+        // if (codeBtn) {
+        //     codeBtn.style.display = 'inline-block';
+        // }
     }
 
-    // 初始化时显示Code按钮
+    // 初始化时显示Code按钮（已隐藏）
     initializeCodeButton() {
-        const codeBtn = document.getElementById('codeBtn');
-        if (codeBtn) {
-            codeBtn.style.display = 'inline-block';
-        }
+        // Code按钮已隐藏，不再强制显示
+        // const codeBtn = document.getElementById('codeBtn');
+        // if (codeBtn) {
+        //     codeBtn.style.display = 'inline-block';
+        // }
     }
 
     showCodeEditor() {
