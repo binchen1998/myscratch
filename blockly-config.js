@@ -246,7 +246,19 @@ function ensureGeneratorsRegistered() {
     // 当消息接收时
     Blockly.JavaScript['when_message_received'] = function(block) {
         const messageName = block.getFieldValue('MESSAGE_NAME') || '消息';
-        return `// 当消息 "${messageName}" 被接收时\n`;
+        
+        // 获取连接到这个事件块的代码
+        let messageHandlerCode = '';
+        let currentBlock = block.getNextBlock();
+        while (currentBlock) {
+            messageHandlerCode += Blockly.JavaScript.blockToCode(currentBlock);
+            currentBlock = currentBlock.getNextBlock();
+        }
+        
+        // 生成消息监听器代码
+        return `addMessageListener('${messageName}', async function(messageName, senderId) {
+console.log('[消息监听器] 消息"${messageName}"已经收到，发送者:', senderId);
+${messageHandlerCode}});\n`;
     };
     
     // 广播消息

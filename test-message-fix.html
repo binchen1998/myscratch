@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息系统修复测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>消息系统修复测试</h1>
+        
+        <div class="test-section">
+            <h2>测试说明</h2>
+            <p>这个测试用于验证消息接收块的代码生成是否正常工作。</p>
+            <p>预期行为：</p>
+            <ul>
+                <li>程序开始时等待1秒</li>
+                <li>广播消息 "x"</li>
+                <li>当消息 "x" 被接收时，精灵移动到坐标 (0, 0)</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h2>控制按钮</h2>
+            <button onclick="testMessageSystem()">测试消息系统</button>
+            <button onclick="clearLog()">清除日志</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>测试日志</h2>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟日志系统
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // 模拟消息系统
+        const messageSystem = {
+            listeners: new Map(),
+            messageHistory: [],
+            maxHistory: 100
+        };
+
+        function addMessageListener(messageName, callback, spriteId = null) {
+            if (!messageSystem.listeners.has(messageName)) {
+                messageSystem.listeners.set(messageName, []);
+                log(`创建新的消息监听器列表: ${messageName}`, 'info');
+            }
+            
+            const listeners = messageSystem.listeners.get(messageName);
+            listeners.push({
+                callback: callback,
+                spriteId: spriteId,
+                timestamp: Date.now()
+            });
+            
+            log(`注册监听器: ${messageName}, 精灵ID: ${spriteId}, 当前监听器总数: ${listeners.length}`, 'success');
+        }
+
+        function broadcastMessage(messageName, senderId = null) {
+            log(`广播消息: ${messageName}, 发送者: ${senderId}`, 'info');
+            
+            const messageRecord = {
+                name: messageName,
+                senderId: senderId,
+                timestamp: Date.now(),
+                receivedBy: []
+            };
+            
+            messageSystem.messageHistory.push(messageRecord);
+            
+            if (messageSystem.messageHistory.length > messageSystem.maxHistory) {
+                messageSystem.messageHistory.shift();
+            }
+            
+            if (messageSystem.listeners.has(messageName)) {
+                const listeners = messageSystem.listeners.get(messageName);
+                log(`找到 ${listeners.length} 个监听器监听消息 "${messageName}"`, 'info');
+                listeners.forEach((listener, index) => {
+                    try {
+                        log(`执行第 ${index + 1} 个监听器回调，精灵ID: ${listener.spriteId}`, 'info');
+                        listener.callback(messageName, senderId);
+                        messageRecord.receivedBy.push(listener.spriteId);
+                        log(`第 ${index + 1} 个监听器回调执行完成`, 'success');
+                    } catch (error) {
+                        log(`执行监听器回调失败: ${error}`, 'error');
+                    }
+                });
+            } else {
+                log(`没有找到监听消息 "${messageName}" 的监听器`, 'error');
+            }
+            
+            return messageRecord;
+        }
+
+        // 模拟精灵函数
+        async function waitSeconds(seconds) {
+            log(`等待 ${seconds} 秒`, 'info');
+            await new Promise(resolve => setTimeout(resolve, seconds * 1000));
+            log(`等待完成`, 'info');
+        }
+
+        async function moveTo(x, y) {
+            log(`精灵移动到坐标 (${x}, ${y})`, 'success');
+        }
+
+        async function moveToAnimated(x, y, duration) {
+            log(`精灵动画移动到坐标 (${x}, ${y})，用时 ${duration} 秒`, 'success');
+            await new Promise(resolve => setTimeout(resolve, duration * 1000));
+        }
+
+        // 测试函数
+        async function testMessageSystem() {
+            log('开始测试消息系统...', 'info');
+            
+            try {
+                // 模拟程序开始时的代码
+                log('程序开始执行', 'info');
+                await waitSeconds(1);
+                log('广播消息 "x"', 'info');
+                await broadcastMessage('x', 'test-sprite');
+                
+                log('测试完成', 'success');
+            } catch (error) {
+                log(`测试失败: ${error}`, 'error');
+            }
+        }
+
+        // 页面加载时自动注册消息监听器（模拟从Blockly生成的代码）
+        window.addEventListener('load', function() {
+            log('页面加载完成，注册消息监听器...', 'info');
+            
+            // 模拟从Blockly生成的代码
+            addMessageListener('x', async function(messageName, senderId) {
+                log(`消息监听器: 消息"${messageName}"已经收到，发送者: ${senderId}`, 'info');
+                await moveToAnimated(0, 0, 2);
+            }, 'test-sprite');
+            
+            log('消息监听器注册完成', 'success');
+        });
+    </script>
+</body>
+</html> 
