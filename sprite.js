@@ -11,6 +11,7 @@ class Sprite {
         this.rotation = 0;
         this.scale = 1.0;
         this.visible = true;
+        this.effects = {}; // 存储图形特效
         this.xmlCode = ''; // 存储Blockly XML代码
         this.jsCode = '';  // 存储JavaScript代码
         this.isRunning = false;
@@ -56,14 +57,182 @@ class Sprite {
                 imgHeight = 40;
             }
             
-            // 使用原始尺寸绘制，保持图片的原始比例
-            ctx.drawImage(this.image, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
+            // 检查是否需要应用像素化或马赛克特效
+            const needsPixelate = this.effects && this.effects.pixelate !== undefined;
+            const needsMosaic = this.effects && this.effects.mosaic !== undefined;
+            
+            if (needsPixelate || needsMosaic) {
+                // 创建临时canvas来处理像素化/马赛克效果
+                this.drawWithPixelEffects(ctx, imgWidth, imgHeight);
+            } else {
+                // 应用其他图形特效
+                this.applyEffects(ctx);
+                
+                // 使用原始尺寸绘制，保持图片的原始比例
+                ctx.drawImage(this.image, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
+            }
         } else {
+            // 应用图形特效
+            this.applyEffects(ctx);
+            
             // 如果没有图片，绘制一个默认的LED图标
             this.drawDefaultLED(ctx);
         }
         
         ctx.restore();
+    }
+    
+    // 应用图形特效
+    applyEffects(ctx) {
+        if (!this.effects || Object.keys(this.effects).length === 0) {
+            return;
+        }
+        
+        // 应用颜色特效
+        if (this.effects.color !== undefined) {
+            const colorValue = this.effects.color;
+            // Scratch中颜色特效范围是0-200，对应0-360度
+            const hueRotation = (colorValue / 200) * 360;
+            ctx.filter = `hue-rotate(${hueRotation}deg)`;
+        }
+        
+        // 应用亮度特效
+        if (this.effects.brightness !== undefined) {
+            const brightnessValue = this.effects.brightness;
+            // Scratch中亮度特效范围是-100到100，对应0.1到2.0
+            const brightness = Math.max(0.1, 1 + (brightnessValue / 100));
+            ctx.filter = ctx.filter ? `${ctx.filter} brightness(${brightness})` : `brightness(${brightness})`;
+        }
+        
+        // 应用虚像特效
+        if (this.effects.ghost !== undefined) {
+            const ghostValue = this.effects.ghost;
+            // Scratch中虚像特效范围是0-100，对应1-0透明度
+            const opacity = Math.max(0, 1 - (ghostValue / 100));
+            ctx.globalAlpha = opacity;
+        }
+        
+        // 应用鱼眼特效
+        if (this.effects.fisheye !== undefined) {
+            const fisheyeValue = this.effects.fisheye;
+            // Scratch中鱼眼特效范围是-100到100，对应0.5到1.5倍缩放
+            const scale = Math.max(0.5, 1 + (fisheyeValue / 100));
+            ctx.scale(scale, scale);
+        }
+        
+        // 应用漩涡特效
+        if (this.effects.whirl !== undefined) {
+            const whirlValue = this.effects.whirl;
+            // Scratch中漩涡特效范围是-100到100，对应-π到π弧度
+            const rotation = (whirlValue / 100) * Math.PI;
+            ctx.rotate(rotation);
+        }
+    }
+    
+    // 绘制带像素化/马赛克特效的图片
+    drawWithPixelEffects(ctx, imgWidth, imgHeight) {
+        // 创建临时canvas
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // 设置临时canvas尺寸
+        tempCanvas.width = imgWidth;
+        tempCanvas.height = imgHeight;
+        
+        // 先绘制原始图片到临时canvas
+        tempCtx.drawImage(this.image, 0, 0, imgWidth, imgHeight);
+        
+        // 获取图像数据
+        const imageData = tempCtx.getImageData(0, 0, imgWidth, imgHeight);
+        const data = imageData.data;
+        
+        // 应用像素化特效
+        if (this.effects.pixelate !== undefined) {
+            const pixelateValue = this.effects.pixelate;
+            // Scratch中像素化特效范围是0-100，对应1-20像素大小
+            const pixelSize = Math.max(1, Math.floor(1 + (pixelateValue / 100) * 19));
+            
+            if (pixelSize > 1) {
+                // 像素化处理
+                for (let y = 0; y < imgHeight; y += pixelSize) {
+                    for (let x = 0; x < imgWidth; x += pixelSize) {
+                        // 获取当前像素块的平均颜色
+                        let r = 0, g = 0, b = 0, a = 0;
+                        let count = 0;
+                        
+                        for (let dy = 0; dy < pixelSize && y + dy < imgHeight; dy++) {
+                            for (let dx = 0; dx < pixelSize && x + dx < imgWidth; dx++) {
+                                const index = ((y + dy) * imgWidth + (x + dx)) * 4;
+                                r += data[index];
+                                g += data[index + 1];
+                                b += data[index + 2];
+                                a += data[index + 3];
+                                count++;
+                            }
+                        }
+                        
+                        if (count > 0) {
+                            r = Math.round(r / count);
+                            g = Math.round(g / count);
+                            b = Math.round(b / count);
+                            a = Math.round(a / count);
+                            
+                            // 将平均颜色应用到整个像素块
+                            for (let dy = 0; dy < pixelSize && y + dy < imgHeight; dy++) {
+                                for (let dx = 0; dx < pixelSize && x + dx < imgWidth; dx++) {
+                                    const index = ((y + dy) * imgWidth + (x + dx)) * 4;
+                                    data[index] = r;
+                                    data[index + 1] = g;
+                                    data[index + 2] = b;
+                                    data[index + 3] = a;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 应用马赛克特效
+        if (this.effects.mosaic !== undefined) {
+            const mosaicValue = this.effects.mosaic;
+            // Scratch中马赛克特效范围是0-100，对应1-20像素大小
+            const mosaicSize = Math.max(1, Math.floor(1 + (mosaicValue / 100) * 19));
+            
+            if (mosaicSize > 1) {
+                // 马赛克处理（类似像素化，但使用随机颜色）
+                for (let y = 0; y < imgHeight; y += mosaicSize) {
+                    for (let x = 0; x < imgWidth; x += mosaicSize) {
+                        // 获取当前马赛克块的颜色
+                        const index = (y * imgWidth + x) * 4;
+                        const r = data[index];
+                        const g = data[index + 1];
+                        const b = data[index + 2];
+                        const a = data[index + 3];
+                        
+                        // 将颜色应用到整个马赛克块
+                        for (let dy = 0; dy < mosaicSize && y + dy < imgHeight; dy++) {
+                            for (let dx = 0; dx < mosaicSize && x + dx < imgWidth; dx++) {
+                                const pixelIndex = ((y + dy) * imgWidth + (x + dx)) * 4;
+                                data[pixelIndex] = r;
+                                data[pixelIndex + 1] = g;
+                                data[pixelIndex + 2] = b;
+                                data[pixelIndex + 3] = a;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 将处理后的图像数据放回临时canvas
+        tempCtx.putImageData(imageData, 0, 0);
+        
+        // 应用其他特效（除了像素化和马赛克）
+        this.applyEffects(ctx);
+        
+        // 绘制处理后的图片
+        ctx.drawImage(tempCanvas, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
     }
 
     // 绘制默认LED图标
@@ -231,24 +400,24 @@ function selectSprite(spriteId) {
     
     // 通知AI聊天系统当前精灵已更改
     if (typeof aiChat !== 'undefined' && aiChat) {
-        console.log('通知AI聊天系统精灵更改');
+    
         aiChat.setCurrentSprite(spriteId);
     } else {
-        console.log('AI聊天系统未初始化');
+    
     }
     
     if (typeof codeEditor !== 'undefined' && codeEditor) {
-        console.log('通知Code编辑器系统精灵更改');
+    
         codeEditor.setCurrentSprite(spriteId);
     } else {
-        console.log('Code编辑器系统未初始化');
+    
     }
 
     if (typeof xmlViewer !== 'undefined' && xmlViewer) {
-        console.log('通知XML查看器系统精灵更改');
+    
         xmlViewer.setCurrentSprite(spriteId);
     } else {
-        console.log('XML查看器系统未初始化');
+    
     }
     currentBackgroundId = null; // 清除背景选择
     const sprite = sprites.find(s => s.id === spriteId);
@@ -350,7 +519,16 @@ function renderSpriteProperties(sprite) {
                 <input type="text" class="property-input compact" id="spriteName" value="${sprite.name}" placeholder="精灵名称">
             </div>
             
-
+            <!-- 坐标位置 (一行显示) -->
+            <div class="property-row">
+                <label class="property-label">位置</label>
+                <div class="coordinate-inputs">
+                    <span class="coordinate-label">x:</span>
+                    <input type="number" class="coordinate-input" id="spriteX" value="${Math.round(scratchCoords.x)}" step="1">
+                    <span class="coordinate-label">y:</span>
+                    <input type="number" class="coordinate-input" id="spriteY" value="${Math.round(scratchCoords.y)}" step="1">
+                </div>
+            </div>
             
             <!-- 显示控制 -->
             <div class="property-row">
@@ -619,7 +797,7 @@ function resizeImageIfNeeded(img) {
     const resizedImg = new Image();
     resizedImg.src = canvas.toDataURL('image/png', 1.0);
     
-    console.log(`图片已调整尺寸: ${originalWidth}x${originalHeight} -> ${newWidth}x${newHeight}`);
+
     
     return resizedImg;
 }
@@ -689,9 +867,24 @@ function addPropertyEventListeners(sprite) {
         });
     }
     
-    // X坐标
+    // X坐标 - 实时更新
     const xInput = document.getElementById('spriteX');
     if (xInput) {
+        // 实时更新（输入时）
+        xInput.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (!isNaN(value)) {
+                const scratchX = value;
+                const canvasCoords = scratchToCanvasCoordinates(scratchX, canvasToScratchCoordinates(sprite.x, sprite.y).y);
+                const bounds = calculateSpriteBounds(sprite);
+                sprite.x = Math.max(bounds.minX, Math.min(bounds.maxX, canvasCoords.x));
+                sprite.y = Math.max(bounds.minY, Math.min(bounds.maxY, canvasCoords.y));
+                redrawCanvas();
+                renderSpritesList();
+            }
+        });
+        
+        // 确认更新（失去焦点时）
         xInput.addEventListener('change', function() {
             const scratchX = parseFloat(this.value);
             const canvasCoords = scratchToCanvasCoordinates(scratchX, canvasToScratchCoordinates(sprite.x, sprite.y).y);
@@ -704,9 +897,24 @@ function addPropertyEventListeners(sprite) {
         });
     }
     
-    // Y坐标
+    // Y坐标 - 实时更新
     const yInput = document.getElementById('spriteY');
     if (yInput) {
+        // 实时更新（输入时）
+        yInput.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (!isNaN(value)) {
+                const scratchY = value;
+                const canvasCoords = scratchToCanvasCoordinates(canvasToScratchCoordinates(sprite.x, sprite.y).x, scratchY);
+                const bounds = calculateSpriteBounds(sprite);
+                sprite.x = Math.max(bounds.minX, Math.min(bounds.maxX, canvasCoords.x));
+                sprite.y = Math.max(bounds.minY, Math.min(bounds.maxY, canvasCoords.y));
+                redrawCanvas();
+                renderSpritesList();
+            }
+        });
+        
+        // 确认更新（失去焦点时）
         yInput.addEventListener('change', function() {
             const scratchY = parseFloat(this.value);
             const canvasCoords = scratchToCanvasCoordinates(canvasToScratchCoordinates(sprite.x, sprite.y).x, scratchY);

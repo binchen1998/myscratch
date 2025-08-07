@@ -8,6 +8,9 @@ const MAX_STEPS = 100000; // 增加步数限制
 // const MAX_EXECUTION_TIME = 10000; // 注释掉超时限制
 let abortController = null; // 用于强制终止执行
 
+// 全局变量存储
+let globalVariables = {}; // 存储全局变量 {变量名: 值}
+
 // 执行状态管理
 let spriteExecutionStates = new Map(); // 存储每个精灵的执行状态
 
@@ -29,6 +32,167 @@ let keyEventSystem = {
 let spriteClickEventSystem = {
     listeners: new Map() // 存储精灵点击事件监听器
 };
+
+// 声音管理系统
+let sounds = []; // 存储所有声音（只包含可序列化数据）
+
+// 声音管理函数
+function getSoundsList() {
+    return sounds;
+}
+
+function getSoundByName(name) {
+    return sounds.find(sound => sound.name === name);
+}
+
+function getSoundById(id) {
+    return sounds.find(sound => sound.id === id);
+}
+
+function playSoundByName(name, waitUntilDone = false) {
+    const sound = getSoundByName(name);
+    if (sound) {
+        console.log(`[Worker] 🎵 请求播放声音: ${name}`);
+        
+        // 通过消息与主线程通信来播放音频
+        postMessage({
+            type: 'PLAY_SOUND',
+            soundName: name,
+            soundData: sound.dataURL,
+            waitUntilDone: waitUntilDone
+        });
+        
+        if (waitUntilDone) {
+            return new Promise((resolve, reject) => {
+                // 创建一个简单的延迟来模拟等待
+                setTimeout(() => {
+                    console.log(`[Worker] 🎵 声音播放完成: ${name}`);
+                    resolve();
+                }, sound.duration * 1000 || 1000);
+            });
+        }
+    } else {
+        console.warn(`[Worker] 🎵 未找到声音: ${name}`);
+    }
+}
+
+function stopAllSounds() {
+    console.log('[Worker] 🎵 请求停止所有声音');
+    
+    // 通过消息与主线程通信来停止音频
+    postMessage({
+        type: 'STOP_ALL_SOUNDS'
+    });
+}
+
+// 全局音量状态
+let currentVolume = 100;
+
+function setVolume(volume) {
+    // 更新全局音量状态
+    currentVolume = Math.max(0, Math.min(100, volume));
+    const normalizedVolume = currentVolume / 100;
+    console.log(`[Worker] 🎵 设置音量: ${currentVolume}% (${normalizedVolume})`);
+    
+    // 通过消息与主线程通信来设置音量
+    postMessage({
+        type: 'SET_VOLUME',
+        volume: normalizedVolume
+    });
+}
+
+// 全局变量操作函数
+function createGlobalVariable(varName, initialValue = 0) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (globalVariables.hasOwnProperty(trimmedVarName)) {
+        throw new Error(`全局变量 "${trimmedVarName}" 已存在`);
+    }
+    
+    globalVariables[trimmedVarName] = initialValue;
+    console.log(`[Worker] 全局变量 "${trimmedVarName}" 已创建，初始值: ${initialValue}`);
+    return trimmedVarName;
+}
+
+function setGlobalVariable(varName, value) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (!globalVariables.hasOwnProperty(trimmedVarName)) {
+        // 如果变量不存在，自动创建
+        console.log(`[Worker] 全局变量 "${trimmedVarName}" 不存在，自动创建`);
+        createGlobalVariable(trimmedVarName, value);
+    } else {
+        globalVariables[trimmedVarName] = value;
+        console.log(`[Worker] 全局变量 "${trimmedVarName}" 已设置为: ${value}`);
+    }
+}
+
+function changeGlobalVariable(varName, value) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (!globalVariables.hasOwnProperty(trimmedVarName)) {
+        // 如果变量不存在，自动创建
+        console.log(`[Worker] 全局变量 "${trimmedVarName}" 不存在，自动创建`);
+        createGlobalVariable(trimmedVarName, value);
+    } else {
+        const currentValue = globalVariables[trimmedVarName];
+        // 智能类型处理：如果是数字则相加，如果是字符串则连接
+        if (typeof currentValue === 'number' && typeof value === 'number') {
+            globalVariables[trimmedVarName] = currentValue + value;
+        } else {
+            globalVariables[trimmedVarName] = (currentValue || '') + value;
+        }
+        console.log(`[Worker] 全局变量 "${trimmedVarName}" 已增加，新值: ${globalVariables[trimmedVarName]}`);
+    }
+}
+
+function getGlobalVariable(varName) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    return globalVariables[trimmedVarName] || '';
+}
+
+function getAllGlobalVariables() {
+    return { ...globalVariables };
+}
+
+function deleteGlobalVariable(varName) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (globalVariables.hasOwnProperty(trimmedVarName)) {
+        delete globalVariables[trimmedVarName];
+        console.log(`[Worker] 全局变量 "${trimmedVarName}" 已删除`);
+        return true;
+    } else {
+        console.log(`[Worker] 全局变量 "${trimmedVarName}" 不存在`);
+        return false;
+    }
+}
+
+function clearAllGlobalVariables() {
+    globalVariables = {};
+    console.log('[Worker] 所有全局变量已清除');
+}
+
+function getVolume() {
+    console.log(`[Worker] 🎵 获取音量: ${currentVolume}%`);
+    return currentVolume;
+}
 
 // 注册消息监听器
 function addMessageListener(messageName, callback, spriteId = null) {
@@ -118,7 +282,7 @@ function removeKeyEvent(key, spriteId = null) {
 
 // 注册精灵点击事件监听器
 function registerSpriteClickEvent(callback, spriteId = null) {
-    console.log(`[Worker] 🖱️ 注册精灵点击事件监听器, 精灵ID: ${spriteId}`);
+
     
     const newListener = {
         callback: callback,
@@ -127,17 +291,17 @@ function registerSpriteClickEvent(callback, spriteId = null) {
     };
     
     spriteClickEventSystem.listeners.set(spriteId || 'global', newListener);
-    console.log(`[Worker] 🖱️ 成功添加精灵点击事件监听器，当前监听器数量:`, spriteClickEventSystem.listeners.size);
+
 }
 
 // 移除精灵点击事件监听器
 function removeSpriteClickEvent(spriteId = null) {
-    console.log(`[Worker] 🖱️ 移除精灵点击事件监听器, 精灵ID: ${spriteId}`);
+
     
     const key = spriteId || 'global';
     if (spriteClickEventSystem.listeners.has(key)) {
         spriteClickEventSystem.listeners.delete(key);
-        console.log(`[Worker] 🖱️ 成功移除精灵点击事件监听器`);
+    
     }
 }
 
@@ -295,17 +459,16 @@ function createExecutionContext(sprite) {
         moveTo: function(x, y) {
             return new Promise(resolve => {
                 if (!isRunning) {
-                    console.log('[Worker] moveTo被中断，执行已停止');
+                
                     resolve();
                     return;
                 }
                 
-                console.log('[Worker] moveTo被调用:', x, y);
+            
                 const targetX = parseFloat(x);
                 const targetY = parseFloat(y);
                 
-                console.log('[Worker] 解析后的坐标:', targetX, targetY);
-                console.log('[Worker] 精灵当前位置:', sprite.x, sprite.y);
+                
                 
                 // 将Scratch坐标系统转换为canvas坐标系统
                 // Scratch: 中心(0,0), 范围(-240,240) x (-180,180)
@@ -317,7 +480,7 @@ function createExecutionContext(sprite) {
                 sprite.x = Math.max(20, Math.min(460, canvasX));
                 sprite.y = Math.max(20, Math.min(340, canvasY));
                 
-                console.log('[Worker] 精灵新位置:', sprite.x, sprite.y);
+            
                 
                 // 发送状态更新
                 const updateMessage = {
@@ -328,7 +491,7 @@ function createExecutionContext(sprite) {
                         y: sprite.y
                     }
                 };
-                console.log('[Worker] 发送状态更新:', updateMessage);
+            
                 postMessage(updateMessage);
                 
                 resolve();
@@ -391,7 +554,7 @@ function createExecutionContext(sprite) {
         rotate: function(degrees) {
             return new Promise(resolve => {
                 if (!isRunning) {
-                    console.log('[Worker] rotate被中断，执行已停止');
+                
                     resolve();
                     return;
                 }
@@ -445,7 +608,7 @@ function createExecutionContext(sprite) {
         waitSeconds: function(seconds) {
             return new Promise(resolve => {
                 if (!isRunning) {
-                    console.log('[Worker] waitSeconds被中断，执行已停止');
+                
                     resolve();
                     return;
                 }
@@ -455,7 +618,7 @@ function createExecutionContext(sprite) {
                 
                 function checkWait() {
                     if (!isRunning) {
-                        console.log('[Worker] waitSeconds被中断');
+                    
                         resolve();
                         return;
                     }
@@ -591,16 +754,11 @@ function createExecutionContext(sprite) {
                 const maxY = 360 + halfHeight; // 允许图像完全移出下边界
                 
                 // 添加调试信息
-                console.log('[Worker] moveYSteps被调用:');
-                console.log('[Worker] - 步数:', stepValue);
-                console.log('[Worker] - 直接Y移动:', deltaY);
-                console.log('[Worker] - 图像高度:', imgHeight, '缩放后高度:', actualHeight);
-                console.log('[Worker] - 边界限制:', minY, '到', maxY);
-                console.log('[Worker] - 移动前Y位置:', sprite.y);
+                
                 
                 sprite.y = Math.max(minY, Math.min(maxY, sprite.y + deltaY));
                 
-                console.log('[Worker] - 移动后Y位置:', sprite.y);
+            
                 
                 postMessage({
                     type: 'SPRITE_UPDATE',
@@ -680,8 +838,7 @@ function createExecutionContext(sprite) {
                         const mouseX = e.data.x;
                         const mouseY = e.data.y;
                         
-                        console.log('[Worker] 收到鼠标位置:', mouseX, mouseY);
-                        console.log('[Worker] 精灵当前位置:', sprite.x, sprite.y);
+                        
                         
                         // 获取精灵图像尺寸
                         let imgWidth = 40, imgHeight = 40; // 默认尺寸
@@ -709,8 +866,7 @@ function createExecutionContext(sprite) {
                         const canvasX = Math.max(minX, Math.min(maxX, mouseX));
                         const canvasY = Math.max(minY, Math.min(maxY, mouseY));
                         
-                        console.log('[Worker] 转换后的canvas坐标:', canvasX, canvasY);
-                        console.log('[Worker] 边界限制:', minX, '到', maxX, 'X', minY, '到', maxY);
+                        
                         
                         sprite.x = canvasX;
                         sprite.y = canvasY;
@@ -730,7 +886,7 @@ function createExecutionContext(sprite) {
                 // 设置超时，如果5秒内没有收到响应，保持当前位置
                 setTimeout(() => {
                     self.removeEventListener('message', handleMousePosition);
-                    console.log('[Worker] 鼠标位置请求超时，保持当前位置');
+                
                     resolve();
                 }, 5000);
             });
@@ -1030,7 +1186,7 @@ function createExecutionContext(sprite) {
                     return;
                 }
                 
-                console.log('[Worker] 停止程序执行');
+            
                 isRunning = false;
                 
                 // 通知主线程停止执行
@@ -1052,7 +1208,7 @@ function createExecutionContext(sprite) {
                     return;
                 }
                 
-                console.log('[Worker] 停止执行:', option);
+            
                 switch (option) {
                     case 'this script':
                         // 停止当前脚本
@@ -1164,7 +1320,7 @@ function createExecutionContext(sprite) {
         
         // 变量相关函数
         showVariable: function(varName, variablesObj) {
-            console.log('[Worker] 显示变量:', varName);
+        
             // 这里可以添加在舞台上显示变量的逻辑
             postMessage({
                 type: 'SHOW_VARIABLE',
@@ -1175,7 +1331,7 @@ function createExecutionContext(sprite) {
         },
         
         hideVariable: function(varName) {
-            console.log('[Worker] 隐藏变量:', varName);
+        
             // 这里可以添加在舞台上隐藏变量的逻辑
             postMessage({
                 type: 'HIDE_VARIABLE',
@@ -1213,7 +1369,7 @@ function createExecutionContext(sprite) {
         // 添加消息监听器
         addMessageListener: function(messageName, callback) {
             // console.log(`[Worker] 精灵 ${sprite.name} 添加消息监听器: ${messageName}`);
-            console.log(`[Worker] 精灵 ${sprite.name} 回调函数:`, typeof callback);
+        
             // 使用全局的addMessageListener函数
             addMessageListener(messageName, callback, sprite.id);
         },
@@ -1242,13 +1398,13 @@ function createExecutionContext(sprite) {
         
         // 注册精灵点击事件
         registerSpriteClickEvent: function(callback) {
-            console.log(`[Worker] 精灵 ${sprite.name} 注册点击事件`);
+        
             registerSpriteClickEvent(callback, sprite.id);
         },
         
         // 移除精灵点击事件
         removeSpriteClickEvent: function() {
-            console.log(`[Worker] 精灵 ${sprite.name} 移除点击事件`);
+        
             removeSpriteClickEvent(sprite.id);
         },
         
@@ -1260,7 +1416,7 @@ function createExecutionContext(sprite) {
                     return;
                 }
                 
-                console.log(`[Worker] 精灵 ${sprite.name} 说: ${message}`);
+            
                 
                 postMessage({
                     type: 'SPRITE_SAY',
@@ -1281,7 +1437,7 @@ function createExecutionContext(sprite) {
                 }
                 
                 const duration = parseFloat(seconds) * 1000;
-                console.log(`[Worker] 精灵 ${sprite.name} 说 ${message} ${seconds} 秒`);
+            
                 
                 postMessage({
                     type: 'SPRITE_SAY_FOR_SECS',
@@ -1311,7 +1467,7 @@ function createExecutionContext(sprite) {
                     return;
                 }
                 
-                console.log(`[Worker] 精灵 ${sprite.name} 思考: ${message}`);
+            
                 
                 postMessage({
                     type: 'SPRITE_SAY',
@@ -1332,7 +1488,7 @@ function createExecutionContext(sprite) {
                 }
                 
                 const duration = parseFloat(seconds) * 1000;
-                console.log(`[Worker] 精灵 ${sprite.name} 思考 ${message} ${seconds} 秒`);
+            
                 
                 postMessage({
                     type: 'SPRITE_SAY_FOR_SECS',
@@ -1363,7 +1519,7 @@ function createExecutionContext(sprite) {
                     return;
                 }
                 
-                console.log(`[Worker] 精灵 ${sprite.name} 切换到造型: ${costumeId}`);
+            
                 
                 // 确保costumes数组存在且有内容
                 if (!sprite.costumes || sprite.costumes.length === 0) {
@@ -1398,7 +1554,7 @@ function createExecutionContext(sprite) {
                     return;
                 }
                 
-                console.log(`[Worker] 精灵 ${sprite.name} 切换到下一个造型`);
+            
                 
                 // 确保costumes数组存在且有内容
                 if (!sprite.costumes || sprite.costumes.length === 0) {
@@ -1429,84 +1585,264 @@ function createExecutionContext(sprite) {
             return sprite.currentCostumeIndex + 1;
         },
         
+        // ===== 大小和特效函数 =====
+        changeSizeBy: function(size) {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                const sizeChange = parseFloat(size) || 0;
+                sprite.scale = Math.max(0.1, sprite.scale + sizeChange / 100);
+                
+                postMessage({
+                    type: 'SPRITE_STATE_UPDATE',
+                    spriteId: sprite.id,
+                    state: {
+                        scale: sprite.scale
+                    }
+                });
+                
+                resolve();
+            });
+        },
+        
+        setSizeTo: function(size) {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                const newSize = parseFloat(size) || 100;
+                sprite.scale = Math.max(0.1, newSize / 100);
+                
+                postMessage({
+                    type: 'SPRITE_STATE_UPDATE',
+                    spriteId: sprite.id,
+                    state: {
+                        scale: sprite.scale
+                    }
+                });
+                
+                resolve();
+            });
+        },
+        
+        changeEffectBy: function(effectType, value) {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                const effectValue = parseFloat(value) || 0;
+                
+                // 初始化特效对象
+                if (!sprite.effects) {
+                    sprite.effects = {};
+                }
+                
+                // 更新特效值
+                sprite.effects[effectType] = (sprite.effects[effectType] || 0) + effectValue;
+                
+                postMessage({
+                    type: 'SPRITE_STATE_UPDATE',
+                    spriteId: sprite.id,
+                    state: {
+                        effects: sprite.effects
+                    }
+                });
+                
+                resolve();
+            });
+        },
+        
+        setEffectTo: function(effectType, value) {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                const effectValue = parseFloat(value) || 0;
+                
+                // 初始化特效对象
+                if (!sprite.effects) {
+                    sprite.effects = {};
+                }
+                
+                // 设置特效值
+                sprite.effects[effectType] = effectValue;
+                
+                postMessage({
+                    type: 'SPRITE_STATE_UPDATE',
+                    spriteId: sprite.id,
+                    state: {
+                        effects: sprite.effects
+                    }
+                });
+                
+                resolve();
+            });
+        },
+        
+        clearGraphicEffects: function() {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                // 清除所有特效
+                sprite.effects = {};
+                
+                postMessage({
+                    type: 'SPRITE_STATE_UPDATE',
+                    spriteId: sprite.id,
+                    state: {
+                        effects: sprite.effects
+                    }
+                });
+                
+                resolve();
+            });
+        },
+        
+        show: function() {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                sprite.visible = true;
+                
+                postMessage({
+                    type: 'SPRITE_STATE_UPDATE',
+                    spriteId: sprite.id,
+                    state: {
+                        visible: sprite.visible
+                    }
+                });
+                
+                resolve();
+            });
+        },
+        
+        hide: function() {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                sprite.visible = false;
+                
+                postMessage({
+                    type: 'SPRITE_STATE_UPDATE',
+                    spriteId: sprite.id,
+                    state: {
+                        visible: sprite.visible
+                    }
+                });
+                
+                resolve();
+            });
+        },
+        
+        goToFrontBack: function(frontBack) {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                postMessage({
+                    type: 'SPRITE_LAYER_CHANGE',
+                    spriteId: sprite.id,
+                    action: frontBack === 'front' ? 'goToFront' : 'goToBack'
+                });
+                
+                resolve();
+            });
+        },
+        
+        goForwardBackwardLayers: function(forwardBackward, num) {
+            return new Promise(resolve => {
+                if (!isRunning) {
+                    resolve();
+                    return;
+                }
+                
+                const layerCount = parseInt(num) || 1;
+                
+                postMessage({
+                    type: 'SPRITE_LAYER_CHANGE',
+                    spriteId: sprite.id,
+                    action: forwardBackward === 'forward' ? 'goForward' : 'goBackward',
+                    layers: layerCount
+                });
+                
+                resolve();
+            });
+        },
+        
 
     };
 }
 
 // 执行代码
 async function executeCode(sprite, jsCode, abortSignal) {
-    console.log('[Worker] 开始执行精灵代码:', sprite.name);
-    console.log('[Worker] 代码内容:', jsCode);
+
     
     // 检查代码是否只包含事件监听器注册（更精确的检查）
     const hasEventListeners = jsCode.includes('registerKeyEvent') || jsCode.includes('registerSpriteClickEvent') || jsCode.includes('addMessageListener');
     const hasOtherCode = jsCode.includes('await ') || jsCode.includes('rotate') || jsCode.includes('moveTo') || jsCode.includes('setX') || jsCode.includes('setY') || jsCode.includes('changeX') || jsCode.includes('changeY') || jsCode.includes('waitSeconds') || jsCode.includes('sleep');
     
-    console.log('[Worker] 代码检查结果:');
-    console.log('[Worker] - hasEventListeners:', hasEventListeners);
-    console.log('[Worker] - hasOtherCode:', hasOtherCode);
-    console.log('[Worker] - 代码内容:', jsCode);
+
     
     // 如果代码只包含事件监听器注册，没有其他执行代码，则跳过执行
     if (hasEventListeners && !hasOtherCode) {
-        console.log('[Worker] 代码只包含事件监听器注册，跳过执行阶段');
+    
         return; // 直接返回，不执行代码
     }
     
     // 如果代码包含事件监听器，先清除该精灵的现有事件监听器，避免重复注册
     if (hasEventListeners) {
-        console.log(`[Worker] 清除精灵 ${sprite.name} 的现有事件监听器，避免重复注册`);
+    
         
         // 清除键盘事件监听器
-        console.log(`[Worker] executeCode 清除前键盘事件监听器状态:`, 
-            Object.fromEntries(keyEventSystem.listeners.entries())
-        );
+
         
         for (const [key, listeners] of keyEventSystem.listeners.entries()) {
             const originalCount = listeners.length;
             const filteredListeners = listeners.filter(listener => listener.spriteId !== sprite.id);
             keyEventSystem.listeners.set(key, filteredListeners);
             const removedCount = originalCount - filteredListeners.length;
-            if (removedCount > 0) {
-                console.log(`[Worker] executeCode 清除精灵 ${sprite.name} 的键盘事件监听器: ${key}, 移除了 ${removedCount} 个`);
-            }
+
         }
         
-        console.log(`[Worker] executeCode 清除后键盘事件监听器状态:`, 
-            Object.fromEntries(keyEventSystem.listeners.entries())
-        );
+
         
         // 清除精灵点击事件监听器
         const originalClickCount = spriteClickEventSystem.listeners.size;
         for (const [key, listener] of spriteClickEventSystem.listeners.entries()) {
-            if (listener.spriteId === sprite.id) {
-                spriteClickEventSystem.listeners.delete(key);
-                console.log(`[Worker] 清除精灵 ${sprite.name} 的精灵点击事件监听器: ${key}`);
-            }
+
         }
         const removedClickCount = originalClickCount - spriteClickEventSystem.listeners.size;
-        if (removedClickCount > 0) {
-            console.log(`[Worker] 清除精灵 ${sprite.name} 的精灵点击事件监听器, 移除了 ${removedClickCount} 个`);
-        }
+
     }
     
-    console.log('[Worker] 执行包含动作的代码');
+
     
     const context = createExecutionContext(sprite);
     executionContexts.set(sprite.id, context);
     
-    // 调试：检查context对象的内容
-    console.log('[Worker] Context对象内容:', Object.keys(context));
-    console.log('[Worker] Context中的say函数:', typeof context.say);
-    console.log('[Worker] Context中的sayForSecs函数:', typeof context.sayForSecs);
-    console.log('[Worker] Context中的think函数:', typeof context.think);
-    console.log('[Worker] Context中的thinkForSecs函数:', typeof context.thinkForSecs);
+
     
-    // 检查是否有语法错误
-    if (typeof context.say === 'undefined') {
-        console.error('[Worker] 错误：say函数未在context中找到！');
-        console.error('[Worker] 请检查createExecutionContext函数的语法');
-    }
+
     
     try {
         // 从context中获取所有函数
@@ -1590,6 +1926,15 @@ async function executeCode(sprite, jsCode, abortSignal) {
         const sayForSecs = context.sayForSecs;
         const think = context.think;
         const thinkForSecs = context.thinkForSecs;
+        const changeSizeBy = context.changeSizeBy;
+        const setSizeTo = context.setSizeTo;
+        const changeEffectBy = context.changeEffectBy;
+        const setEffectTo = context.setEffectTo;
+        const clearGraphicEffects = context.clearGraphicEffects;
+        const show = context.show;
+        const hide = context.hide;
+        const goToFrontBack = context.goToFrontBack;
+        const goForwardBackwardLayers = context.goForwardBackwardLayers;
         
         // 造型函数
         const switchCostume = context.switchCostume;
@@ -1627,7 +1972,8 @@ async function executeCode(sprite, jsCode, abortSignal) {
             'broadcastMessage', 'broadcastMessageAndWait', 'addMessageListener', 'removeMessageListener',
             'registerKeyEvent', 'removeKeyEvent', 'registerSpriteClickEvent', 'removeSpriteClickEvent',
             'showVariable', 'hideVariable', 'variables', 'updateVariableDisplay',
-            'say', 'sayForSecs', 'think', 'thinkForSecs', 'switchCostume', 'nextCostume', 'getCostumeNumber', 'getX', 'getY',
+            'say', 'sayForSecs', 'think', 'thinkForSecs', 'changeSizeBy', 'setSizeTo', 'changeEffectBy', 'setEffectTo', 'clearGraphicEffects', 'show', 'hide', 'goToFrontBack', 'goForwardBackwardLayers', 'switchCostume', 'nextCostume', 'getCostumeNumber', 'getX', 'getY',
+            'playSoundByName', 'stopAllSounds', 'setVolume', 'getVolume',
             'Math', 'abs', 'floor', 'ceil', 'round', 'sqrt', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', 'exp', 'pow10',
             'PI', 'E', 'GOLDEN_RATIO', 'SQRT2', 'SQRT1_2', 'INFINITY', `
             return (async function() {
@@ -1665,7 +2011,8 @@ async function executeCode(sprite, jsCode, abortSignal) {
             broadcastMessage, broadcastMessageAndWait, addMessageListener, removeMessageListener,
             registerKeyEvent, removeKeyEvent, registerSpriteClickEvent, removeSpriteClickEvent,
             showVariable, hideVariable, variables, updateVariableDisplay,
-            say, sayForSecs, think, thinkForSecs, switchCostume, nextCostume, getCostumeNumber, getX, getY,
+            say, sayForSecs, think, thinkForSecs, changeSizeBy, setSizeTo, changeEffectBy, setEffectTo, clearGraphicEffects, show, hide, goToFrontBack, goForwardBackwardLayers, switchCostume, nextCostume, getCostumeNumber, getX, getY,
+            playSoundByName, stopAllSounds, setVolume, getVolume,
             Math, abs, floor, ceil, round, sqrt, sin, cos, tan, asin, acos, atan, ln, log, exp, pow10,
             PI, E, GOLDEN_RATIO, SQRT2, SQRT1_2, INFINITY);
         
@@ -1772,6 +2119,19 @@ self.onmessage = function(e) {
                     console.log('[Worker] 背景:', b.name, '代码长度:', b.code ? b.code.length : 0, '代码内容:', b.code);
                 });
             }
+            
+            // 初始化声音数据
+            if (data.sounds) {
+                console.log('[Worker] 初始化声音数据:', data.sounds);
+                sounds = data.sounds;
+                console.log('[Worker] 声音初始化完成，数量:', sounds.length);
+            }
+            break;
+            
+        case 'SYNC_SOUNDS':
+            console.log('[Worker] 同步声音数据:', data.sounds);
+            sounds = data.sounds || [];
+            console.log('[Worker] 声音同步完成，数量:', sounds.length);
             break;
             
         case 'START_EXECUTION':
@@ -1945,6 +2305,14 @@ self.onmessage = function(e) {
                     console.log('[Worker] 更新精灵代码:', sprite.name);
                 }
             }
+            break;
+            
+        case 'STOP_ALL_SOUNDS_REQUEST':
+            console.log('[Worker] 🎵 ===== 收到停止所有声音请求 =====');
+            console.log('[Worker] 🎵 当前声音列表长度:', sounds.length);
+            console.log('[Worker] 🎵 调用Worker的stopAllSounds函数');
+            stopAllSounds();
+            console.log('[Worker] 🎵 ===== 停止所有声音请求处理完成 =====');
             break;
             
         case 'BROADCAST_MESSAGE':
@@ -2162,6 +2530,15 @@ function executeMessageListenerRegistration(sprite, listenerCode, context) {
         const sayForSecs = context.sayForSecs;
         const think = context.think;
         const thinkForSecs = context.thinkForSecs;
+        const changeSizeBy = context.changeSizeBy;
+        const setSizeTo = context.setSizeTo;
+        const changeEffectBy = context.changeEffectBy;
+        const setEffectTo = context.setEffectTo;
+        const clearGraphicEffects = context.clearGraphicEffects;
+        const show = context.show;
+        const hide = context.hide;
+        const goToFrontBack = context.goToFrontBack;
+        const goForwardBackwardLayers = context.goForwardBackwardLayers;
         
         // 造型函数
         const switchCostume = context.switchCostume;
@@ -2212,7 +2589,7 @@ function executeMessageListenerRegistration(sprite, listenerCode, context) {
             'broadcastMessage', 'broadcastMessageAndWait', 'addMessageListener', 'removeMessageListener',
             'registerKeyEvent', 'removeKeyEvent', 'registerSpriteClickEvent', 'removeSpriteClickEvent',
             'showVariable', 'hideVariable', 'variables', 'updateVariableDisplay',
-            'say', 'sayForSecs', 'think', 'thinkForSecs', 'switchCostume', 'nextCostume', 'getCostumeNumber',
+            'say', 'sayForSecs', 'think', 'thinkForSecs', 'changeSizeBy', 'setSizeTo', 'changeEffectBy', 'setEffectTo', 'clearGraphicEffects', 'show', 'hide', 'goToFrontBack', 'goForwardBackwardLayers', 'switchCostume', 'nextCostume', 'getCostumeNumber',
             'Math', 'abs', 'floor', 'ceil', 'round', 'sqrt', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', 'exp', 'pow10',
             'PI', 'E', 'GOLDEN_RATIO', 'SQRT2', 'SQRT1_2', 'INFINITY', `
             return (function() {
@@ -2235,7 +2612,7 @@ function executeMessageListenerRegistration(sprite, listenerCode, context) {
             broadcastMessage, broadcastMessageAndWait, addMessageListener, removeMessageListener,
             registerKeyEvent, removeKeyEvent, registerSpriteClickEvent, removeSpriteClickEvent,
             showVariable, hideVariable, variables, updateVariableDisplay,
-            say, sayForSecs, think, thinkForSecs, switchCostume, nextCostume, getCostumeNumber,
+            say, sayForSecs, think, thinkForSecs, changeSizeBy, setSizeTo, changeEffectBy, setEffectTo, clearGraphicEffects, show, hide, goToFrontBack, goForwardBackwardLayers, switchCostume, nextCostume, getCostumeNumber,
             Math, abs, floor, ceil, round, sqrt, sin, cos, tan, asin, acos, atan, ln, log, exp, pow10,
             PI, E, GOLDEN_RATIO, SQRT2, SQRT1_2, INFINITY);
         

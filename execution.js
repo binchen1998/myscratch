@@ -129,6 +129,16 @@ function setupWorkerMessageHandlers() {
                     handleSpriteCostumeChanged(e.data.spriteId, e.data.costumeIndex, e.data.costumeName);
                     break;
                     
+                case 'SPRITE_STATE_UPDATE':
+                    // console.log('[主线程] 精灵状态更新:', e.data.spriteId, e.data.state);
+                    updateSpriteFromWorker(e.data.spriteId, e.data.state);
+                    break;
+                    
+                case 'SPRITE_LAYER_CHANGE':
+                    // console.log('[主线程] 精灵图层变化:', e.data.spriteId, e.data.action, e.data.layers);
+                    handleSpriteLayerChange(e.data.spriteId, e.data.action, e.data.layers);
+                    break;
+                    
                 case 'SHOW_VARIABLE':
                     // console.log('[主线程] 显示变量:', e.data.varName, '值:', e.data.value);
                     showVariable(e.data.varName, e.data.spriteId);
@@ -143,6 +153,33 @@ function setupWorkerMessageHandlers() {
                 case 'UPDATE_VARIABLE':
                     // console.log('[主线程] 更新变量:', e.data.varName, '值:', e.data.value);
                     updateVariableValue(e.data.varName, e.data.value);
+                    break;
+                    
+                case 'PLAY_SOUND':
+                    console.log('[主线程] 🎵 播放声音:', e.data.soundName);
+                    if (typeof playSoundByName === 'function') {
+                        playSoundByName(e.data.soundName, e.data.waitUntilDone);
+                    } else {
+                        console.warn('[主线程] 🎵 playSoundByName 函数不可用');
+                    }
+                    break;
+                    
+                case 'STOP_ALL_SOUNDS':
+                    console.log('[主线程] 🎵 停止所有声音');
+                    if (typeof stopAllSounds === 'function') {
+                        stopAllSounds();
+                    } else {
+                        console.warn('[主线程] 🎵 stopAllSounds 函数不可用');
+                    }
+                    break;
+                    
+                case 'SET_VOLUME':
+                    console.log('[主线程] 🎵 设置音量:', e.data.volume);
+                    if (typeof setVolume === 'function') {
+                        setVolume(e.data.volume * 100);
+                    } else {
+                        console.warn('[主线程] 🎵 setVolume 函数不可用');
+                    }
                     break;
                     
                 case 'GET_MOUSE_POSITION':
@@ -197,6 +234,15 @@ function setupWorkerMessageHandlers() {
         // console.error('[主线程] Worker错误:', error);
         // console.error('Worker错误详情:', error.message, error.filename, error.lineno);
         showNotification('Worker执行出错，无法继续执行。请刷新页面重试。');
+        
+        // 先停止所有声音，然后再处理Worker错误
+        console.log('[主线程] 🎵 Worker错误：停止所有声音');
+        if (typeof stopAllSounds === 'function') {
+            stopAllSounds();
+            console.log('[主线程] 🎵 ✅ Worker错误时已停止所有声音');
+        }
+        
+        // 设置Worker为null并停止执行
         spriteWorker = null;
         stopExecution();
     };
@@ -244,10 +290,54 @@ function syncSpritesToWorker() {
             currentCostumeIndex: sprite.currentCostumeIndex || 0 // 发送当前造型索引给Worker
         }));
         
+        // 获取声音数据
+        const soundsData = typeof getSoundsList === 'function' ? getSoundsList() : [];
+        
         spriteWorker.postMessage({
             type: 'INIT_SPRITES',
-            data: { sprites: spriteData }
+            data: { 
+                sprites: spriteData,
+                sounds: soundsData
+            }
         });
+    }
+}
+
+// 同步声音数据到Worker
+function syncSoundsToWorker() {
+    if (spriteWorker && typeof getSoundsList === 'function') {
+        const soundsData = getSoundsList();
+        
+        // 确保声音数据不包含任何HTMLAudioElement对象
+        const cleanSoundsData = soundsData.map(sound => ({
+            id: sound.id,
+            name: sound.name,
+            dataURL: sound.dataURL,
+            duration: sound.duration
+        }));
+        
+        // 验证数据可序列化性
+        try {
+            JSON.stringify(cleanSoundsData);
+            console.log('[主线程] ✅ 同步声音数据验证通过，可以序列化');
+        } catch (error) {
+            console.error('[主线程] ❌ 同步声音数据序列化失败:', error);
+            throw new Error('同步声音数据包含不可序列化的对象');
+        }
+        
+        spriteWorker.postMessage({
+            type: 'SYNC_SOUNDS',
+            data: { sounds: cleanSoundsData }
+        });
+    }
+}
+
+// 清除合并代码，强制使用实时代码生成
+function clearMergedCode() {
+    if (window.currentProjectData) {
+        delete window.currentProjectData.mergedCode;
+        console.log('[主线程] 合并代码已清除，将使用实时代码生成');
+        showNotification('合并代码已清除，将使用实时代码生成');
     }
 }
 
@@ -263,8 +353,31 @@ function autoStopExecution() {
 function getCurrentMergedCode() {
     // 检查是否有合并代码可用
     if (window.currentProjectData && window.currentProjectData.mergedCode) {
+        console.log('[主线程] 找到合并代码，长度:', window.currentProjectData.mergedCode.length);
+        console.log('[主线程] 合并代码内容预览:', window.currentProjectData.mergedCode.substring(0, 500) + '...');
+        
+        // 检查合并代码是否包含声音相关函数
+        if (window.currentProjectData.mergedCode.includes('playSoundByName')) {
+            console.log('[主线程] ✅ 合并代码包含 playSoundByName 函数');
+        } else {
+            console.log('[主线程] ❌ 合并代码不包含 playSoundByName 函数');
+        }
+        
+        if (window.currentProjectData.mergedCode.includes('stopAllSounds')) {
+            console.log('[主线程] ✅ 合并代码包含 stopAllSounds 函数');
+        } else {
+            console.log('[主线程] ❌ 合并代码不包含 stopAllSounds 函数');
+        }
+        
+        if (window.currentProjectData.mergedCode.includes('setVolume')) {
+            console.log('[主线程] ✅ 合并代码包含 setVolume 函数');
+        } else {
+            console.log('[主线程] ❌ 合并代码不包含 setVolume 函数');
+        }
+        
         return window.currentProjectData.mergedCode;
     }
+    console.log('[主线程] 没有找到合并代码');
     return null;
 }
 
@@ -282,10 +395,7 @@ function runMergedCodeFromString(mergedCode) {
             redrawCanvas();
         }
         
-        // 打印合并代码到控制台供调试
-        console.log('=== 合并代码开始 ===');
-        console.log(mergedCode);
-        console.log('=== 合并代码结束 ===');
+
         
         // 创建一个新的Worker来运行合并的代码
         const mergedCodeBlob = new Blob([mergedCode], { type: 'application/javascript' });
@@ -337,6 +447,33 @@ function runMergedCodeFromString(mergedCode) {
                     updateVariableValue(e.data.varName, e.data.value);
                     break;
                     
+                case 'PLAY_SOUND':
+                    console.log('[主线程] 🎵 播放声音 (合并代码):', e.data.soundName);
+                    if (typeof playSoundByName === 'function') {
+                        playSoundByName(e.data.soundName, e.data.waitUntilDone);
+                    } else {
+                        console.warn('[主线程] 🎵 playSoundByName 函数不可用');
+                    }
+                    break;
+                    
+                case 'STOP_ALL_SOUNDS':
+                    console.log('[主线程] 🎵 停止所有声音 (合并代码)');
+                    if (typeof stopAllSounds === 'function') {
+                        stopAllSounds();
+                    } else {
+                        console.warn('[主线程] 🎵 stopAllSounds 函数不可用');
+                    }
+                    break;
+                    
+                case 'SET_VOLUME':
+                    console.log('[主线程] 🎵 设置音量 (合并代码):', e.data.volume);
+                    if (typeof setVolume === 'function') {
+                        setVolume(e.data.volume * 100);
+                    } else {
+                        console.warn('[主线程] 🎵 setVolume 函数不可用');
+                    }
+                    break;
+                    
                 case 'SWITCH_BACKGROUND':
                     switchBackgroundById(e.data.backgroundId);
                     break;
@@ -348,6 +485,9 @@ function runMergedCodeFromString(mergedCode) {
             showNotification('合并代码执行出错，请检查代码格式');
             stopExecution();
         };
+        
+        // 保存合并Worker的引用，以便在停止时终止它
+        window.currentMergedWorker = mergedWorker;
         
         // 开始执行
         isRunning = true;
@@ -504,8 +644,18 @@ async function startExecution() {
     const mergedCode = getCurrentMergedCode();
     if (mergedCode) {
         console.log('[主线程] 使用合并代码执行');
-        runMergedCodeFromString(mergedCode);
-        return;
+        console.log('[主线程] ⚠️ 注意：使用合并代码执行，可能不包含最新的声音功能');
+        console.log('[主线程] 建议：清除合并代码以使用实时代码生成');
+        
+        // 检查合并代码是否包含声音功能
+        if (!mergedCode.includes('playSoundByName') || !mergedCode.includes('stopAllSounds')) {
+            console.log('[主线程] 🚨 合并代码不包含声音功能，自动清除并重新生成');
+            clearMergedCode();
+            // 继续执行实时代码生成
+        } else {
+            runMergedCodeFromString(mergedCode);
+            return;
+        }
     }
     
     // 如果没有合并代码，使用原有的执行方式
@@ -541,6 +691,23 @@ async function startExecution() {
                 // 检查workspace中的blocks
                 const blocks = tempWorkspace.getAllBlocks();
                 console.log(`精灵 ${sprite.name} 有 ${blocks.length} 个代码块:`, blocks.map(b => b.type));
+                
+                // 详细检查每个块
+                blocks.forEach((block, index) => {
+                    console.log(`  [主线程] 块 ${index + 1}: ${block.type}`);
+                    if (block.type.startsWith('sound_')) {
+                        console.log(`  [主线程] 🎵 发现声音积木: ${block.type}`);
+                        // 检查声音积木的字段值
+                        const fields = block.inputList || [];
+                        fields.forEach(input => {
+                            if (input.fieldRow) {
+                                input.fieldRow.forEach(field => {
+                                    console.log(`  [主线程]    字段: ${field.name} = ${field.getValue()}`);
+                                });
+                            }
+                        });
+                    }
+                });
                 
                 // 再次确保生成器可用
                 ensureGeneratorsRegistered();
@@ -640,6 +807,19 @@ async function startExecution() {
                 }
                 
                 console.log(`[主线程] 最终生成的JavaScript代码:`, jsCode);
+                
+                // 检查生成的代码是否包含声音相关函数调用
+                if (jsCode.includes('playSoundByName')) {
+                    console.log(`[主线程] ✅ 精灵 ${sprite.name} 的代码包含 playSoundByName 调用`);
+                } else {
+                    console.log(`[主线程] ❌ 精灵 ${sprite.name} 的代码不包含 playSoundByName 调用`);
+                }
+                
+                if (jsCode.includes('stopAllSounds')) {
+                    console.log(`[主线程] ✅ 精灵 ${sprite.name} 的代码包含 stopAllSounds 调用`);
+                } else {
+                    console.log(`[主线程] ❌ 精灵 ${sprite.name} 的代码不包含 stopAllSounds 调用`);
+                }
                 
                 // 更新精灵的JavaScript代码
                 sprite.jsCode = jsCode;
@@ -821,11 +1001,34 @@ async function startExecution() {
             }
         });
         
+        // 获取声音数据
+        const soundsData = typeof getSoundsList === 'function' ? getSoundsList() : [];
+        
+        // 确保声音数据不包含任何HTMLAudioElement对象
+        const cleanSoundsData = soundsData.map(sound => ({
+            id: sound.id,
+            name: sound.name,
+            dataURL: sound.dataURL,
+            duration: sound.duration
+        }));
+        
+        // 验证数据可序列化性
+        try {
+            JSON.stringify(cleanSoundsData);
+            console.log('[主线程] ✅ 声音数据验证通过，可以序列化');
+        } catch (error) {
+            console.error('[主线程] ❌ 声音数据序列化失败:', error);
+            throw new Error('声音数据包含不可序列化的对象');
+        }
+        
+        console.log('[主线程] 发送声音数据到Worker:', cleanSoundsData);
+        
         spriteWorker.postMessage({
             type: 'INIT_SPRITES',
             data: { 
                 sprites: spriteData,
-                backgrounds: backgroundData
+                backgrounds: backgroundData,
+                sounds: cleanSoundsData
             }
         });
         
@@ -849,6 +1052,7 @@ async function startExecution() {
 
 // 停止执行
 function stopExecution() {
+    console.log('[主线程] 停止执行程序');
     isRunning = false;
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
@@ -858,14 +1062,26 @@ function stopExecution() {
         animationId = null;
     }
     
+    // 停止所有声音播放（使用浏览器API，简单有效）
+    console.log('[主线程] 🎵 ===== 停止所有声音播放 =====');
+    console.log('[主线程] 🎵 检查stopAllSounds函数是否可用:', typeof stopAllSounds);
+    if (typeof stopAllSounds === 'function') {
+        console.log('[主线程] 🎵 调用stopAllSounds函数');
+        stopAllSounds();
+        console.log('[主线程] 🎵 ✅ stopAllSounds函数调用完成');
+    } else {
+        console.warn('[主线程] 🎵 ❌ stopAllSounds 函数不可用');
+    }
+    console.log('[主线程] 🎵 ===== 停止所有声音播放完成 =====');
+    
     // 清除所有说话气泡
     if (typeof spriteSpeechBubbles !== 'undefined') {
         spriteSpeechBubbles.clear();
     }
     
-    // 强制终止Worker并重新创建
+    // 第三步：强制终止Worker并重新创建
     if (spriteWorker) {
-        console.log('[主线程] 强制终止Worker');
+        console.log('[主线程] 第三步：强制终止Worker');
         spriteWorker.terminate();
         spriteWorker = null;
         
@@ -877,6 +1093,13 @@ function stopExecution() {
             console.log('[主线程] 重新初始化Worker');
             initializeWorker();
         }, 100);
+    }
+    
+    // 终止合并Worker（如果存在）
+    if (window.currentMergedWorker) {
+        console.log('[主线程] 强制终止合并Worker');
+        window.currentMergedWorker.terminate();
+        window.currentMergedWorker = null;
     }
     
     // 重新绘制画布
@@ -912,9 +1135,14 @@ function generateBlockCode(block, workspace = null) {
         const blockType = block.type;
         console.log('[主线程] 生成代码块:', blockType);
         
-        // 直接使用手动代码生成，避免Blockly生成器的问题
-        console.log('[主线程] 使用手动代码生成...');
-        return generateCodeManually(block, workspace);
+        // 首先尝试使用Blockly的代码生成器
+        if (Blockly.JavaScript[blockType]) {
+            console.log('[主线程] 使用Blockly代码生成器...');
+            return Blockly.JavaScript[blockType](block);
+        } else {
+            console.log('[主线程] Blockly代码生成器不可用，使用手动代码生成...');
+            return generateCodeManually(block, workspace);
+        }
         
     } catch (error) {
         console.error('[主线程] 代码生成错误:', error);
@@ -934,7 +1162,7 @@ function generateCodeManually(block, workspace = null, depth = 0) {
     const blockType = block.type;
     console.log(`${indent}[主线程] 手动生成代码块 (深度${depth}):`, blockType);
     
-    // 添加更多调试信息
+    
     if (blockType === 'controls_repeat_forever') {
         console.log(`${indent}[主线程] 检查循环块的输入:`, block.inputList);
         const doInput = block.getInput('DO');
@@ -1178,22 +1406,26 @@ function generateCodeManually(block, workspace = null, depth = 0) {
             
         // ===== 外观块代码生成器 =====
         case 'looks_say':
-            const sayMessage = block.getFieldValue('MESSAGE') || '你好!';
-            return `await say('${sayMessage.replace(/'/g, "\\'")}');\n`;
+            const sayMessageBlock = block.getInputTargetBlock('MESSAGE');
+            const sayMessageCode = sayMessageBlock ? generateCodeManually(sayMessageBlock, workspace, depth + 1) : "'你好!'";
+            return `await say(${sayMessageCode});\n`;
             
         case 'looks_say_for_secs':
-            const sayForSecsMessage = block.getFieldValue('MESSAGE') || '你好!';
+            const sayForSecsMessageBlock = block.getInputTargetBlock('MESSAGE');
+            const sayForSecsMessageCode = sayForSecsMessageBlock ? generateCodeManually(sayForSecsMessageBlock, workspace, depth + 1) : "'你好!'";
             const sayForSecsDuration = block.getFieldValue('SECS') || '2';
-            return `await sayForSecs('${sayForSecsMessage.replace(/'/g, "\\'")}', ${sayForSecsDuration});\n`;
+            return `await sayForSecs(${sayForSecsMessageCode}, ${sayForSecsDuration});\n`;
             
         case 'looks_think':
-            const thinkMessage = block.getFieldValue('MESSAGE') || '嗯';
-            return `await think('${thinkMessage.replace(/'/g, "\\'")}');\n`;
+            const thinkMessageBlock = block.getInputTargetBlock('MESSAGE');
+            const thinkMessageCode = thinkMessageBlock ? generateCodeManually(thinkMessageBlock, workspace, depth + 1) : "'嗯'";
+            return `await think(${thinkMessageCode});\n`;
             
         case 'looks_think_for_secs':
-            const thinkForSecsMessage = block.getFieldValue('MESSAGE') || '嗯';
+            const thinkForSecsMessageBlock = block.getInputTargetBlock('MESSAGE');
+            const thinkForSecsMessageCode = thinkForSecsMessageBlock ? generateCodeManually(thinkForSecsMessageBlock, workspace, depth + 1) : "'嗯'";
             const thinkForSecsDuration = block.getFieldValue('SECS') || '2';
-            return `await thinkForSecs('${thinkForSecsMessage.replace(/'/g, "\\'")}', ${thinkForSecsDuration});\n`;
+            return `await thinkForSecs(${thinkForSecsMessageCode}, ${thinkForSecsDuration});\n`;
             
         case 'looks_switch_costume':
             const costumeId = block.getFieldValue('COSTUME') || 'costume_1';
@@ -1204,6 +1436,42 @@ function generateCodeManually(block, workspace = null, depth = 0) {
             
         case 'looks_costume_number':
             return `getCostumeNumber()`;
+            
+        case 'looks_changesizeby':
+            const sizeChange = block.getFieldValue('SIZE') || '10';
+            return `changeSizeBy(${sizeChange});\n`;
+            
+        case 'looks_setsizeto':
+            const sizeSet = block.getFieldValue('SIZE') || '100';
+            return `setSizeTo(${sizeSet});\n`;
+            
+        case 'looks_changeeffectby':
+            const effectTypeChange = block.getFieldValue('EFFECT') || 'color';
+            const effectValueChange = block.getFieldValue('VALUE') || '25';
+            return `changeEffectBy('${effectTypeChange}', ${effectValueChange});\n`;
+            
+        case 'looks_seteffectto':
+            const effectTypeSet = block.getFieldValue('EFFECT') || 'color';
+            const effectValueSet = block.getFieldValue('VALUE') || '0';
+            return `setEffectTo('${effectTypeSet}', ${effectValueSet});\n`;
+            
+        case 'looks_cleargraphiceffects':
+            return `clearGraphicEffects();\n`;
+            
+        case 'looks_show':
+            return `show();\n`;
+            
+        case 'looks_hide':
+            return `hide();\n`;
+            
+        case 'looks_gotofrontback':
+            const frontBack = block.getFieldValue('FRONT_BACK') || 'front';
+            return `goToFrontBack('${frontBack}');\n`;
+            
+        case 'looks_goforwardbackwardlayers':
+            const forwardBackward = block.getFieldValue('FORWARD_BACKWARD') || 'forward';
+            const layerNum = block.getFieldValue('NUM') || '1';
+            return `goForwardBackwardLayers('${forwardBackward}', ${layerNum});\n`;
             
         case 'controls_stop':
             const stopOption = block.getFieldValue('STOP_OPTION') || 'this script';
@@ -1263,15 +1531,15 @@ function generateCodeManually(block, workspace = null, depth = 0) {
             console.log(`[主线程] 📨 消息处理代码长度:`, messageHandlerCode.length);
             console.log(`[主线程] 📨 消息处理代码:`, messageHandlerCode);
             
-            // 生成消息监听器代码
-            const listenerCode = `addMessageListener('${messageName}', async function(messageName, senderId) {\n${messageHandlerCode}});\n`;
+            // 生成消息监听器代码，添加调试打印
+            const listenerCode = `addMessageListener('${messageName}', async function(messageName, senderId) {\nconsole.log('[消息监听器] 消息"${messageName}"已经收到，发送者:', senderId);\n${messageHandlerCode}});\n`;
             console.log(`[主线程] 📨 生成的消息监听器代码:`, listenerCode);
             return listenerCode;
             
         case 'broadcast_message':
             const broadcastMessageName = block.getFieldValue('MESSAGE_NAME') || '消息';
             console.log(`[主线程] 📢 生成广播消息块代码: ${broadcastMessageName}`);
-            const broadcastCode = `await broadcastMessage('${broadcastMessageName}');\n`;
+            const broadcastCode = `console.log('[广播消息] 正在广播消息"${broadcastMessageName}"');\nawait broadcastMessage('${broadcastMessageName}');\n`;
             console.log(`[主线程] 📢 生成的广播消息代码:`, broadcastCode);
             return broadcastCode;
             
@@ -1487,25 +1755,108 @@ function generateCodeManually(block, workspace = null, depth = 0) {
             const setVarName = block.getFieldValue('VAR') || '变量';
             const setValueBlock = block.getInputTargetBlock('VALUE');
             const setValueCode = setValueBlock ? generateCodeManually(setValueBlock, workspace, depth + 1) : '0';
-            return `variables['${setVarName}'] = ${setValueCode};\nupdateVariableDisplay('${setVarName}', variables);\n`;
+            // 转义变量名中的特殊字符
+            const escapedSetVarName = setVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `variables['${escapedSetVarName}'] = ${setValueCode};\nupdateVariableDisplay('${escapedSetVarName}', variables);\n`;
             
         case 'variables_change':
             const changeVarName = block.getFieldValue('VAR') || '变量';
             const changeValueBlock = block.getInputTargetBlock('VALUE');
             const changeValueCode = changeValueBlock ? generateCodeManually(changeValueBlock, workspace, depth + 1) : '1';
-            return `variables['${changeVarName}'] = (variables['${changeVarName}'] || 0) + ${changeValueCode};\nupdateVariableDisplay('${changeVarName}', variables);\n`;
+            // 转义变量名中的特殊字符
+            const escapedChangeVarName = changeVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            // 智能类型处理：如果是数字则相加，如果是字符串则连接
+            return `(function() {
+                const currentValue = variables['${escapedChangeVarName}'];
+                const newValue = ${changeValueCode};
+                if (typeof currentValue === 'number' && typeof newValue === 'number') {
+                    variables['${escapedChangeVarName}'] = (currentValue || 0) + newValue;
+                } else {
+                    variables['${escapedChangeVarName}'] = (currentValue || '') + newValue;
+                }
+                updateVariableDisplay('${escapedChangeVarName}', variables);
+            })();\n`;
             
         case 'variables_get':
             const getVarName = block.getFieldValue('VAR') || '变量';
-            return `(variables['${getVarName}'] || 0)`;
+            // 转义变量名中的特殊字符
+            const escapedGetVarName = getVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `(variables['${escapedGetVarName}'] || '')`;
             
         case 'variables_show':
             const showVarName = block.getFieldValue('VAR') || '变量';
-            return `showVariable('${showVarName}', variables);\n`;
+            // 转义变量名中的特殊字符
+            const escapedShowVarName = showVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `showVariable('${escapedShowVarName}', variables);\n`;
             
         case 'variables_hide':
             const hideVarName = block.getFieldValue('VAR') || '变量';
-            return `hideVariable('${hideVarName}', variables);\n`;
+            // 转义变量名中的特殊字符
+            const escapedHideVarName = hideVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `hideVariable('${escapedHideVarName}', variables);\n`;
+
+        // ===== 全局变量相关代码生成 =====
+        case 'global_variables_create':
+            const createGlobalVarName = block.getFieldValue('VAR_NAME') || '变量名';
+            // 转义变量名中的特殊字符
+            const escapedCreateGlobalVarName = createGlobalVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `createGlobalVariable('${escapedCreateGlobalVarName}', 0);\n`;
+            
+        case 'global_variables_set':
+            const setGlobalVarName = block.getFieldValue('VAR_NAME') || '变量名';
+            const setGlobalValueBlock = block.getInputTargetBlock('VALUE');
+            const setGlobalValueCode = setGlobalValueBlock ? generateCodeManually(setGlobalValueBlock, workspace, depth + 1) : '0';
+            // 转义变量名中的特殊字符
+            const escapedSetGlobalVarName = setGlobalVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `setGlobalVariable('${escapedSetGlobalVarName}', ${setGlobalValueCode});\n`;
+            
+        case 'global_variables_change':
+            const changeGlobalVarName = block.getFieldValue('VAR_NAME') || '变量名';
+            const changeGlobalValueBlock = block.getInputTargetBlock('VALUE');
+            const changeGlobalValueCode = changeGlobalValueBlock ? generateCodeManually(changeGlobalValueBlock, workspace, depth + 1) : '1';
+            // 转义变量名中的特殊字符
+            const escapedChangeGlobalVarName = changeGlobalVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `changeGlobalVariable('${escapedChangeGlobalVarName}', ${changeGlobalValueCode});\n`;
+            
+        case 'global_variables_get':
+            const getGlobalVarName = block.getFieldValue('VAR_NAME') || '变量名';
+            // 转义变量名中的特殊字符
+            const escapedGetGlobalVarName = getGlobalVarName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+            return `getGlobalVariable('${escapedGetGlobalVarName}')`;
+            
+        // 声音积木处理
+        case 'sound_play':
+            const soundName = block.getFieldValue('SOUND') || 'karen';
+            return `playSoundByName('${soundName}', false);\n`;
+            
+        case 'sound_play_wait':
+            const soundNameWait = block.getFieldValue('SOUND') || 'karen';
+            return `playSoundByName('${soundNameWait}', true);\n`;
+            
+        case 'sound_stop_all':
+            return `stopAllSounds();\n`;
+            
+        case 'sound_change_effect':
+            const soundEffectValue = block.getFieldValue('EFFECT') || 'echo';
+            return `setVolume(${soundEffectValue});\n`;
+            
+        case 'sound_set_effect':
+            const soundEffectValueSet = block.getFieldValue('EFFECT') || 'echo';
+            return `setVolume(${soundEffectValueSet});\n`;
+            
+        case 'sound_clear_effects':
+            return `setVolume(100);\n`;
+            
+        case 'sound_change_volume':
+            const volumeChange = block.getFieldValue('VOLUME') || '10';
+            return `setVolume(getVolume() + ${volumeChange});\n`;
+            
+        case 'sound_set_volume':
+            const volumeSet = block.getFieldValue('VOLUME') || '100';
+            return `setVolume(${volumeSet});\n`;
+            
+        case 'sound_volume':
+            return `getVolume()`;
             
         default:
             console.warn('[主线程] 未知的块类型:', blockType);
@@ -1697,6 +2048,65 @@ function handleSpriteCostumeChanged(spriteId, costumeIndex, costumeName) {
     // 显示通知
     if (typeof showNotification === 'function') {
         showNotification(`精灵 ${sprite.name} 切换到造型 "${costumeName}"`);
+    }
+}
+
+// 处理精灵图层变化
+function handleSpriteLayerChange(spriteId, action, layers) {
+    const sprite = sprites.find(s => s.id === spriteId);
+    if (!sprite) return;
+    
+    console.log(`[主线程] 精灵 ${sprite.name} 图层变化: ${action} ${layers || ''}`);
+    
+    // 获取精灵在数组中的索引
+    const spriteIndex = sprites.findIndex(s => s.id === spriteId);
+    if (spriteIndex === -1) return;
+    
+    switch (action) {
+        case 'goToFront':
+            // 移到最前面
+            sprites.splice(spriteIndex, 1);
+            sprites.push(sprite);
+            break;
+            
+        case 'goToBack':
+            // 移到最后面
+            sprites.splice(spriteIndex, 1);
+            sprites.unshift(sprite);
+            break;
+            
+        case 'goForward':
+            // 前移指定层数
+            const forwardLayers = layers || 1;
+            const newForwardIndex = Math.min(spriteIndex + forwardLayers, sprites.length - 1);
+            sprites.splice(spriteIndex, 1);
+            sprites.splice(newForwardIndex, 0, sprite);
+            break;
+            
+        case 'goBackward':
+            // 后移指定层数
+            const backwardLayers = layers || 1;
+            const newBackwardIndex = Math.max(spriteIndex - backwardLayers, 0);
+            sprites.splice(spriteIndex, 1);
+            sprites.splice(newBackwardIndex, 0, sprite);
+            break;
+    }
+    
+    // 重新绘制画布
+    redrawCanvas();
+    
+    // 更新精灵列表显示
+    renderSpritesList();
+    
+    // 显示通知
+    if (typeof showNotification === 'function') {
+        const actionText = {
+            'goToFront': '移到最前面',
+            'goToBack': '移到最后面',
+            'goForward': `前移${layers}层`,
+            'goBackward': `后移${layers}层`
+        }[action] || action;
+        showNotification(`精灵 ${sprite.name} ${actionText}`);
     }
 }
 

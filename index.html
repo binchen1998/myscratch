@@ -16,8 +16,7 @@
             <button id="stopBtn" class="control-btn stop" disabled>⏹ 停止</button>
             <button id="saveBtn" class="control-btn save">💾 保存</button>
             <button id="loadBtn" class="control-btn load">📂 加载</button>
-            <button id="debugBtn" class="control-btn debug">🐛 调试</button>
-            <button id="debugLoopBtn" class="control-btn debug-loop">🔄 循环调试</button>
+            <button id="soundManagerBtn" class="control-btn sound">🔊 声音管理</button>
         </div>
         <h1>儿童编程工具</h1>
     </div>
@@ -205,6 +204,26 @@
         </div>
     </div>
 
+    <!-- 声音管理对话框 -->
+    <div id="soundModal" class="sound-modal" style="display: none;">
+        <div class="sound-content">
+            <div class="sound-header">
+                <h3>声音管理</h3>
+                <button class="sound-close" id="soundCloseBtn">&times;</button>
+            </div>
+            <div class="sound-body">
+                <div class="sound-controls">
+                    <button id="addSoundBtn" class="sound-add-btn">+ 添加声音</button>
+                    <button id="removeSoundBtn" class="sound-remove-btn" disabled>- 删除声音</button>
+                </div>
+                <div class="sounds-list" id="soundsList">
+                    <!-- 声音将在这里显示 -->
+                </div>
+                <input type="file" id="soundFileInput" accept="audio/*" style="display: none;">
+            </div>
+        </div>
+    </div>
+
     <script src="config.js"></script>
     <script src="core.js"></script>
     <script src="sprite.js"></script>
@@ -217,6 +236,7 @@
     <script src="ai-chat.js"></script>
     <script src="code-editor.js"></script>
     <script src="xml-viewer.js"></script>
+    <script src="sound-manager.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 

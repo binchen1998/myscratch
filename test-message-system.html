@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息系统测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        input {
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>消息系统调试测试</h1>
+    
+    <div class="test-section">
+        <h3>1. 测试消息监听器注册</h3>
+        <input type="text" id="messageName" placeholder="消息名称" value="test">
+        <button onclick="testAddListener()">注册监听器</button>
+        <button onclick="testBroadcast()">广播消息</button>
+        <button onclick="showListeners()">显示所有监听器</button>
+        <button onclick="clearLog()">清除日志</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 测试全局变量</h3>
+        <input type="text" id="varName" placeholder="变量名" value="testVar">
+        <input type="text" id="varValue" placeholder="变量值" value="100">
+        <button onclick="testCreateGlobalVar()">创建全局变量</button>
+        <button onclick="testSetGlobalVar()">设置全局变量</button>
+        <button onclick="testGetGlobalVar()">获取全局变量</button>
+        <button onclick="showAllGlobalVars()">显示所有全局变量</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. 控制台日志</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        // 重写console.log来同时显示在页面上
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addToLog(level, ...args) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            const logEntry = document.createElement('div');
+            logEntry.style.color = level === 'error' ? 'red' : level === 'warn' ? 'orange' : 'black';
+            logEntry.textContent = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', ...args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', ...args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToLog('warn', ...args);
+        };
+
+        // 全局变量存储（模拟core.js中的实现）
+        let globalVariables = {};
+        
+        // 全局变量操作函数
+        function createGlobalVariable(varName, initialValue = 0) {
+            if (typeof varName !== 'string' || varName.trim() === '') {
+                throw new Error('变量名不能为空');
+            }
+            
+            const trimmedVarName = varName.trim();
+            if (globalVariables.hasOwnProperty(trimmedVarName)) {
+                throw new Error(`全局变量 "${trimmedVarName}" 已存在`);
+            }
+            
+            globalVariables[trimmedVarName] = initialValue;
+            console.log(`全局变量 "${trimmedVarName}" 已创建，初始值: ${initialValue}`);
+            return trimmedVarName;
+        }
+
+        function setGlobalVariable(varName, value) {
+            if (typeof varName !== 'string' || varName.trim() === '') {
+                throw new Error('变量名不能为空');
+            }
+            
+            const trimmedVarName = varName.trim();
+            if (!globalVariables.hasOwnProperty(trimmedVarName)) {
+                console.log(`全局变量 "${trimmedVarName}" 不存在，自动创建`);
+                createGlobalVariable(trimmedVarName, value);
+            } else {
+                globalVariables[trimmedVarName] = value;
+                console.log(`全局变量 "${trimmedVarName}" 已设置为: ${value}`);
+            }
+        }
+
+        function getGlobalVariable(varName) {
+            if (typeof varName !== 'string' || varName.trim() === '') {
+                throw new Error('变量名不能为空');
+            }
+            
+            const trimmedVarName = varName.trim();
+            return globalVariables[trimmedVarName] || '';
+        }
+
+        function getAllGlobalVariables() {
+            return { ...globalVariables };
+        }
+
+        // 消息系统（模拟core.js中的实现）
+        let messageSystem = {
+            listeners: new Map(),
+            messageHistory: [],
+            maxHistory: 100
+        };
+
+        function addMessageListener(messageName, callback, spriteId = null) {
+            if (!messageSystem.listeners.has(messageName)) {
+                messageSystem.listeners.set(messageName, []);
+                console.log(`[消息系统] 创建新的消息监听器列表: ${messageName}`);
+            }
+            
+            const listeners = messageSystem.listeners.get(messageName);
+            listeners.push({
+                callback: callback,
+                spriteId: spriteId,
+                timestamp: Date.now()
+            });
+            
+            console.log(`[消息系统] 注册监听器: ${messageName}, 精灵ID: ${spriteId}, 当前监听器总数: ${listeners.length}`);
+        }
+
+        function broadcastMessage(messageName, senderId = null) {
+            console.log(`[消息系统] 广播消息: ${messageName}, 发送者: ${senderId}`);
+            
+            const messageRecord = {
+                name: messageName,
+                senderId: senderId,
+                timestamp: Date.now(),
+                receivedBy: []
+            };
+            
+            messageSystem.messageHistory.push(messageRecord);
+            
+            if (messageSystem.messageHistory.length > messageSystem.maxHistory) {
+                messageSystem.messageHistory.shift();
+            }
+            
+            if (messageSystem.listeners.has(messageName)) {
+                const listeners = messageSystem.listeners.get(messageName);
+                console.log(`[消息系统] 找到 ${listeners.length} 个监听器监听消息 "${messageName}"`);
+                listeners.forEach((listener, index) => {
+                    try {
+                        console.log(`[消息系统] 执行第 ${index + 1} 个监听器回调，精灵ID: ${listener.spriteId}`);
+                        listener.callback(messageName, senderId);
+                        messageRecord.receivedBy.push(listener.spriteId);
+                        console.log(`[消息系统] 第 ${index + 1} 个监听器回调执行完成`);
+                    } catch (error) {
+                        console.error(`[消息系统] 执行监听器回调失败:`, error);
+                    }
+                });
+            } else {
+                console.log(`[消息系统] 没有找到监听消息 "${messageName}" 的监听器`);
+            }
+            
+            return messageRecord;
+        }
+
+        function getActiveListeners() {
+            const activeListeners = {};
+            messageSystem.listeners.forEach((listeners, messageName) => {
+                activeListeners[messageName] = listeners.length;
+            });
+            return activeListeners;
+        }
+
+        // 测试函数
+        function testAddListener() {
+            const messageName = document.getElementById('messageName').value || 'test';
+            console.log(`[测试] 注册监听器: ${messageName}`);
+            
+            addMessageListener(messageName, async function(messageName, senderId) {
+                console.log(`[消息监听器] 消息"${messageName}"已经收到，发送者:`, senderId);
+                console.log(`[消息监听器] 执行测试回调函数`);
+            }, 'test_sprite');
+        }
+
+        function testBroadcast() {
+            const messageName = document.getElementById('messageName').value || 'test';
+            console.log(`[测试] 广播消息: ${messageName}`);
+            broadcastMessage(messageName, 'test_sender');
+        }
+
+        function showListeners() {
+            const listeners = getActiveListeners();
+            console.log(`[测试] 当前活跃的监听器:`, listeners);
+        }
+
+        function testCreateGlobalVar() {
+            const varName = document.getElementById('varName').value || 'testVar';
+            const varValue = document.getElementById('varValue').value || '100';
+            try {
+                createGlobalVariable(varName, varValue);
+            } catch (error) {
+                console.error(`[测试] 创建全局变量失败:`, error.message);
+            }
+        }
+
+        function testSetGlobalVar() {
+            const varName = document.getElementById('varName').value || 'testVar';
+            const varValue = document.getElementById('varValue').value || '100';
+            try {
+                setGlobalVariable(varName, varValue);
+            } catch (error) {
+                console.error(`[测试] 设置全局变量失败:`, error.message);
+            }
+        }
+
+        function testGetGlobalVar() {
+            const varName = document.getElementById('varName').value || 'testVar';
+            try {
+                const value = getGlobalVariable(varName);
+                console.log(`[测试] 全局变量 "${varName}" 的值:`, value);
+            } catch (error) {
+                console.error(`[测试] 获取全局变量失败:`, error.message);
+            }
+        }
+
+        function showAllGlobalVars() {
+            const allVars = getAllGlobalVariables();
+            console.log(`[测试] 所有全局变量:`, allVars);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[测试] 消息系统测试页面已加载');
+            console.log('[测试] 可以开始测试消息监听器和全局变量功能');
+        });
+    </script>
+</body>
+</html> 

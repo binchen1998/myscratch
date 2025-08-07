@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声音文件上传调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>声音文件上传调试</h1>
+    
+    <div class="test-section">
+        <h2>直接文件输入测试</h2>
+        <input type="file" id="directFileInput" accept="audio/*" class="file-input">
+        <button onclick="testDirectFileInput()">测试直接文件输入</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>按钮触发的文件输入测试</h2>
+        <button onclick="triggerFileInput()">点击触发文件选择</button>
+        <input type="file" id="triggeredFileInput" accept="audio/*" style="display: none;">
+    </div>
+    
+    <div class="test-section">
+        <h2>声音管理测试</h2>
+        <button onclick="showSoundManager()">显示声音管理</button>
+        <div id="soundModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px; z-index: 1000;">
+            <h3>声音管理</h3>
+            <button id="addSoundBtn">+ 添加声音</button>
+            <input type="file" id="soundFileInput" accept="audio/*" style="display: none;">
+            <button onclick="hideSoundManager()">关闭</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>调试日志</h2>
+        <div id="debugLog" class="log">调试日志将在这里显示...</div>
+        <button onclick="clearLog()">清空日志</button>
+    </div>
+
+    <script>
+        function log(message) {
+            const logElement = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            document.getElementById('debugLog').textContent = '';
+        }
+        
+        // 直接文件输入测试
+        function testDirectFileInput() {
+            log('测试直接文件输入');
+            const fileInput = document.getElementById('directFileInput');
+            fileInput.addEventListener('change', function(event) {
+                log('直接文件输入change事件触发');
+                const file = event.target.files[0];
+                if (file) {
+                    log(`选择的文件: ${file.name}, 类型: ${file.type}, 大小: ${file.size}`);
+                } else {
+                    log('没有选择文件');
+                }
+            });
+        }
+        
+        // 按钮触发的文件输入测试
+        function triggerFileInput() {
+            log('点击触发文件选择按钮');
+            const fileInput = document.getElementById('triggeredFileInput');
+            if (fileInput) {
+                log('找到文件输入元素，触发点击');
+                fileInput.click();
+            } else {
+                log('未找到文件输入元素');
+            }
+        }
+        
+        // 设置触发文件输入的事件监听器
+        document.getElementById('triggeredFileInput').addEventListener('change', function(event) {
+            log('触发文件输入change事件触发');
+            const file = event.target.files[0];
+            if (file) {
+                log(`选择的文件: ${file.name}, 类型: ${file.type}, 大小: ${file.size}`);
+            } else {
+                log('没有选择文件');
+            }
+        });
+        
+        // 声音管理测试
+        function showSoundManager() {
+            log('显示声音管理模态框');
+            document.getElementById('soundModal').style.display = 'block';
+            
+            // 绑定添加声音按钮事件
+            const addSoundBtn = document.getElementById('addSoundBtn');
+            if (addSoundBtn) {
+                addSoundBtn.onclick = function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    log('点击添加声音按钮');
+                    const fileInput = document.getElementById('soundFileInput');
+                    if (fileInput) {
+                        log('找到文件输入元素，触发点击');
+                        fileInput.click();
+                    } else {
+                        log('未找到文件输入元素');
+                    }
+                };
+            }
+            
+            // 绑定文件输入事件
+            const soundFileInput = document.getElementById('soundFileInput');
+            if (soundFileInput) {
+                soundFileInput.onchange = function(event) {
+                    log('声音文件输入change事件触发');
+                    const file = event.target.files[0];
+                    if (file) {
+                        log(`选择的文件: ${file.name}, 类型: ${file.type}, 大小: ${file.size}`);
+                        
+                        // 检查文件类型
+                        if (!file.type.startsWith('audio/')) {
+                            log('错误：不是音频文件');
+                            return;
+                        }
+                        
+                        // 检查文件大小
+                        if (file.size > 10 * 1024 * 1024) {
+                            log('错误：文件太大');
+                            return;
+                        }
+                        
+                        log('文件验证通过，开始读取');
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            log('文件读取成功');
+                            const audio = new Audio(e.target.result);
+                            audio.onloadedmetadata = function() {
+                                const soundName = file.name.replace(/\.[^/.]+$/, "");
+                                log(`音频加载成功，名称: ${soundName}, 时长: ${audio.duration}`);
+                                alert(`声音 "${soundName}" 已添加`);
+                            };
+                            audio.onerror = function() {
+                                log('音频加载失败');
+                            };
+                        };
+                        reader.onerror = function() {
+                            log('文件读取失败');
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        log('没有选择文件');
+                    }
+                    
+                    // 清空文件输入
+                    event.target.value = '';
+                };
+            }
+        }
+        
+        function hideSoundManager() {
+            log('隐藏声音管理模态框');
+            document.getElementById('soundModal').style.display = 'none';
+        }
+        
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            log('页面加载完成');
+        });
+    </script>
+</body>
+</html> 

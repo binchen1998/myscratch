@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单声音测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>简单声音文件上传测试</h1>
+    
+    <div class="test-section">
+        <h2>测试1：直接文件输入</h2>
+        <input type="file" id="fileInput1" accept="audio/*">
+        <div id="result1" class="result">结果将在这里显示...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试2：按钮触发文件选择</h2>
+        <button onclick="triggerFileSelect()">选择音频文件</button>
+        <input type="file" id="fileInput2" accept="audio/*" style="display: none;">
+        <div id="result2" class="result">结果将在这里显示...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试3：模拟声音管理界面</h2>
+        <button onclick="showModal()">显示模态框</button>
+        <div id="modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ccc; border-radius: 8px; z-index: 1000;">
+            <h3>声音管理</h3>
+            <button onclick="selectFile()">+ 添加声音</button>
+            <input type="file" id="fileInput3" accept="audio/*" style="display: none;">
+            <button onclick="hideModal()">关闭</button>
+        </div>
+        <div id="result3" class="result">结果将在这里显示...</div>
+    </div>
+
+    <script>
+        // 测试1：直接文件输入
+        document.getElementById('fileInput1').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('result1').textContent = `选择的文件: ${file.name}, 类型: ${file.type}, 大小: ${file.size} 字节`;
+            } else {
+                document.getElementById('result1').textContent = '没有选择文件';
+            }
+        });
+        
+        // 测试2：按钮触发文件选择
+        function triggerFileSelect() {
+            document.getElementById('fileInput2').click();
+        }
+        
+        document.getElementById('fileInput2').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('result2').textContent = `选择的文件: ${file.name}, 类型: ${file.type}, 大小: ${file.size} 字节`;
+            } else {
+                document.getElementById('result2').textContent = '没有选择文件';
+            }
+        });
+        
+        // 测试3：模态框中的文件选择
+        function showModal() {
+            document.getElementById('modal').style.display = 'block';
+        }
+        
+        function hideModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+        
+        function selectFile() {
+            document.getElementById('fileInput3').click();
+        }
+        
+        document.getElementById('fileInput3').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('result3').textContent = `选择的文件: ${file.name}, 类型: ${file.type}, 大小: ${file.size} 字节`;
+                
+                // 尝试读取文件
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('result3').textContent += '\n文件读取成功，开始创建音频对象...';
+                    
+                    const audio = new Audio(e.target.result);
+                    audio.onloadedmetadata = function() {
+                        document.getElementById('result3').textContent += `\n音频加载成功，时长: ${audio.duration} 秒`;
+                    };
+                    audio.onerror = function() {
+                        document.getElementById('result3').textContent += '\n音频加载失败';
+                    };
+                };
+                reader.onerror = function() {
+                    document.getElementById('result3').textContent += '\n文件读取失败';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('result3').textContent = '没有选择文件';
+            }
+        });
+    </script>
+</body>
+</html> 

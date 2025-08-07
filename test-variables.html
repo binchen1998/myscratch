@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>变量功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>变量功能测试</h1>
+    
+    <div class="test-section">
+        <h2>测试说明</h2>
+        <p>这个页面用于测试变量功能的修改是否正确：</p>
+        <ul>
+            <li>✓ 恢复了"新建变量..."按钮</li>
+            <li>✓ 变量块支持动态变量选择</li>
+            <li>✓ 代码生成器支持多变量</li>
+            <li>✓ 保持了原有的变量功能</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>修改总结</h2>
+        <div class="test-result success">
+            <strong>已完成的修改：</strong>
+            <ul>
+                <li>恢复了 createNewVariable() 函数</li>
+                <li>恢复了工具箱中的"新建变量..."按钮</li>
+                <li>恢复了变量块中的 FieldVariable 选择器</li>
+                <li>更新了代码生成器以支持动态变量名</li>
+                <li>恢复了变量系统的初始化代码</li>
+                <li>更新了 XML 文件中的变量块定义</li>
+                <li>更新了 API 文档</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>功能验证</h2>
+        <div class="test-result">
+            <strong>请验证以下功能：</strong>
+            <ol>
+                <li>打开主程序，检查变量分类是否显示</li>
+                <li>点击"新建变量..."按钮，创建新变量</li>
+                <li>拖拽变量块到工作区，检查变量选择器是否工作</li>
+                <li>测试变量设置、改变、获取、显示、隐藏功能</li>
+                <li>检查生成的代码是否正确</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>预期行为</h2>
+        <div class="test-result success">
+            <strong>正常行为：</strong>
+            <ul>
+                <li>变量分类中显示"新建变量..."按钮</li>
+                <li>变量块显示变量选择器下拉菜单</li>
+                <li>可以创建多个不同名称的变量</li>
+                <li>变量块可以正确引用选中的变量</li>
+                <li>生成的代码使用正确的变量名</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        console.log('变量功能测试页面已加载');
+        console.log('请打开主程序 index.html 进行实际测试');
+    </script>
+</body>
+</html> 

@@ -149,15 +149,15 @@
   },
   {
     "api": "variables[varName] = value",
-    "description": "set variable value"
+    "description": "set variable value (supports numbers and strings)"
   },
   {
     "api": "variables[varName] = (variables[varName] || 0) + value",
-    "description": "change variable value by adding specified amount"
+    "description": "change variable value by adding numbers or concatenating strings"
   },
   {
-    "api": "(variables[varName] || 0)",
-    "description": "get variable value"
+    "api": "(variables[varName] || '')",
+    "description": "get variable value (returns empty string if undefined)"
   },
   {
     "api": "showVariable(varName, variables)",

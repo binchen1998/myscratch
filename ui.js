@@ -2,7 +2,7 @@
 function initializeEventListeners() {
     // 检查是否已经初始化过
     if (window.eventListenersInitialized) {
-        console.log('事件监听器已初始化过，跳过重复初始化');
+    
         return;
     }
     
@@ -11,6 +11,12 @@ function initializeEventListeners() {
     document.getElementById('stopBtn').addEventListener('click', stopExecution);
     document.getElementById('saveBtn').addEventListener('click', saveProject);
     document.getElementById('loadBtn').addEventListener('click', loadProject);
+    
+    // 声音管理按钮事件（如果存在）
+    const soundManagerBtn = document.getElementById('soundManagerBtn');
+    if (soundManagerBtn) {
+        soundManagerBtn.addEventListener('click', showSoundManagerModal);
+    }
     
     // 精灵管理事件
     document.getElementById('addSpriteBtn').addEventListener('click', showAddSpriteModal);
@@ -28,19 +34,12 @@ function initializeEventListeners() {
     
     if (addBackgroundBtn) {
         addBackgroundBtn.addEventListener('click', function() {
-            console.log('[UI] 点击添加背景按钮');
             addBackground();
         });
-    } else {
-        console.error('[UI] 未找到添加背景按钮');
     }
-    
-
     
     if (backgroundFileInput) {
         backgroundFileInput.addEventListener('change', handleBackgroundFileSelect);
-    } else {
-        console.error('[UI] 未找到背景文件输入');
     }
     
     // 模态框事件

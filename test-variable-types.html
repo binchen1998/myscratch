@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>变量类型支持测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .code-example {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>变量类型支持测试</h1>
+    
+    <div class="test-section">
+        <h2>功能说明</h2>
+        <p>现在变量系统支持两种数据类型：</p>
+        <ul>
+            <li><strong>数字类型</strong> - 用于数学计算</li>
+            <li><strong>字符串类型</strong> - 用于文本处理</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>智能类型处理</h2>
+        <div class="test-result info">
+            <strong>变量改变时的智能行为：</strong>
+            <ul>
+                <li>如果当前值是数字，新值也是数字 → 执行数学加法</li>
+                <li>如果当前值是字符串，或新值是字符串 → 执行字符串连接</li>
+                <li>未定义的变量默认为空字符串</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>使用示例</h2>
+        
+        <h3>数字变量示例：</h3>
+        <div class="code-example">
+// 设置数字变量
+variables['分数'] = 100;
+variables['等级'] = 5;
+
+// 改变数字变量（数学加法）
+variables['分数'] = variables['分数'] + 10;  // 结果：110
+variables['等级'] = variables['等级'] + 1;   // 结果：6
+        </div>
+        
+        <h3>字符串变量示例：</h3>
+        <div class="code-example">
+// 设置字符串变量
+variables['名字'] = '小明';
+variables['消息'] = '你好';
+
+// 改变字符串变量（字符串连接）
+variables['名字'] = variables['名字'] + '同学';  // 结果：'小明同学'
+variables['消息'] = variables['消息'] + '世界';  // 结果：'你好世界'
+        </div>
+        
+        <h3>混合类型示例：</h3>
+        <div class="code-example">
+// 从数字开始
+variables['计数器'] = 1;
+
+// 添加字符串（自动转换为字符串连接）
+variables['计数器'] = variables['计数器'] + '号';  // 结果：'1号'
+
+// 继续添加字符串
+variables['计数器'] = variables['计数器'] + '选手';  // 结果：'1号选手'
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试步骤</h2>
+        <div class="test-result">
+            <strong>请在主程序中测试以下场景：</strong>
+            <ol>
+                <li>创建一个名为"分数"的变量，设置为数字100</li>
+                <li>使用"改变变量"块，将"分数"增加10 → 应该得到110</li>
+                <li>创建一个名为"名字"的变量，设置为字符串"小明"</li>
+                <li>使用"改变变量"块，将"名字"增加"同学" → 应该得到"小明同学"</li>
+                <li>创建一个变量，先设置为数字，然后增加字符串 → 观察类型转换</li>
+                <li>测试变量显示功能，确认字符串和数字都能正确显示</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>技术实现</h2>
+        <div class="test-result success">
+            <strong>修改内容：</strong>
+            <ul>
+                <li>更新了变量改变代码生成器，添加了智能类型检测</li>
+                <li>修改了变量获取代码，默认返回空字符串而不是0</li>
+                <li>变量显示功能已经支持字符串和数字的显示</li>
+                <li>更新了API文档，说明新的类型支持</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>代码生成示例</h2>
+        <div class="code-example">
+// 变量改变块的生成代码：
+(function() {
+    const currentValue = variables['变量名'];
+    const newValue = 输入值;
+    if (typeof currentValue === 'number' && typeof newValue === 'number') {
+        variables['变量名'] = (currentValue || 0) + newValue;  // 数字加法
+    } else {
+        variables['变量名'] = (currentValue || '') + newValue;  // 字符串连接
+    }
+    updateVariableDisplay('变量名', variables);
+})();
+        </div>
+    </div>
+    
+    <script>
+        console.log('变量类型支持测试页面已加载');
+        console.log('请打开主程序 index.html 进行实际测试');
+        
+        // 演示智能类型处理
+        function demonstrateVariableTypes() {
+            console.log('=== 变量类型演示 ===');
+            
+            // 数字变量
+            let score = 100;
+            score = score + 10;
+            console.log('数字变量:', score); // 110
+            
+            // 字符串变量
+            let name = '小明';
+            name = name + '同学';
+            console.log('字符串变量:', name); // 小明同学
+            
+            // 混合类型
+            let counter = 1;
+            counter = counter + '号';
+            console.log('混合类型:', counter); // 1号
+        }
+        
+        demonstrateVariableTypes();
+    </script>
+</body>
+</html> 

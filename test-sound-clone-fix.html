@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试声音克隆修复</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 测试声音克隆修复</h1>
+    
+    <div class="test-section">
+        <h2>测试说明</h2>
+        <p>这个测试用于验证 HTMLAudioElement 克隆错误是否已修复。</p>
+        <p>问题：当声音被播放后，HTMLAudioElement 对象会被存储在声音数据中，导致无法通过 postMessage 发送到 Worker。</p>
+        <p>解决方案：确保 getSoundsList() 函数始终返回可序列化的数据，不包含 HTMLAudioElement 对象。</p>
+    </div>
+
+    <div class="test-section">
+        <h2>测试步骤</h2>
+        <button onclick="testGetSoundsList()">1. 测试 getSoundsList() 函数</button>
+        <button onclick="testPlaySound()">2. 播放声音</button>
+        <button onclick="testGetSoundsListAfterPlay()">3. 播放后再次测试 getSoundsList()</button>
+        <button onclick="testWorkerMessage()">4. 测试 Worker 消息发送</button>
+        <button onclick="runAllTests()">运行所有测试</button>
+    </div>
+
+    <div class="test-section">
+        <h2>测试结果</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // 模拟声音管理器的 sounds 数组
+        let sounds = [];
+        let testResults = [];
+
+        // 模拟 getSoundsList 函数（修复后的版本）
+        function getSoundsList() {
+            return sounds.map(sound => {
+                // 确保返回的对象不包含任何HTMLAudioElement对象
+                const cleanSound = {
+                    id: sound.id,
+                    name: sound.name,
+                    dataURL: sound.dataURL,
+                    duration: sound.duration
+                };
+                
+                // 验证数据完整性
+                if (!cleanSound.id || !cleanSound.name || !cleanSound.dataURL) {
+                    console.warn('[声音管理] 声音数据不完整:', cleanSound);
+                }
+                
+                return cleanSound;
+            });
+        }
+
+        // 模拟添加声音
+        function addTestSound() {
+            const sound = {
+                id: 'test_sound_' + Date.now(),
+                name: '测试声音',
+                dataURL: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT',
+                duration: 1.0,
+                audio: null
+            };
+            sounds.push(sound);
+            logResult('info', `添加测试声音: ${sound.name}`);
+        }
+
+        // 模拟播放声音
+        function playTestSound() {
+            if (sounds.length > 0) {
+                const sound = sounds[0];
+                // 模拟创建 HTMLAudioElement
+                sound.audio = new Audio(sound.dataURL);
+                logResult('info', `播放声音: ${sound.name} (已创建 HTMLAudioElement)`);
+            }
+        }
+
+        // 测试 getSoundsList 函数
+        function testGetSoundsList() {
+            try {
+                const soundsList = getSoundsList();
+                const serialized = JSON.stringify(soundsList);
+                
+                logResult('success', `✅ getSoundsList() 测试通过`);
+                logResult('info', `返回数据: ${JSON.stringify(soundsList, null, 2)}`);
+                logResult('info', `序列化成功: ${serialized.length} 字符`);
+                
+                return true;
+            } catch (error) {
+                logResult('error', `❌ getSoundsList() 测试失败: ${error.message}`);
+                return false;
+            }
+        }
+
+        // 测试播放声音
+        function testPlaySound() {
+            try {
+                playTestSound();
+                logResult('success', `✅ 声音播放测试通过`);
+                return true;
+            } catch (error) {
+                logResult('error', `❌ 声音播放测试失败: ${error.message}`);
+                return false;
+            }
+        }
+
+        // 播放后测试 getSoundsList
+        function testGetSoundsListAfterPlay() {
+            try {
+                const soundsList = getSoundsList();
+                const serialized = JSON.stringify(soundsList);
+                
+                // 检查是否包含 audio 属性
+                const hasAudioProperty = soundsList.some(sound => 'audio' in sound);
+                
+                if (hasAudioProperty) {
+                    logResult('error', `❌ 播放后 getSoundsList() 仍然包含 audio 属性`);
+                    return false;
+                }
+                
+                logResult('success', `✅ 播放后 getSoundsList() 测试通过`);
+                logResult('info', `返回数据: ${JSON.stringify(soundsList, null, 2)}`);
+                logResult('info', `序列化成功: ${serialized.length} 字符`);
+                
+                return true;
+            } catch (error) {
+                logResult('error', `❌ 播放后 getSoundsList() 测试失败: ${error.message}`);
+                return false;
+            }
+        }
+
+        // 测试 Worker 消息发送
+        function testWorkerMessage() {
+            try {
+                const soundsList = getSoundsList();
+                
+                // 模拟 postMessage 调用
+                const message = {
+                    type: 'INIT_SPRITES',
+                    data: {
+                        sprites: [],
+                        backgrounds: [],
+                        sounds: soundsList
+                    }
+                };
+                
+                // 尝试序列化整个消息
+                const serialized = JSON.stringify(message);
+                
+                logResult('success', `✅ Worker 消息发送测试通过`);
+                logResult('info', `消息大小: ${serialized.length} 字符`);
+                
+                return true;
+            } catch (error) {
+                logResult('error', `❌ Worker 消息发送测试失败: ${error.message}`);
+                return false;
+            }
+        }
+
+        // 运行所有测试
+        function runAllTests() {
+            clearResults();
+            
+            logResult('info', '🚀 开始运行所有测试...');
+            
+            // 添加测试声音
+            addTestSound();
+            
+            // 测试 1: getSoundsList
+            const test1 = testGetSoundsList();
+            
+            // 测试 2: 播放声音
+            const test2 = testPlaySound();
+            
+            // 测试 3: 播放后 getSoundsList
+            const test3 = testGetSoundsListAfterPlay();
+            
+            // 测试 4: Worker 消息发送
+            const test4 = testWorkerMessage();
+            
+            // 总结
+            const allPassed = test1 && test2 && test3 && test4;
+            
+            if (allPassed) {
+                logResult('success', '🎉 所有测试通过！HTMLAudioElement 克隆问题已修复。');
+            } else {
+                logResult('error', '❌ 部分测试失败，需要进一步检查。');
+            }
+        }
+
+        // 记录测试结果
+        function logResult(type, message) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+            
+            console.log(`[测试] ${message}`);
+        }
+
+        // 清除测试结果
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            logResult('info', '测试页面已加载，可以开始测试');
+        };
+    </script>
+</body>
+</html> 

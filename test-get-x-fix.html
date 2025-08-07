@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>get_x 积木代码生成器测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.success:hover {
+            background: #218838;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .code-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+        }
+        #blocklyDiv {
+            height: 400px;
+            width: 100%;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 get_x 积木代码生成器测试</h1>
+    
+    <div class="container">
+        <h2>测试说明</h2>
+        <p>这个测试验证 get_x 积木的代码生成器是否正常工作：</p>
+        <ul>
+            <li>在 Blockly 工作区中创建包含 get_x 积木的程序</li>
+            <li>测试代码生成是否成功</li>
+            <li>验证生成的代码是否正确</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <h2>Blockly 工作区</h2>
+        <div id="blocklyDiv"></div>
+        <button class="success" onclick="testCodeGeneration()">🧪 测试代码生成</button>
+        <button onclick="clearWorkspace()">🧹 清空工作区</button>
+        <button onclick="createTestBlocks()">📝 创建测试积木</button>
+        
+        <div id="status" class="status info">准备就绪</div>
+    </div>
+
+    <div class="container">
+        <h2>生成的代码</h2>
+        <div id="codeOutput" class="code-output">等待生成代码...</div>
+    </div>
+
+    <div class="container">
+        <h2>执行日志</h2>
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Blockly 库 -->
+    <script src="blockly.min.js"></script>
+    <script src="blockly-config.js"></script>
+
+    <script>
+        let workspace;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function updateCodeOutput(code) {
+            document.getElementById('codeOutput').textContent = code;
+        }
+        
+        function initializeBlockly() {
+            log('🚀 初始化 Blockly...');
+            
+            // 确保生成器已注册
+            if (typeof ensureGeneratorsRegistered === 'function') {
+                ensureGeneratorsRegistered();
+                log('✅ 代码生成器已注册');
+            } else {
+                log('❌ 无法找到 ensureGeneratorsRegistered 函数');
+            }
+            
+            // 创建工具箱配置
+            const toolboxConfig = {
+                kind: "categoryToolbox",
+                contents: [
+                    {
+                        kind: "category",
+                        name: "事件",
+                        colour: "#FF8C1A",
+                        contents: [
+                            { kind: "block", type: "when_program_starts" }
+                        ]
+                    },
+                    {
+                        kind: "category",
+                        name: "变量",
+                        colour: "#FF8C1A",
+                        contents: [
+                            { kind: "block", type: "variables_set" }
+                        ]
+                    },
+                    {
+                        kind: "category",
+                        name: "运动",
+                        colour: "#4C97FF",
+                        contents: [
+                            { kind: "block", type: "get_x" },
+                            { kind: "block", type: "get_y" },
+                            { kind: "block", type: "motion_gotoxy" },
+                            { kind: "block", type: "motion_changexby" },
+                            { kind: "block", type: "motion_setx" }
+                        ]
+                    }
+                ]
+            };
+            
+            // 创建工作区
+            workspace = Blockly.inject('blocklyDiv', {
+                toolbox: toolboxConfig,
+                scrollbars: true,
+                trashcan: true,
+                grid: {
+                    spacing: 20,
+                    length: 3,
+                    colour: '#ccc',
+                    snap: true
+                },
+                zoom: {
+                    controls: true,
+                    wheel: true,
+                    startScale: 1.0,
+                    maxScale: 3,
+                    minScale: 0.3,
+                    scaleSpeed: 1.2
+                }
+            });
+            
+            log('✅ Blockly 工作区已创建');
+            updateStatus('Blockly 已初始化', 'success');
+        }
+        
+        function testCodeGeneration() {
+            log('🧪 开始测试代码生成...');
+            updateStatus('正在生成代码...', 'info');
+            
+            try {
+                // 获取所有顶级积木
+                const topBlocks = workspace.getTopBlocks(true);
+                log(`📊 找到 ${topBlocks.length} 个顶级积木`);
+                
+                if (topBlocks.length === 0) {
+                    log('⚠️ 工作区中没有积木');
+                    updateStatus('工作区中没有积木', 'error');
+                    updateCodeOutput('// 工作区中没有积木');
+                    return;
+                }
+                
+                let generatedCode = '';
+                
+                // 为每个顶级积木生成代码
+                topBlocks.forEach((block, index) => {
+                    log(`🔧 处理积木 ${index + 1}: ${block.type}`);
+                    
+                    try {
+                        // 尝试使用 Blockly 的代码生成器
+                        if (Blockly.JavaScript[block.type]) {
+                            log(`✅ 使用 Blockly 代码生成器: ${block.type}`);
+                            const code = Blockly.JavaScript[block.type](block);
+                            if (code) {
+                                generatedCode += code;
+                                log(`✅ 成功生成代码: ${code.trim()}`);
+                            } else {
+                                log(`⚠️ 代码生成器返回空值: ${block.type}`);
+                            }
+                        } else {
+                            log(`❌ 未找到代码生成器: ${block.type}`);
+                            generatedCode += `// 未找到代码生成器: ${block.type}\n`;
+                        }
+                    } catch (error) {
+                        log(`❌ 代码生成错误: ${block.type} - ${error.message}`);
+                        generatedCode += `// 代码生成错误: ${block.type} - ${error.message}\n`;
+                    }
+                });
+                
+                if (generatedCode.trim()) {
+                    updateCodeOutput(generatedCode);
+                    log('✅ 代码生成完成');
+                    updateStatus('代码生成成功', 'success');
+                } else {
+                    updateCodeOutput('// 没有生成任何代码');
+                    log('⚠️ 没有生成任何代码');
+                    updateStatus('没有生成任何代码', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 代码生成测试失败: ${error.message}`);
+                updateStatus(`代码生成失败: ${error.message}`, 'error');
+                updateCodeOutput(`// 代码生成失败: ${error.message}`);
+            }
+        }
+        
+        function clearWorkspace() {
+            log('🧹 清空工作区...');
+            workspace.clear();
+            updateCodeOutput('// 工作区已清空');
+            updateStatus('工作区已清空', 'info');
+        }
+        
+        function createTestBlocks() {
+            log('📝 创建测试积木...');
+            clearWorkspace();
+            
+            try {
+                // 创建 "当程序开始时" 积木
+                const startBlock = workspace.newBlock('when_program_starts');
+                startBlock.initSvg();
+                startBlock.render();
+                startBlock.moveBy(50, 50);
+                
+                // 创建 "设置变量" 积木
+                const setVarBlock = workspace.newBlock('variables_set');
+                setVarBlock.initSvg();
+                setVarBlock.render();
+                setVarBlock.moveBy(50, 150);
+                
+                // 创建 "获取x坐标" 积木
+                const getXBlock = workspace.newBlock('get_x');
+                getXBlock.initSvg();
+                getXBlock.render();
+                getXBlock.moveBy(50, 250);
+                
+                // 连接积木
+                startBlock.nextConnection.connect(setVarBlock.previousConnection);
+                setVarBlock.getInput('VALUE').connection.connect(getXBlock.outputConnection);
+                
+                log('✅ 测试积木创建完成');
+                updateStatus('测试积木已创建', 'success');
+                
+                // 自动测试代码生成
+                setTimeout(() => {
+                    testCodeGeneration();
+                }, 500);
+                
+            } catch (error) {
+                log(`❌ 创建测试积木失败: ${error.message}`);
+                updateStatus(`创建测试积木失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载完成
+        window.addEventListener('load', function() {
+            log('🚀 页面加载完成');
+            initializeBlockly();
+        });
+    </script>
+</body>
+</html> 

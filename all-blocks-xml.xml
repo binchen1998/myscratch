@@ -162,23 +162,39 @@
 
   <!-- 说 -->
   <block type="looks_say" x="50" y="450">
-    <field name="MESSAGE">你好!</field>
+    <value name="MESSAGE">
+      <block type="text">
+        <field name="TEXT">你好!</field>
+      </block>
+    </value>
   </block>
 
   <!-- 说几秒 -->
   <block type="looks_say_for_secs" x="200" y="450">
-    <field name="MESSAGE">你好!</field>
+    <value name="MESSAGE">
+      <block type="text">
+        <field name="TEXT">你好!</field>
+      </block>
+    </value>
     <field name="SECS">2</field>
   </block>
 
   <!-- 思考 -->
   <block type="looks_think" x="350" y="450">
-    <field name="MESSAGE">嗯</field>
+    <value name="MESSAGE">
+      <block type="text">
+        <field name="TEXT">嗯</field>
+      </block>
+    </value>
   </block>
 
   <!-- 思考几秒 -->
   <block type="looks_think_for_secs" x="500" y="450">
-    <field name="MESSAGE">嗯</field>
+    <value name="MESSAGE">
+      <block type="text">
+        <field name="TEXT">嗯</field>
+      </block>
+    </value>
     <field name="SECS">2</field>
   </block>
 
@@ -192,6 +208,33 @@
 
   <!-- 造型编号 -->
   <block type="looks_costume_number" x="950" y="450"></block>
+
+  <!-- 说变量示例 -->
+  <block type="looks_say" x="50" y="500">
+    <value name="MESSAGE">
+      <block type="variables_get">
+        <field name="VAR">变量</field>
+      </block>
+    </value>
+  </block>
+
+  <!-- 说字符串连接示例 -->
+  <block type="looks_say" x="200" y="500">
+    <value name="MESSAGE">
+      <block type="text_join">
+        <value name="TEXT1">
+          <block type="text">
+            <field name="TEXT">分数：</field>
+          </block>
+        </value>
+        <value name="TEXT2">
+          <block type="variables_get">
+            <field name="VAR">变量</field>
+          </block>
+        </value>
+      </block>
+    </value>
+  </block>
 
   <!-- ===== 控制块 ===== -->
 
@@ -567,70 +610,36 @@
     <field name="VAR">变量</field>
   </block>
 
-</xml>
-用户的原始代码是：
+  <!-- ===== 全局变量块 ===== -->
 
-<xml xmlns="https://developers.google.com/blockly/xml">
-  <block type="when_program_starts" id=":1-xp6e=6hYVY(rMWiWR" x="190" y="50" />
-  <block type="controls_repeat_ext" id="$nunVFEipi$YO)/=Lh," x="430" y="70">
-    <field name="TIMES">5</field>
+  <!-- 新建全局变量 -->
+  <block type="global_variables_create" x="50" y="1150">
+    <field name="VAR_NAME">分数</field>
   </block>
-  <block type="rotate" id="o}zd*5U^;LK}*ka!4l]*" x="450" y="150">
-    <field name="DEGREES">90</field>
-    <next>
-      <block type="wait_seconds" id="Mv0S?%|CQA*tfe0vv_Ei">
-        <field name="SECONDS">1</field>
+
+  <!-- 将全局变量设为 -->
+  <block type="global_variables_set" x="200" y="1150">
+    <field name="VAR_NAME">分数</field>
+    <value name="VALUE">
+      <block type="math_number">
+        <field name="NUM">100</field>
       </block>
-    </next>
+    </value>
   </block>
-  <block type="when_message_received" id="ckabiqrwEl7)P|cFXc0Z" x="190" y="250">
-    <field name="MESSAGE_NAME">x</field>
-    <next>
-      <block type="controls_repeat_ext" id="7PUznmabe1C(R?(sHKi;">
-        <field name="TIMES">10</field>
-        <statement name="DO">
-          <block type="move_x_steps" id="3bCL^O_^lQrg{9|NQ%^">
-            <field name="STEPS">10</field>
-          </block>
-        </statement>
+
+  <!-- 将全局变量增加 -->
+  <block type="global_variables_change" x="350" y="1150">
+    <field name="VAR_NAME">分数</field>
+    <value name="VALUE">
+      <block type="math_number">
+        <field name="NUM">10</field>
       </block>
-    </next>
+    </value>
   </block>
-  <block type="move_to_animated" id="+2L56.nHY!SB|xb6=u/" x="370" y="350">
-    <field name="X">100</field>
-    <field name="Y">180</field>
-    <field name="DURATION">2</field>
+
+  <!-- 获取全局变量 -->
+  <block type="global_variables_get" x="500" y="1150">
+    <field name="VAR_NAME">分数</field>
   </block>
-  <block type="when_key_pressed" id="up_key_block" x="50" y="500">
-    <field name="KEY_OPTION">space</field>
-    <next>
-      <block type="move_y_steps" id="move_up_block">
-        <field name="STEPS">-10</field>
-      </block>
-    </next>
-  </block>
-  <block type="when_key_pressed" id="down_key_block" x="250" y="500">
-    <field name="KEY_OPTION">space</field>
-    <next>
-      <block type="move_y_steps" id="move_down_block">
-        <field name="STEPS">10</field>
-      </block>
-    </next>
-  </block>
-  <block type="when_key_pressed" id="left_key_block" x="50" y="600">
-    <field name="KEY_OPTION">space</field>
-    <next>
-      <block type="move_x_steps" id="move_left_block">
-        <field name="STEPS">-10</field>
-      </block>
-    </next>
-  </block>
-  <block type="when_key_pressed" id="right_key_block" x="250" y="600">
-    <field name="KEY_OPTION">space</field>
-    <next>
-      <block type="move_x_steps" id="move_right_block">
-        <field name="STEPS">10</field>
-      </block>
-    </next>
-  </block>
+
 </xml>

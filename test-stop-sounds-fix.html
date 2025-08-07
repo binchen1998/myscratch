@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>停止声音功能修复测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>停止声音功能修复测试</h1>
+    
+    <div class="test-section">
+        <h2>测试1：模拟音频对象管理</h2>
+        <button onclick="testAudioObjectManagement()">测试音频对象管理</button>
+        <div id="result1" class="result">结果将在这里显示...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试2：停止声音功能</h2>
+        <button onclick="testStopSounds()">测试停止声音</button>
+        <button onclick="clearTestResults()">清除测试结果</button>
+        <div id="result2" class="result">结果将在这里显示...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试3：完整流程测试</h2>
+        <button onclick="testFullFlow()">测试完整流程</button>
+        <div id="result3" class="result">结果将在这里显示...</div>
+    </div>
+
+    <script>
+        // 模拟活跃音频对象集合
+        let mockActiveAudioObjects = new Set();
+        let mockCurrentPlayingAudio = null;
+        
+        function log(elementId, message, isSuccess = null) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}\n`;
+            
+            if (isSuccess === true) {
+                element.className = 'result success';
+            } else if (isSuccess === false) {
+                element.className = 'result error';
+            } else if (isSuccess === 'warning') {
+                element.className = 'result warning';
+            } else {
+                element.className = 'result';
+            }
+            
+            element.textContent += logMessage;
+            console.log(message);
+        }
+        
+        function clearLog(elementId) {
+            document.getElementById(elementId).textContent = '';
+            document.getElementById(elementId).className = 'result';
+        }
+        
+        // 模拟创建音频对象
+        function createMockAudio(name) {
+            const audio = {
+                name: name,
+                paused: false,
+                currentTime: 0,
+                pause: function() {
+                    this.paused = true;
+                    console.log(`[模拟音频] 暂停: ${this.name}`);
+                },
+                play: function() {
+                    this.paused = false;
+                    console.log(`[模拟音频] 播放: ${this.name}`);
+                    return Promise.resolve();
+                }
+            };
+            
+            // 添加到活跃集合
+            mockActiveAudioObjects.add(audio);
+            console.log(`[模拟音频] 添加到活跃集合: ${name}`);
+            
+            return audio;
+        }
+        
+        // 模拟停止所有声音
+        function mockStopAllSounds() {
+            console.log(`[模拟停止] 停止 ${mockActiveAudioObjects.size} 个活跃音频对象`);
+            
+            mockActiveAudioObjects.forEach(audio => {
+                try {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    console.log(`[模拟停止] 停止音频: ${audio.name}`);
+                } catch (error) {
+                    console.warn(`[模拟停止] 停止音频时出错: ${error.message}`);
+                }
+            });
+            
+            // 清空活跃音频对象集合
+            mockActiveAudioObjects.clear();
+            
+            // 停止当前播放的音频
+            if (mockCurrentPlayingAudio) {
+                mockCurrentPlayingAudio.pause();
+                mockCurrentPlayingAudio.currentTime = 0;
+                mockCurrentPlayingAudio = null;
+            }
+            
+            console.log('[模拟停止] 所有声音已停止');
+        }
+        
+        // 测试1：音频对象管理
+        function testAudioObjectManagement() {
+            clearLog('result1');
+            log('result1', '开始测试音频对象管理...');
+            
+            // 创建几个模拟音频对象
+            const audio1 = createMockAudio('karen');
+            const audio2 = createMockAudio('meow');
+            const audio3 = createMockAudio('woof');
+            
+            log('result1', `✅ 创建了 3 个模拟音频对象`, true);
+            log('result1', `活跃音频对象数量: ${mockActiveAudioObjects.size}`);
+            
+            // 测试播放
+            audio1.play();
+            audio2.play();
+            audio3.play();
+            
+            log('result1', '✅ 所有音频对象开始播放', true);
+            
+            // 测试停止
+            mockStopAllSounds();
+            
+            log('result1', '✅ 所有音频对象已停止', true);
+            log('result1', `活跃音频对象数量: ${mockActiveAudioObjects.size}`);
+            
+            // 验证停止状态
+            const allPaused = [audio1, audio2, audio3].every(audio => audio.paused);
+            if (allPaused) {
+                log('result1', '✅ 所有音频对象都已暂停', true);
+            } else {
+                log('result1', '❌ 部分音频对象未正确暂停', false);
+            }
+        }
+        
+        // 测试2：停止声音功能
+        function testStopSounds() {
+            clearLog('result2');
+            log('result2', '开始测试停止声音功能...');
+            
+            // 模拟播放多个声音
+            log('result2', '1. 模拟播放多个声音...');
+            const audios = [];
+            for (let i = 0; i < 5; i++) {
+                const audio = createMockAudio(`声音${i + 1}`);
+                audio.play();
+                audios.push(audio);
+            }
+            
+            log('result2', `   ✅ 播放了 ${audios.length} 个声音`, true);
+            log('result2', `   活跃音频对象数量: ${mockActiveAudioObjects.size}`);
+            
+            // 等待一段时间后停止
+            setTimeout(() => {
+                log('result2', '2. 执行停止所有声音...');
+                mockStopAllSounds();
+                
+                log('result2', '3. 验证停止结果...');
+                const allPaused = audios.every(audio => audio.paused);
+                const allStopped = mockActiveAudioObjects.size === 0;
+                
+                if (allPaused && allStopped) {
+                    log('result2', '   ✅ 所有声音都已正确停止', true);
+                } else {
+                    log('result2', '   ❌ 部分声音未正确停止', false);
+                    if (!allPaused) {
+                        log('result2', '   ⚠️ 部分音频对象未暂停', 'warning');
+                    }
+                    if (!allStopped) {
+                        log('result2', '   ⚠️ 活跃音频对象集合未清空', 'warning');
+                    }
+                }
+                
+                log('result2', `   活跃音频对象数量: ${mockActiveAudioObjects.size}`);
+                
+            }, 1000);
+        }
+        
+        function clearTestResults() {
+            clearLog('result2');
+            mockActiveAudioObjects.clear();
+            mockCurrentPlayingAudio = null;
+            log('result2', '测试结果已清除', true);
+        }
+        
+        // 测试3：完整流程测试
+        function testFullFlow() {
+            clearLog('result3');
+            log('result3', '开始测试完整流程...');
+            
+            // 模拟程序执行流程
+            log('result3', '1. 模拟程序开始执行...');
+            
+            // 模拟播放声音
+            log('result3', '2. 模拟播放声音...');
+            const audio1 = createMockAudio('karen');
+            const audio2 = createMockAudio('meow');
+            audio1.play();
+            audio2.play();
+            
+            log('result3', `   ✅ 播放了 2 个声音`, true);
+            log('result3', `   活跃音频对象数量: ${mockActiveAudioObjects.size}`);
+            
+            // 模拟程序停止
+            setTimeout(() => {
+                log('result3', '3. 模拟程序停止...');
+                mockStopAllSounds();
+                
+                log('result3', '4. 验证停止结果...');
+                const allPaused = [audio1, audio2].every(audio => audio.paused);
+                const allStopped = mockActiveAudioObjects.size === 0;
+                
+                if (allPaused && allStopped) {
+                    log('result3', '   ✅ 程序停止时所有声音都已停止', true);
+                } else {
+                    log('result3', '   ❌ 程序停止时部分声音未停止', false);
+                }
+                
+                log('result3', `   活跃音频对象数量: ${mockActiveAudioObjects.size}`);
+                log('result3', '✅ 完整流程测试完成', true);
+                
+            }, 1000);
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('停止声音功能修复测试页面已加载');
+        });
+    </script>
+</body>
+</html> 

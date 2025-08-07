@@ -755,30 +755,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('没有初始精灵');
         }
         
-        // 手动检查并显示Chat按钮（用于调试）
-        setTimeout(() => {
-            console.log('手动检查Chat按钮状态');
-            const chatBtn = document.getElementById('chatBtn');
-            console.log('Chat按钮元素:', chatBtn);
-            console.log('当前精灵ID:', currentSpriteId);
-            console.log('精灵列表:', sprites);
-            
-            if (chatBtn && currentSpriteId) {
-                chatBtn.style.display = 'inline-block';
-                console.log('手动显示Chat按钮');
-            }
-        }, 500);
+
     }, 100);
 });
 
-// 添加全局函数用于手动测试Chat按钮
-window.testChatButton = function() {
-    console.log('手动测试Chat按钮');
-    const chatBtn = document.getElementById('chatBtn');
-    if (chatBtn) {
-        chatBtn.style.display = 'inline-block';
-        console.log('Chat按钮已显示');
-    } else {
-        console.error('未找到Chat按钮');
-    }
-}; 
+ 

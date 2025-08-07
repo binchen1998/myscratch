@@ -15,6 +15,9 @@ let currentBackgroundIndex = 0; // 当前背景索引
 let currentBackgroundId = null; // 当前选中的背景ID（用于代码编辑）
 let mousePosition = { x: 240, y: 180 }; // 默认鼠标位置（画布中心）
 
+// 全局变量存储
+let globalVariables = {}; // 存储全局变量 {变量名: 值}
+
 // 安全的sprite添加函数，确保每次添加后都会重绘
 function addSpriteSafely(sprite) {
     sprites.push(sprite);
@@ -114,6 +117,7 @@ function scratchToCanvasCoordinates(scratchX, scratchY) {
 function addMessageListener(messageName, callback, spriteId = null) {
     if (!messageSystem.listeners.has(messageName)) {
         messageSystem.listeners.set(messageName, []);
+        console.log(`[消息系统] 创建新的消息监听器列表: ${messageName}`);
     }
     
     const listeners = messageSystem.listeners.get(messageName);
@@ -123,7 +127,7 @@ function addMessageListener(messageName, callback, spriteId = null) {
         timestamp: Date.now()
     });
     
-    console.log(`[消息系统] 注册监听器: ${messageName}, 精灵ID: ${spriteId}`);
+    console.log(`[消息系统] 注册监听器: ${messageName}, 精灵ID: ${spriteId}, 当前监听器总数: ${listeners.length}`);
 }
 
 // 移除消息监听器
@@ -161,14 +165,19 @@ function broadcastMessage(messageName, senderId = null) {
     // 通知所有监听器
     if (messageSystem.listeners.has(messageName)) {
         const listeners = messageSystem.listeners.get(messageName);
-        listeners.forEach(listener => {
+        console.log(`[消息系统] 找到 ${listeners.length} 个监听器监听消息 "${messageName}"`);
+        listeners.forEach((listener, index) => {
             try {
+                console.log(`[消息系统] 执行第 ${index + 1} 个监听器回调，精灵ID: ${listener.spriteId}`);
                 listener.callback(messageName, senderId);
                 messageRecord.receivedBy.push(listener.spriteId);
+                console.log(`[消息系统] 第 ${index + 1} 个监听器回调执行完成`);
             } catch (error) {
                 console.error(`[消息系统] 执行监听器回调失败:`, error);
             }
         });
+    } else {
+        console.log(`[消息系统] 没有找到监听消息 "${messageName}" 的监听器`);
     }
     
     // 显示通知
@@ -222,12 +231,9 @@ function initializeMessageSystem() {
     messageSystem.pendingMessages.clear();
     messageSystem.messageHistory = [];
     
-    // 添加全局消息监听器（用于调试）
-    addMessageListener('debug', (messageName, senderId) => {
-        console.log(`[消息系统] 调试消息: ${messageName} 来自 ${senderId}`);
-    });
+
     
-    console.log('[消息系统] 消息通讯系统初始化完成');
+
 }
 
 // 通知提示
@@ -248,6 +254,94 @@ function showNotification(message, duration = 3000) {
 // 工具函数
 function getSprite(id) {
     return sprites.find(s => s.id === id);
+}
+
+// 全局变量操作函数
+function createGlobalVariable(varName, initialValue = 0) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (globalVariables.hasOwnProperty(trimmedVarName)) {
+        throw new Error(`全局变量 "${trimmedVarName}" 已存在`);
+    }
+    
+    globalVariables[trimmedVarName] = initialValue;
+    console.log(`全局变量 "${trimmedVarName}" 已创建，初始值: ${initialValue}`);
+    return trimmedVarName;
+}
+
+function setGlobalVariable(varName, value) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (!globalVariables.hasOwnProperty(trimmedVarName)) {
+        // 如果变量不存在，自动创建
+        console.log(`全局变量 "${trimmedVarName}" 不存在，自动创建`);
+        createGlobalVariable(trimmedVarName, value);
+    } else {
+        globalVariables[trimmedVarName] = value;
+        console.log(`全局变量 "${trimmedVarName}" 已设置为: ${value}`);
+    }
+}
+
+function changeGlobalVariable(varName, value) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (!globalVariables.hasOwnProperty(trimmedVarName)) {
+        // 如果变量不存在，自动创建
+        console.log(`全局变量 "${trimmedVarName}" 不存在，自动创建`);
+        createGlobalVariable(trimmedVarName, value);
+    } else {
+        const currentValue = globalVariables[trimmedVarName];
+        // 智能类型处理：如果是数字则相加，如果是字符串则连接
+        if (typeof currentValue === 'number' && typeof value === 'number') {
+            globalVariables[trimmedVarName] = currentValue + value;
+        } else {
+            globalVariables[trimmedVarName] = (currentValue || '') + value;
+        }
+        console.log(`全局变量 "${trimmedVarName}" 已增加，新值: ${globalVariables[trimmedVarName]}`);
+    }
+}
+
+function getGlobalVariable(varName) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    return globalVariables[trimmedVarName] || '';
+}
+
+function getAllGlobalVariables() {
+    return { ...globalVariables };
+}
+
+function deleteGlobalVariable(varName) {
+    if (typeof varName !== 'string' || varName.trim() === '') {
+        throw new Error('变量名不能为空');
+    }
+    
+    const trimmedVarName = varName.trim();
+    if (globalVariables.hasOwnProperty(trimmedVarName)) {
+        delete globalVariables[trimmedVarName];
+        console.log(`全局变量 "${trimmedVarName}" 已删除`);
+        return true;
+    } else {
+        console.log(`全局变量 "${trimmedVarName}" 不存在`);
+        return false;
+    }
+}
+
+function clearAllGlobalVariables() {
+    globalVariables = {};
+    console.log('所有全局变量已清除');
 }
 
 // 加载图片并转换为base64
@@ -441,6 +535,11 @@ function initializeApp() {
     initializeWorker();
     initializeMessageSystem(); // 初始化消息通讯系统
     initializeDefaultBackground();
+    
+    // 初始化声音管理
+    if (typeof initializeSoundManager === 'function') {
+        initializeSoundManager();
+    }
     
     // 延迟初始化默认精灵，确保其他组件都已加载
     setTimeout(() => {

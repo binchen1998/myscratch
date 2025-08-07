@@ -4,43 +4,241 @@
 function ensureGeneratorsRegistered() {
     // 检查是否已经注册过
     if (window.generatorsRegistered) {
-        console.log('生成器已注册，跳过重复注册');
+        console.log('代码生成器已经注册过，跳过重复注册');
         return;
     }
     
     // 注册变量积木的JavaScript代码生成器
-    console.log('注册变量积木的JavaScript代码生成器');
+
     
     // 设置变量
     Blockly.JavaScript['variables_set'] = function(block) {
         const varName = block.getFieldValue('VAR') || '变量';
         const value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || '0';
-        return `variables['${varName}'] = ${value};\nupdateVariableDisplay('${varName}', variables);\n`;
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return `variables['${escapedVarName}'] = ${value};\nupdateVariableDisplay('${escapedVarName}', variables);\n`;
     };
     
     // 改变变量
     Blockly.JavaScript['variables_change'] = function(block) {
         const varName = block.getFieldValue('VAR') || '变量';
         const value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || '1';
-        return `variables['${varName}'] = (variables['${varName}'] || 0) + ${value};\nupdateVariableDisplay('${varName}', variables);\n`;
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        // 智能类型处理：如果是数字则相加，如果是字符串则连接
+        return `(function() {
+            const currentValue = variables['${escapedVarName}'];
+            const newValue = ${value};
+            if (typeof currentValue === 'number' && typeof newValue === 'number') {
+                variables['${escapedVarName}'] = (currentValue || 0) + newValue;
+            } else {
+                variables['${escapedVarName}'] = (currentValue || '') + newValue;
+            }
+            updateVariableDisplay('${escapedVarName}', variables);
+        })();\n`;
     };
     
     // 获取变量
     Blockly.JavaScript['variables_get'] = function(block) {
         const varName = block.getFieldValue('VAR') || '变量';
-        return [`(variables['${varName}'] || 0)`, Blockly.JavaScript.ORDER_ATOMIC];
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return [`(variables['${escapedVarName}'] || '')`, Blockly.JavaScript.ORDER_ATOMIC];
     };
     
     // 显示变量
     Blockly.JavaScript['variables_show'] = function(block) {
         const varName = block.getFieldValue('VAR') || '变量';
-        return `showVariable('${varName}', variables);\n`;
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return `showVariable('${escapedVarName}', variables);\n`;
     };
     
     // 隐藏变量
     Blockly.JavaScript['variables_hide'] = function(block) {
         const varName = block.getFieldValue('VAR') || '变量';
-        return `hideVariable('${varName}', variables);\n`;
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return `hideVariable('${escapedVarName}', variables);\n`;
+    };
+
+    // ===== 全局变量代码生成器 =====
+
+    // 新建全局变量
+    Blockly.JavaScript['global_variables_create'] = function(block) {
+        const varName = block.getFieldValue('VAR_NAME') || '变量名';
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return `createGlobalVariable('${escapedVarName}', 0);\n`;
+    };
+
+    // 将全局变量设为
+    Blockly.JavaScript['global_variables_set'] = function(block) {
+        const varName = block.getFieldValue('VAR_NAME') || '变量名';
+        const value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return `setGlobalVariable('${escapedVarName}', ${value});\n`;
+    };
+
+    // 将全局变量增加
+    Blockly.JavaScript['global_variables_change'] = function(block) {
+        const varName = block.getFieldValue('VAR_NAME') || '变量名';
+        const value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return `changeGlobalVariable('${escapedVarName}', ${value});\n`;
+    };
+
+    // 获取全局变量
+    Blockly.JavaScript['global_variables_get'] = function(block) {
+        const varName = block.getFieldValue('VAR_NAME') || '变量名';
+        // 转义变量名中的特殊字符
+        const escapedVarName = varName.replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+        return [`getGlobalVariable('${escapedVarName}')`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // ===== 声音块代码生成器 =====
+    
+    // 播放声音
+    Blockly.JavaScript['sound_play'] = function(block) {
+        const soundName = block.getFieldValue('SOUND_NAME') || 'none';
+        if (soundName === 'none') {
+            return '';
+        }
+        return `playSoundByName('${soundName}', false);\n`;
+    };
+    
+    // 播放声音等待播完
+    Blockly.JavaScript['sound_play_wait'] = function(block) {
+        const soundName = block.getFieldValue('SOUND_NAME') || 'none';
+        if (soundName === 'none') {
+            return '';
+        }
+        return `await playSoundByName('${soundName}', true);\n`;
+    };
+    
+    // 停止所有声音
+    Blockly.JavaScript['sound_stop_all'] = function(block) {
+        return `stopAllSounds();\n`;
+    };
+    
+    // 改变音效
+    Blockly.JavaScript['sound_change_effect'] = function(block) {
+        const effectType = block.getFieldValue('EFFECT_TYPE') || 'pitch';
+        const value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+        return `// 改变${effectType}音效: ${value}\n`;
+    };
+    
+    // 设置音效
+    Blockly.JavaScript['sound_set_effect'] = function(block) {
+        const effectType = block.getFieldValue('EFFECT_TYPE') || 'pitch';
+        const value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+        return `// 设置${effectType}音效为: ${value}\n`;
+    };
+    
+    // 清除音效
+    Blockly.JavaScript['sound_clear_effects'] = function(block) {
+        return `// 清除所有音效\n`;
+    };
+    
+    // 改变音量
+    Blockly.JavaScript['sound_change_volume'] = function(block) {
+        const volume = Blockly.JavaScript.valueToCode(block, 'VOLUME', Blockly.JavaScript.ORDER_ATOMIC) || '-10';
+        return `setVolume(getVolume() + ${volume});\n`;
+    };
+    
+    // 设置音量
+    Blockly.JavaScript['sound_set_volume'] = function(block) {
+        const volume = Blockly.JavaScript.valueToCode(block, 'VOLUME', Blockly.JavaScript.ORDER_ATOMIC) || '100';
+        return `setVolume(${volume});\n`;
+    };
+    
+    // 音量
+    Blockly.JavaScript['sound_volume'] = function(block) {
+        return [`getVolume()`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // ===== 运动块代码生成器 =====
+    
+    // 获取x坐标
+    Blockly.JavaScript['get_x'] = function(block) {
+        return [`getX()`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 获取y坐标
+    Blockly.JavaScript['get_y'] = function(block) {
+        return [`getY()`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 移动到x,y
+    Blockly.JavaScript['motion_gotoxy'] = function(block) {
+        const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+        const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+        return `await goToXY(${x}, ${y});\n`;
+    };
+    
+    // 移动到随机位置
+    Blockly.JavaScript['motion_goto'] = function(block) {
+        const target = block.getFieldValue('TO') || 'random position';
+        return `await goTo('${target}');\n`;
+    };
+    
+    // 滑行到x,y
+    Blockly.JavaScript['motion_glideto'] = function(block) {
+        const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+        const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+        const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+        return `await glideToXY(${x}, ${y}, ${secs});\n`;
+    };
+    
+    // 滑行到随机位置
+    Blockly.JavaScript['motion_glideto_random'] = function(block) {
+        const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+        return `await glideToRandom(${secs});\n`;
+    };
+    
+    // 滑行到角色
+    Blockly.JavaScript['motion_glideto_sprite'] = function(block) {
+        const sprite = block.getFieldValue('TO') || 'mouse-pointer';
+        const secs = Blockly.JavaScript.valueToCode(block, 'SECS', Blockly.JavaScript.ORDER_ATOMIC) || '1';
+        return `await glideToSprite('${sprite}', ${secs});\n`;
+    };
+    
+    // 改变x坐标
+    Blockly.JavaScript['motion_changexby'] = function(block) {
+        const dx = Blockly.JavaScript.valueToCode(block, 'DX', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+        return `await changeX(${dx});\n`;
+    };
+    
+    // 设置x坐标
+    Blockly.JavaScript['motion_setx'] = function(block) {
+        const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+        return `await setX(${x});\n`;
+    };
+    
+    // 改变y坐标
+    Blockly.JavaScript['motion_changeyby'] = function(block) {
+        const dy = Blockly.JavaScript.valueToCode(block, 'DY', Blockly.JavaScript.ORDER_ATOMIC) || '10';
+        return `await changeY(${dy});\n`;
+    };
+    
+    // 设置y坐标
+    Blockly.JavaScript['motion_sety'] = function(block) {
+        const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC) || '0';
+        return `await setY(${y});\n`;
+    };
+    
+    // 碰到边缘就反弹
+    Blockly.JavaScript['motion_bounce_if_on_edge'] = function(block) {
+        return `await bounceIfOnEdge();\n`;
+    };
+    
+    // 设置旋转方式
+    Blockly.JavaScript['motion_set_rotation_style'] = function(block) {
+        const style = block.getFieldValue('STYLE') || 'all around';
+        return `await setRotationStyle('${style}');\n`;
     };
     
     // ===== 消息通讯块代码生成器 =====
@@ -77,9 +275,178 @@ function ensureGeneratorsRegistered() {
         return `// 当角色被点击时\n`;
     };
     
+    // ===== 控制块代码生成器 =====
+    
+    // 等待
+    Blockly.JavaScript['controls_wait'] = function(block) {
+        const seconds = block.getFieldValue('SECONDS') || '1';
+        return `await waitSeconds(${seconds});\n`;
+    };
+    
+    // 等待直到
+    Blockly.JavaScript['controls_wait_until'] = function(block) {
+        const condition = Blockly.JavaScript.valueToCode(block, 'CONDITION', Blockly.JavaScript.ORDER_ATOMIC) || 'false';
+        return `while (!(${condition})) {\n  await sleep(0.001);\n}\n`;
+    };
+    
+    // 停止
+    Blockly.JavaScript['controls_stop'] = function(block) {
+        const stopOption = block.getFieldValue('STOP_OPTION') || 'this script';
+        return `await stopExecution('${stopOption}');\n`;
+    };
+    
+    // ===== 外观块代码生成器 =====
+    
+    // 说
+    Blockly.JavaScript['looks_say'] = function(block) {
+        const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "'你好!'";
+        return `await say(${message});\n`;
+    };
+    
+    // 说...秒
+    Blockly.JavaScript['looks_say_for_secs'] = function(block) {
+        const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "'你好!'";
+        const secs = block.getFieldValue('SECS') || '2';
+        return `await sayForSecs(${message}, ${secs});\n`;
+    };
+    
+    // 思考
+    Blockly.JavaScript['looks_think'] = function(block) {
+        const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "'嗯'";
+        return `await think(${message});\n`;
+    };
+    
+    // 思考...秒
+    Blockly.JavaScript['looks_think_for_secs'] = function(block) {
+        const message = Blockly.JavaScript.valueToCode(block, 'MESSAGE', Blockly.JavaScript.ORDER_ATOMIC) || "'嗯'";
+        const secs = block.getFieldValue('SECS') || '2';
+        return `await thinkForSecs(${message}, ${secs});\n`;
+    };
+    
+    // 切换造型
+    Blockly.JavaScript['looks_switch_costume'] = function(block) {
+        const costume = block.getFieldValue('COSTUME') || 'costume_1';
+        return `await switchCostume('${costume}');\n`;
+    };
+    
+    // 下一个造型
+    Blockly.JavaScript['looks_next_costume'] = function(block) {
+        return `await nextCostume();\n`;
+    };
+    
+    // 造型编号
+    Blockly.JavaScript['looks_costume_number'] = function(block) {
+        return [`getCostumeNumber()`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 将大小增加
+    Blockly.JavaScript['looks_changesizeby'] = function(block) {
+        const size = block.getFieldValue('SIZE') || '10';
+        return `changeSizeBy(${size});\n`;
+    };
+    
+    // 将大小设为
+    Blockly.JavaScript['looks_setsizeto'] = function(block) {
+        const size = block.getFieldValue('SIZE') || '100';
+        return `setSizeTo(${size});\n`;
+    };
+    
+    // 将特效增加
+    Blockly.JavaScript['looks_changeeffectby'] = function(block) {
+        const effect = block.getFieldValue('EFFECT') || 'color';
+        const value = block.getFieldValue('VALUE') || '25';
+        return `changeEffectBy('${effect}', ${value});\n`;
+    };
+    
+    // 将特效设定为
+    Blockly.JavaScript['looks_seteffectto'] = function(block) {
+        const effect = block.getFieldValue('EFFECT') || 'color';
+        const value = block.getFieldValue('VALUE') || '0';
+        return `setEffectTo('${effect}', ${value});\n`;
+    };
+    
+    // 清除图形特效
+    Blockly.JavaScript['looks_cleargraphiceffects'] = function(block) {
+        return `clearGraphicEffects();\n`;
+    };
+    
+    // 显示
+    Blockly.JavaScript['looks_show'] = function(block) {
+        return `show();\n`;
+    };
+    
+    // 隐藏
+    Blockly.JavaScript['looks_hide'] = function(block) {
+        return `hide();\n`;
+    };
+    
+    // 移到最前面/后面
+    Blockly.JavaScript['looks_gotofrontback'] = function(block) {
+        const frontBack = block.getFieldValue('FRONT_BACK') || 'front';
+        return `goToFrontBack('${frontBack}');\n`;
+    };
+    
+    // 前移/后移层
+    Blockly.JavaScript['looks_goforwardbackwardlayers'] = function(block) {
+        const forwardBackward = block.getFieldValue('FORWARD_BACKWARD') || 'forward';
+        const num = block.getFieldValue('NUM') || '1';
+        return `goForwardBackwardLayers('${forwardBackward}', ${num});\n`;
+    };
+    
+    // ===== 侦测块代码生成器 =====
+    
+    // 碰到颜色
+    Blockly.JavaScript['sensing_coloristouchingcolor'] = function(block) {
+        const color1 = block.getFieldValue('COLOR1') || '#ff0000';
+        const color2 = block.getFieldValue('COLOR2') || '#00ff00';
+        return [`checkColorTouchingColor('${color1}', '${color2}')`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 距离
+    Blockly.JavaScript['sensing_distance'] = function(block) {
+        const distanceTo = block.getFieldValue('DISTANCETO') || 'mouse-pointer';
+        return [`getDistance('${distanceTo}')`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 按键是否按下
+    Blockly.JavaScript['sensing_keypressed'] = function(block) {
+        const keyOption = block.getFieldValue('KEY_OPTION') || 'space';
+        return [`isKeyPressed('${keyOption}')`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 鼠标是否按下
+    Blockly.JavaScript['sensing_mousedown'] = function(block) {
+        return [`isMouseDown()`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 计时器
+    Blockly.JavaScript['sensing_timer'] = function(block) {
+        return [`getTimer()`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // 碰撞检测
+    Blockly.JavaScript['collision_detection'] = function(block) {
+        const target = block.getFieldValue('TARGET_SPRITE') || 'edge';
+        return [`checkCollision('${target}')`, Blockly.JavaScript.ORDER_ATOMIC];
+    };
+    
+    // ===== 背景块代码生成器 =====
+    
+    // 切换背景
+    Blockly.JavaScript['switch_background'] = function(block) {
+        const background = block.getFieldValue('BACKGROUND') || 'background1';
+        return `await switchBackground('${background}');\n`;
+    };
+    
+    // 切换到背景
+    Blockly.JavaScript['switch_background_to'] = function(block) {
+        const background = block.getFieldValue('BACKGROUND') || 'background1';
+        return `await switchBackground('${background}');\n`;
+    };
+    
     Blockly.JavaScript.isInitialized = true;
     window.generatorsRegistered = true;
-    console.log('变量积木代码生成器注册完成');
+
 }
 
 // 创建新变量
@@ -89,7 +456,6 @@ function createNewVariable() {
         try {
             // 创建新变量
             workspace.createVariable(varName.trim());
-            console.log('新变量已创建:', varName.trim());
             
             // 显示通知
             if (typeof showNotification === 'function') {
@@ -112,7 +478,7 @@ function initializeBlockly() {
         return;
     }
     
-    console.log('开始初始化Blockly...');
+
     
     // 定义自定义块
     defineCustomBlocks();
@@ -121,7 +487,7 @@ function initializeBlockly() {
     ensureGeneratorsRegistered();
     
     // 创建Blockly工作区
-    console.log('工具箱元素:', document.getElementById('toolbox'));
+
     // 创建内置工具箱配置
     const toolboxConfig = {
         kind: "categoryToolbox",
@@ -207,7 +573,16 @@ function initializeBlockly() {
                     { kind: "block", type: "looks_think_for_secs" },
                     { kind: "block", type: "looks_switch_costume" },
                     { kind: "block", type: "looks_next_costume" },
-                    { kind: "block", type: "looks_costume_number" }
+                    { kind: "block", type: "looks_costume_number" },
+                    { kind: "block", type: "looks_changesizeby" },
+                    { kind: "block", type: "looks_setsizeto" },
+                    { kind: "block", type: "looks_changeeffectby" },
+                    { kind: "block", type: "looks_seteffectto" },
+                    { kind: "block", type: "looks_cleargraphiceffects" },
+                    { kind: "block", type: "looks_show" },
+                    { kind: "block", type: "looks_hide" },
+                    { kind: "block", type: "looks_gotofrontback" },
+                    { kind: "block", type: "looks_goforwardbackwardlayers" }
                 ]
             },
             {
@@ -241,6 +616,22 @@ function initializeBlockly() {
             },
             {
                 kind: "category",
+                name: "声音",
+                colour: "#9C27B0",
+                contents: [
+                    { kind: "block", type: "sound_play" },
+                    { kind: "block", type: "sound_play_wait" },
+                    { kind: "block", type: "sound_stop_all" },
+                    { kind: "block", type: "sound_change_effect" },
+                    { kind: "block", type: "sound_set_effect" },
+                    { kind: "block", type: "sound_clear_effects" },
+                    { kind: "block", type: "sound_change_volume" },
+                    { kind: "block", type: "sound_set_volume" },
+                    { kind: "block", type: "sound_volume" }
+                ]
+            },
+            {
+                kind: "category",
                 name: "变量",
                 colour: "#FF8C1A",
                 contents: [
@@ -249,7 +640,12 @@ function initializeBlockly() {
                     { kind: "block", type: "variables_change" },
                     { kind: "block", type: "variables_get" },
                     { kind: "block", type: "variables_show" },
-                    { kind: "block", type: "variables_hide" }
+                    { kind: "block", type: "variables_hide" },
+                    { kind: "separator" },
+                    { kind: "block", type: "global_variables_create" },
+                    { kind: "block", type: "global_variables_set" },
+                    { kind: "block", type: "global_variables_change" },
+                    { kind: "block", type: "global_variables_get" }
                 ]
             }
         ]
@@ -305,7 +701,14 @@ function initializeBlockly() {
         };
     }
     
-    console.log('Blockly工作区已初始化');
+    // 确保工作区中有默认变量
+    try {
+        workspace.createVariable('变量');
+    } catch (error) {
+        console.log('默认变量已存在或创建失败:', error);
+    }
+    
+
     
     // 注册按钮回调函数
     workspace.registerButtonCallback('CREATE_VARIABLE', createNewVariable);
@@ -321,11 +724,11 @@ function initializeBlockly() {
             
             const block = workspace.getBlockById(event.blockId);
             if (block && block.type === 'when_program_starts') {
-                console.log('[Blockly] 检测到"当程序开始时"块事件:', event.type);
+            
                 
                 // 检查是否已经存在"当程序开始时"块
                 const existingStartBlocks = workspace.getBlocksByType('when_program_starts');
-                console.log('[Blockly] 当前存在的"当程序开始时"块数量:', existingStartBlocks.length);
+            
                 
                 if (existingStartBlocks.length > 1) {
                     // 删除刚创建的块
@@ -338,10 +741,10 @@ function initializeBlockly() {
                         alert('错误：每个精灵只能有一个"当程序开始时"块！');
                     }
                     
-                    console.log('[Blockly] 阻止创建重复的"当程序开始时"块');
+                
                 } else {
                     // 成功添加第一个块时的反馈
-                    console.log('[Blockly] 成功添加"当程序开始时"块');
+                
                 }
             }
         }
@@ -351,7 +754,7 @@ function initializeBlockly() {
     workspace.addChangeListener(function(event) {
         // 检查是否是拖拽开始事件
         if (event.type === 'ui') {
-            console.log('[Blockly] UI事件:', event);
+        
         }
     });
     
@@ -363,7 +766,7 @@ function initializeBlockly() {
 function defineCustomBlocks() {
     // 检查是否已经定义过
     if (window.blocksDefined) {
-        console.log('自定义块已定义过，跳过重复定义');
+    
         return;
     }
     
@@ -901,12 +1304,13 @@ function defineCustomBlocks() {
     Blockly.Blocks['looks_say'] = {
         init: function() {
             this.appendDummyInput()
-                .appendField("说")
-                .appendField(new Blockly.FieldTextInput("你好!"), "MESSAGE");
+                .appendField("说");
+            this.appendValueInput("MESSAGE")
+                .setCheck(null);
             this.setPreviousStatement(true);
             this.setNextStatement(true);
             this.setColour(153);
-            this.setTooltip("让角色说话");
+            this.setTooltip("让角色说话，可以输入文字或变量");
             this.setHelpUrl("");
         }
     };
@@ -915,15 +1319,17 @@ function defineCustomBlocks() {
     Blockly.Blocks['looks_say_for_secs'] = {
         init: function() {
             this.appendDummyInput()
-                .appendField("说")
-                .appendField(new Blockly.FieldTextInput("你好!"), "MESSAGE")
+                .appendField("说");
+            this.appendValueInput("MESSAGE")
+                .setCheck(null);
+            this.appendDummyInput()
                 .appendField("")
                 .appendField(new Blockly.FieldNumber(2, 0, 60, 0.1), "SECS")
                 .appendField("秒");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
             this.setColour(153);
-            this.setTooltip("让角色说话指定秒数");
+            this.setTooltip("让角色说话指定秒数，可以输入文字或变量");
             this.setHelpUrl("");
         }
     };
@@ -932,12 +1338,13 @@ function defineCustomBlocks() {
     Blockly.Blocks['looks_think'] = {
         init: function() {
             this.appendDummyInput()
-                .appendField("思考")
-                .appendField(new Blockly.FieldTextInput("嗯"), "MESSAGE");
+                .appendField("思考");
+            this.appendValueInput("MESSAGE")
+                .setCheck(null);
             this.setPreviousStatement(true);
             this.setNextStatement(true);
             this.setColour(153);
-            this.setTooltip("让角色思考");
+            this.setTooltip("让角色思考，可以输入文字或变量");
             this.setHelpUrl("");
         }
     };
@@ -946,15 +1353,17 @@ function defineCustomBlocks() {
     Blockly.Blocks['looks_think_for_secs'] = {
         init: function() {
             this.appendDummyInput()
-                .appendField("思考")
-                .appendField(new Blockly.FieldTextInput("嗯"), "MESSAGE")
+                .appendField("思考");
+            this.appendValueInput("MESSAGE")
+                .setCheck(null);
+            this.appendDummyInput()
                 .appendField("")
                 .appendField(new Blockly.FieldNumber(2, 0, 60, 0.1), "SECS")
                 .appendField("秒");
             this.setPreviousStatement(true);
             this.setNextStatement(true);
             this.setColour(153);
-            this.setTooltip("让角色思考指定秒数");
+            this.setTooltip("让角色思考指定秒数，可以输入文字或变量");
             this.setHelpUrl("");
         }
     };
@@ -994,6 +1403,156 @@ function defineCustomBlocks() {
             this.setOutput(true, "Number");
             this.setColour(153);
             this.setTooltip("获取当前造型的编号");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 将大小增加
+    Blockly.Blocks['looks_changesizeby'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将大小增加")
+                .appendField(new Blockly.FieldNumber(10, -1000, 1000, 1), "SIZE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("改变精灵的大小");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 将大小设为
+    Blockly.Blocks['looks_setsizeto'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将大小设为")
+                .appendField(new Blockly.FieldNumber(100, 1, 1000, 1), "SIZE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("设置精灵的大小");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 将特效增加
+    Blockly.Blocks['looks_changeeffectby'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将")
+                .appendField(new Blockly.FieldDropdown([
+                    ["颜色", "color"],
+                    ["鱼眼", "fisheye"],
+                    ["漩涡", "whirl"],
+                    ["像素化", "pixelate"],
+                    ["马赛克", "mosaic"],
+                    ["亮度", "brightness"],
+                    ["虚像", "ghost"]
+                ]), "EFFECT")
+                .appendField("特效增加")
+                .appendField(new Blockly.FieldNumber(25, -100, 100, 1), "VALUE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("改变图形特效");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 将特效设定为
+    Blockly.Blocks['looks_seteffectto'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将")
+                .appendField(new Blockly.FieldDropdown([
+                    ["颜色", "color"],
+                    ["鱼眼", "fisheye"],
+                    ["漩涡", "whirl"],
+                    ["像素化", "pixelate"],
+                    ["马赛克", "mosaic"],
+                    ["亮度", "brightness"],
+                    ["虚像", "ghost"]
+                ]), "EFFECT")
+                .appendField("特效设定为")
+                .appendField(new Blockly.FieldNumber(0, -100, 100, 1), "VALUE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("设置图形特效");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 清除图形特效
+    Blockly.Blocks['looks_cleargraphiceffects'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("清除图形特效");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("清除所有图形特效");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 显示
+    Blockly.Blocks['looks_show'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("显示");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("显示精灵");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 隐藏
+    Blockly.Blocks['looks_hide'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("隐藏");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("隐藏精灵");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 移到最前面
+    Blockly.Blocks['looks_gotofrontback'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("移到最")
+                .appendField(new Blockly.FieldDropdown([
+                    ["前面", "front"],
+                    ["后面", "back"]
+                ]), "FRONT_BACK");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("改变精灵的图层位置");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 前移/后移层
+    Blockly.Blocks['looks_goforwardbackwardlayers'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldDropdown([
+                    ["前移", "forward"],
+                    ["后移", "backward"]
+                ]), "FORWARD_BACKWARD")
+                .appendField(new Blockly.FieldNumber(1, 1, 100, 1), "NUM")
+                .appendField("层");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(153);
+            this.setTooltip("向前或向后移动图层");
             this.setHelpUrl("");
         }
     };
@@ -1633,9 +2192,206 @@ function defineCustomBlocks() {
             this.setHelpUrl("");
         }
     };
+
+    // ===== 全局变量块定义 =====
+
+    // 新建全局变量
+    Blockly.Blocks['global_variables_create'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("新建全局变量")
+                .appendField(new Blockly.FieldTextInput("变量名"), "VAR_NAME");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(330);
+            this.setTooltip("创建一个新的全局变量");
+            this.setHelpUrl("");
+        }
+    };
+
+    // 将全局变量设为
+    Blockly.Blocks['global_variables_set'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将全局变量")
+                .appendField(new Blockly.FieldTextInput("变量名"), "VAR_NAME")
+                .appendField("设为");
+            this.appendValueInput("VALUE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(330);
+            this.setTooltip("设置全局变量的值");
+            this.setHelpUrl("");
+        }
+    };
+
+    // 将全局变量增加
+    Blockly.Blocks['global_variables_change'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将全局变量")
+                .appendField(new Blockly.FieldTextInput("变量名"), "VAR_NAME")
+                .appendField("增加");
+            this.appendValueInput("VALUE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(330);
+            this.setTooltip("将全局变量增加指定值");
+            this.setHelpUrl("");
+        }
+    };
+
+    // 获取全局变量
+    Blockly.Blocks['global_variables_get'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("全局变量")
+                .appendField(new Blockly.FieldTextInput("变量名"), "VAR_NAME");
+            this.setOutput(true, null);
+            this.setColour(330);
+            this.setTooltip("获取全局变量的值");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // ===== 声音块定义 =====
+    
+    // 播放声音
+    Blockly.Blocks['sound_play'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("播放声音")
+                .appendField(new Blockly.FieldDropdown(generateSoundOptions), "SOUND_NAME");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("播放指定的声音");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 播放声音等待播完
+    Blockly.Blocks['sound_play_wait'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("播放声音")
+                .appendField(new Blockly.FieldDropdown(generateSoundOptions), "SOUND_NAME")
+                .appendField("等待播完");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("播放指定的声音并等待播完");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 停止所有声音
+    Blockly.Blocks['sound_stop_all'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("停止所有声音");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("停止所有正在播放的声音");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 改变音效
+    Blockly.Blocks['sound_change_effect'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将")
+                .appendField(new Blockly.FieldDropdown([
+                    ["音调", "pitch"],
+                    ["左右平衡", "pan"]
+                ]), "EFFECT_TYPE")
+                .appendField("音效增加")
+                .appendField(new Blockly.FieldNumber(10, -100, 100), "VALUE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("改变音效参数");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 设置音效
+    Blockly.Blocks['sound_set_effect'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将")
+                .appendField(new Blockly.FieldDropdown([
+                    ["音调", "pitch"],
+                    ["左右平衡", "pan"]
+                ]), "EFFECT_TYPE")
+                .appendField("音效设为")
+                .appendField(new Blockly.FieldNumber(100, -100, 100), "VALUE");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("设置音效参数");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 清除音效
+    Blockly.Blocks['sound_clear_effects'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("清除音效");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("清除所有音效设置");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 改变音量
+    Blockly.Blocks['sound_change_volume'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将音量增加")
+                .appendField(new Blockly.FieldNumber(-10, -100, 100), "VOLUME");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("改变音量");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 设置音量
+    Blockly.Blocks['sound_set_volume'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("将音量设为")
+                .appendField(new Blockly.FieldNumber(100, 0, 100), "VOLUME")
+                .appendField("%");
+            this.setPreviousStatement(true);
+            this.setNextStatement(true);
+            this.setColour(160);
+            this.setTooltip("设置音量百分比");
+            this.setHelpUrl("");
+        }
+    };
+    
+    // 音量
+    Blockly.Blocks['sound_volume'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("音量");
+            this.setOutput(true, "Number");
+            this.setColour(160);
+            this.setTooltip("获取当前音量");
+            this.setHelpUrl("");
+        }
+    };
     
     // 确认块定义完成
-    console.log('自定义块定义完成');
+
     
     // 标记块定义完成
     window.blocksDefined = true;

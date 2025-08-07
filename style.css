@@ -101,25 +101,17 @@ body {
     box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
-.control-btn.debug {
+.control-btn.sound {
     background: linear-gradient(45deg, #9C27B0, #7B1FA2);
     color: white;
 }
 
-.control-btn.debug:hover:not(:disabled) {
+.control-btn.sound:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
 }
 
-.control-btn.debug-loop {
-    background: linear-gradient(45deg, #E91E63, #C2185B);
-    color: white;
-}
 
-.control-btn.debug-loop:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
-}
 
 /* Chat按钮样式 */
 .chat-btn {
@@ -763,25 +755,59 @@ body {
 /* 坐标输入组 */
 .coordinate-inputs {
     display: flex;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+}
+
+.coordinate-group {
+    display: flex;
+    align-items: center;
     gap: 4px;
     flex: 1;
     min-width: 0;
 }
 
-.coord-group {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    flex: 1;
-    min-width: 0;
+.coordinate-label {
+    font-size: 12px;
+    color: #555;
+    font-weight: 600;
+    min-width: 14px;
+    flex-shrink: 0;
+    text-align: center;
+    font-family: 'Courier New', monospace;
 }
 
-.coord-label {
-    font-size: 10px;
-    color: #666;
+.coordinate-input {
+    width: 65px;
+    height: 26px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 12px;
+    text-align: center;
+    background: white;
+    outline: none;
+    transition: all 0.2s ease;
+    font-family: 'Courier New', monospace;
     font-weight: 500;
-    min-width: 8px;
-    flex-shrink: 0;
+}
+
+.coordinate-input:focus {
+    border-color: #4C97FF;
+    box-shadow: 0 0 0 2px rgba(76, 151, 255, 0.15);
+    background: #f8fbff;
+}
+
+.coordinate-input:hover {
+    border-color: #999;
+    background: #fafafa;
+}
+
+.coordinate-input:invalid {
+    border-color: #ff6b6b;
+    background: #fff5f5;
 }
 
 /* 显示控制按钮 */
@@ -2049,4 +2075,234 @@ body {
 .xml-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+}
+
+/* 声音管理模态框样式 */
+.sound-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.sound-content {
+    background: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.sound-header {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 15px 15px 0 0;
+}
+
+.sound-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.sound-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.sound-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.sound-body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.sound-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.sound-add-btn, .sound-remove-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sound-add-btn {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.sound-add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.sound-remove-btn {
+    background: linear-gradient(45deg, #f44336, #d32f2f);
+    color: white;
+}
+
+.sound-remove-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.sound-remove-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.sounds-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sound-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.sound-item:hover {
+    border-color: #9C27B0;
+    background: #f0f0f0;
+}
+
+.sound-item.selected {
+    border-color: #9C27B0;
+    background: #e8f5e8;
+}
+
+.sound-preview {
+    width: 60px;
+    height: 60px;
+    background: #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.sound-preview i {
+    font-size: 24px;
+    color: #666;
+}
+
+.sound-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sound-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sound-duration {
+    font-size: 12px;
+    color: #666;
+}
+
+.sound-controls-item {
+    display: flex;
+    gap: 5px;
+    margin-left: 10px;
+}
+
+.sound-play-btn, .sound-stop-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sound-play-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+.sound-play-btn:hover {
+    background: #45a049;
+}
+
+.sound-stop-btn {
+    background: #f44336;
+    color: white;
+}
+
+.sound-stop-btn:hover {
+    background: #d32f2f;
+}
+
+.sound-delete {
+    background: none;
+    border: none;
+    color: #f44336;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+    opacity: 0;
+}
+
+.sound-item:hover .sound-delete {
+    opacity: 1;
+}
+
+.sound-delete:hover {
+    background: #f44336;
+    color: white;
 }

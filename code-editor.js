@@ -106,7 +106,7 @@ class CodeEditor {
             codeModal.style.display = 'flex';
         }
 
-        console.log('Code编辑器已打开，显示合并代码');
+
     }
 
     hideCodeEditor() {
@@ -114,7 +114,7 @@ class CodeEditor {
         if (codeModal) {
             codeModal.style.display = 'none';
         }
-        console.log('Code编辑器已关闭');
+
     }
 
     applyCode() {

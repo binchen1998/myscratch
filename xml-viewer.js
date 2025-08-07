@@ -121,7 +121,7 @@ class XmlViewer {
             xmlModal.style.display = 'flex';
         }
 
-        console.log('XML编辑器已打开，可以编辑当前精灵的XML代码');
+    
     }
 
     hideXmlViewer() {
@@ -129,7 +129,7 @@ class XmlViewer {
         if (xmlModal) {
             xmlModal.style.display = 'none';
         }
-        console.log('XML查看器已关闭');
+    
     }
 
     copyXmlToClipboard() {
@@ -150,7 +150,7 @@ class XmlViewer {
                     alert('XML代码已复制到剪贴板');
                 }
                 
-                console.log('XML代码已复制到剪贴板');
+            
             } catch (error) {
                 console.error('复制失败:', error);
                 if (typeof showNotification === 'function') {
@@ -196,7 +196,7 @@ class XmlViewer {
                 const sprite = sprites.find(s => s.id === this.currentSpriteId);
                 if (sprite) {
                     sprite.xmlCode = xmlContent;
-                    console.log('XML已应用到精灵:', sprite.name);
+                
                 }
             }
             
@@ -207,7 +207,7 @@ class XmlViewer {
                 alert('XML已成功应用到工作区');
             }
             
-            console.log('XML已成功应用到工作区');
+        
             
         } catch (error) {
             console.error('应用XML失败:', error);
@@ -233,7 +233,7 @@ class XmlViewer {
                 alert('XML已重置到原始内容');
             }
             
-            console.log('XML已重置到原始内容');
+        
         }
     }
 
@@ -303,7 +303,7 @@ const xmlViewer = new XmlViewer();
 
 // 在页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('XML查看器系统初始化');
+
     // 确保XML按钮显示
     xmlViewer.initializeXmlButton();
 }); 

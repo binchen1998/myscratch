@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试同名声音播放修复</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 测试同名声音播放修复</h1>
+        <p>这个测试验证当两个sprite播放同一个声音文件时，程序结束时能正确停止所有声音。</p>
+        
+        <div class="test-section">
+            <h3>测试准备</h3>
+            <p>首先需要添加一个测试声音文件：</p>
+            <input type="file" id="soundFile" accept="audio/*" style="display: none;">
+            <button onclick="document.getElementById('soundFile').click()">选择音频文件</button>
+            <div id="fileStatus" class="status info" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试1: 同名声音播放</h3>
+            <p>模拟两个sprite同时播放同一个声音：</p>
+            <button onclick="testDuplicateSoundPlay()">播放同名声音</button>
+            <button onclick="stopAllSounds()">停止所有声音</button>
+            <div id="test1Status" class="status info" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试2: 程序结束时的声音停止</h3>
+            <p>模拟程序结束时的声音停止：</p>
+            <button onclick="testProgramStop()">模拟程序结束</button>
+            <div id="test2Status" class="status info" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试日志</h3>
+            <div id="testLog" class="log"></div>
+            <button onclick="clearLog()">清空日志</button>
+        </div>
+    </div>
+
+    <script src="sound-manager.js"></script>
+    <script>
+        // 初始化声音管理器
+        let testSoundAdded = false;
+        
+        // 模拟声音管理器的初始化
+        function initializeTest() {
+            // 模拟声音数组
+            if (!window.sounds) {
+                window.sounds = [];
+            }
+            if (!window.playingSounds) {
+                window.playingSounds = new Map();
+            }
+            if (!window.activeAudioObjects) {
+                window.activeAudioObjects = new Set();
+            }
+            
+            log('测试环境初始化完成');
+        }
+        
+        // 日志函数
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logEntry.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[测试] ${message}`);
+        }
+        
+        // 清空日志
+        function clearLog() {
+            document.getElementById('testLog').innerHTML = '';
+        }
+        
+        // 显示状态
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+        }
+        
+        // 文件选择处理
+        document.getElementById('soundFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                log(`选择文件: ${file.name}`);
+                
+                if (!file.type.startsWith('audio/')) {
+                    showStatus('fileStatus', '请选择音频文件！', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const audio = new Audio(e.target.result);
+                    audio.onloadedmetadata = function() {
+                        const soundName = file.name.replace(/\.[^/.]+$/, "");
+                        
+                        // 添加到声音数组
+                        const sound = {
+                            id: 'sound_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                            name: soundName,
+                            dataURL: e.target.result,
+                            duration: audio.duration,
+                            audio: null
+                        };
+                        
+                        window.sounds.push(sound);
+                        testSoundAdded = true;
+                        
+                        log(`✅ 声音 "${soundName}" 已添加，时长: ${audio.duration.toFixed(2)}秒`);
+                        showStatus('fileStatus', `声音 "${soundName}" 已添加`, 'success');
+                    };
+                    audio.onerror = function() {
+                        log('❌ 音频文件加载失败', 'error');
+                        showStatus('fileStatus', '音频文件加载失败！', 'error');
+                    };
+                };
+                reader.onerror = function() {
+                    log('❌ 文件读取失败', 'error');
+                    showStatus('fileStatus', '文件读取失败！', 'error');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 测试同名声音播放
+        function testDuplicateSoundPlay() {
+            if (!testSoundAdded) {
+                showStatus('test1Status', '请先添加一个音频文件！', 'error');
+                return;
+            }
+            
+            log('开始测试同名声音播放...');
+            showStatus('test1Status', '正在测试同名声音播放...', 'info');
+            
+            const soundName = window.sounds[0].name;
+            
+            // 第一次播放
+            log(`第一次播放声音: ${soundName}`);
+            playSoundByName(soundName, false);
+            
+            // 等待500ms后第二次播放
+            setTimeout(() => {
+                log(`第二次播放同名声音: ${soundName}`);
+                playSoundByName(soundName, false);
+                
+                // 检查播放字典状态
+                setTimeout(() => {
+                    const playingCount = window.playingSounds.size;
+                    const activeCount = window.activeAudioObjects.size;
+                    log(`播放字典中的声音数量: ${playingCount}`);
+                    log(`活跃音频对象数量: ${activeCount}`);
+                    
+                    if (playingCount === 1 && activeCount === 1) {
+                        log('✅ 同名声音播放测试通过：只有一个声音在播放字典中', 'success');
+                        showStatus('test1Status', '同名声音播放测试通过！', 'success');
+                    } else {
+                        log(`❌ 同名声音播放测试失败：播放字典中有${playingCount}个声音，活跃对象有${activeCount}个`, 'error');
+                        showStatus('test1Status', '同名声音播放测试失败！', 'error');
+                    }
+                }, 1000);
+            }, 500);
+        }
+        
+        // 测试程序结束时的声音停止
+        function testProgramStop() {
+            if (!testSoundAdded) {
+                showStatus('test2Status', '请先添加一个音频文件！', 'error');
+                return;
+            }
+            
+            log('开始测试程序结束时的声音停止...');
+            showStatus('test2Status', '正在测试程序结束时的声音停止...', 'info');
+            
+            const soundName = window.sounds[0].name;
+            
+            // 播放声音
+            log(`播放声音: ${soundName}`);
+            playSoundByName(soundName, false);
+            
+            // 等待1秒后模拟程序结束
+            setTimeout(() => {
+                log('模拟程序结束，停止所有声音...');
+                stopAllSounds();
+                
+                // 检查是否所有声音都已停止
+                setTimeout(() => {
+                    const playingCount = window.playingSounds.size;
+                    const activeCount = window.activeAudioObjects.size;
+                    log(`停止后播放字典中的声音数量: ${playingCount}`);
+                    log(`停止后活跃音频对象数量: ${activeCount}`);
+                    
+                    if (playingCount === 0 && activeCount === 0) {
+                        log('✅ 程序结束声音停止测试通过：所有声音都已停止', 'success');
+                        showStatus('test2Status', '程序结束声音停止测试通过！', 'success');
+                    } else {
+                        log(`❌ 程序结束声音停止测试失败：还有${playingCount}个声音在播放字典中，${activeCount}个活跃对象`, 'error');
+                        showStatus('test2Status', '程序结束声音停止测试失败！', 'error');
+                    }
+                }, 500);
+            }, 1000);
+        }
+        
+        // 初始化测试
+        initializeTest();
+    </script>
+</body>
+</html> 

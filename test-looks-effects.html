@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外观效果测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-section h2 {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #45a049;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .code-preview {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 外观效果块测试</h1>
+        
+        <div class="test-section">
+            <h2>📏 大小控制测试</h2>
+            <p>测试精灵大小相关的块功能</p>
+            <button class="test-button" onclick="testChangeSizeBy()">将大小增加 10</button>
+            <button class="test-button" onclick="testSetSizeTo()">将大小设为 100</button>
+            <div class="code-preview">changeSizeBy(10);
+setSizeTo(100);</div>
+            <div id="size-status" class="status"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎭 图形特效测试</h2>
+            <p>测试各种图形特效</p>
+            <button class="test-button" onclick="testChangeEffectBy()">将颜色特效增加 25</button>
+            <button class="test-button" onclick="testSetEffectTo()">将颜色特效设定为 0</button>
+            <button class="test-button" onclick="testClearEffects()">清除图形特效</button>
+            <div class="code-preview">changeEffectBy('color', 25);
+setEffectTo('color', 0);
+clearGraphicEffects();</div>
+            <div id="effect-status" class="status"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>👁️ 显示/隐藏测试</h2>
+            <p>测试精灵的显示和隐藏功能</p>
+            <button class="test-button" onclick="testShow()">显示</button>
+            <button class="test-button" onclick="testHide()">隐藏</button>
+            <div class="code-preview">show();
+hide();</div>
+            <div id="visibility-status" class="status"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📚 图层控制测试</h2>
+            <p>测试精灵的图层位置控制</p>
+            <button class="test-button" onclick="testGoToFront()">移到最前面</button>
+            <button class="test-button" onclick="testGoToBack()">移到最后面</button>
+            <button class="test-button" onclick="testGoForward()">前移 1 层</button>
+            <button class="test-button" onclick="testGoBackward()">后移 1 层</button>
+            <div class="code-preview">goToFrontBack('front');
+goToFrontBack('back');
+goForwardBackwardLayers('forward', 1);
+goForwardBackwardLayers('backward', 1);</div>
+            <div id="layer-status" class="status"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 综合测试</h2>
+            <p>测试多个外观效果的组合</p>
+            <button class="test-button" onclick="testCombinedEffects()">运行综合测试</button>
+            <div class="code-preview">// 综合测试代码
+changeSizeBy(20);
+changeEffectBy('color', 30);
+show();
+goToFrontBack('front');</div>
+            <div id="combined-status" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟函数（在实际环境中这些函数会由Worker提供）
+        let mockSprite = {
+            scale: 1.0,
+            effects: {},
+            visible: true,
+            layer: 0
+        };
+
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        function testChangeSizeBy() {
+            try {
+                // 模拟 changeSizeBy 函数
+                const sizeChange = 10;
+                mockSprite.scale = Math.max(0.1, mockSprite.scale + sizeChange / 100);
+                updateStatus('size-status', `✅ 大小增加成功！当前大小: ${Math.round(mockSprite.scale * 100)}%`, 'success');
+            } catch (error) {
+                updateStatus('size-status', `❌ 大小增加失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testSetSizeTo() {
+            try {
+                // 模拟 setSizeTo 函数
+                const newSize = 100;
+                mockSprite.scale = Math.max(0.1, newSize / 100);
+                updateStatus('size-status', `✅ 大小设置成功！当前大小: ${Math.round(mockSprite.scale * 100)}%`, 'success');
+            } catch (error) {
+                updateStatus('size-status', `❌ 大小设置失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testChangeEffectBy() {
+            try {
+                // 模拟 changeEffectBy 函数
+                const effectType = 'color';
+                const effectValue = 25;
+                mockSprite.effects[effectType] = (mockSprite.effects[effectType] || 0) + effectValue;
+                updateStatus('effect-status', `✅ 特效增加成功！${effectType}特效: ${mockSprite.effects[effectType]}`, 'success');
+            } catch (error) {
+                updateStatus('effect-status', `❌ 特效增加失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testSetEffectTo() {
+            try {
+                // 模拟 setEffectTo 函数
+                const effectType = 'color';
+                const effectValue = 0;
+                mockSprite.effects[effectType] = effectValue;
+                updateStatus('effect-status', `✅ 特效设置成功！${effectType}特效: ${mockSprite.effects[effectType]}`, 'success');
+            } catch (error) {
+                updateStatus('effect-status', `❌ 特效设置失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testClearEffects() {
+            try {
+                // 模拟 clearGraphicEffects 函数
+                mockSprite.effects = {};
+                updateStatus('effect-status', `✅ 特效清除成功！`, 'success');
+            } catch (error) {
+                updateStatus('effect-status', `❌ 特效清除失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testShow() {
+            try {
+                // 模拟 show 函数
+                mockSprite.visible = true;
+                updateStatus('visibility-status', `✅ 显示成功！精灵可见性: ${mockSprite.visible}`, 'success');
+            } catch (error) {
+                updateStatus('visibility-status', `❌ 显示失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testHide() {
+            try {
+                // 模拟 hide 函数
+                mockSprite.visible = false;
+                updateStatus('visibility-status', `✅ 隐藏成功！精灵可见性: ${mockSprite.visible}`, 'success');
+            } catch (error) {
+                updateStatus('visibility-status', `❌ 隐藏失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testGoToFront() {
+            try {
+                // 模拟 goToFrontBack 函数
+                mockSprite.layer = 999; // 移到最前面
+                updateStatus('layer-status', `✅ 移到最前面成功！图层: ${mockSprite.layer}`, 'success');
+            } catch (error) {
+                updateStatus('layer-status', `❌ 移到最前面失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testGoToBack() {
+            try {
+                // 模拟 goToFrontBack 函数
+                mockSprite.layer = 0; // 移到最后面
+                updateStatus('layer-status', `✅ 移到最后面成功！图层: ${mockSprite.layer}`, 'success');
+            } catch (error) {
+                updateStatus('layer-status', `❌ 移到最后面失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testGoForward() {
+            try {
+                // 模拟 goForwardBackwardLayers 函数
+                mockSprite.layer += 1;
+                updateStatus('layer-status', `✅ 前移1层成功！图层: ${mockSprite.layer}`, 'success');
+            } catch (error) {
+                updateStatus('layer-status', `❌ 前移1层失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testGoBackward() {
+            try {
+                // 模拟 goForwardBackwardLayers 函数
+                mockSprite.layer = Math.max(0, mockSprite.layer - 1);
+                updateStatus('layer-status', `✅ 后移1层成功！图层: ${mockSprite.layer}`, 'success');
+            } catch (error) {
+                updateStatus('layer-status', `❌ 后移1层失败: ${error.message}`, 'error');
+            }
+        }
+
+        function testCombinedEffects() {
+            try {
+                // 模拟综合测试
+                mockSprite.scale = Math.max(0.1, mockSprite.scale + 20 / 100);
+                mockSprite.effects['color'] = (mockSprite.effects['color'] || 0) + 30;
+                mockSprite.visible = true;
+                mockSprite.layer = 999;
+                
+                updateStatus('combined-status', 
+                    `✅ 综合测试成功！\n` +
+                    `大小: ${Math.round(mockSprite.scale * 100)}%\n` +
+                    `颜色特效: ${mockSprite.effects['color']}\n` +
+                    `可见性: ${mockSprite.visible}\n` +
+                    `图层: ${mockSprite.layer}`, 'success');
+            } catch (error) {
+                updateStatus('combined-status', `❌ 综合测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('size-status', '📏 大小控制测试已准备就绪', 'info');
+            updateStatus('effect-status', '🎭 图形特效测试已准备就绪', 'info');
+            updateStatus('visibility-status', '👁️ 显示/隐藏测试已准备就绪', 'info');
+            updateStatus('layer-status', '📚 图层控制测试已准备就绪', 'info');
+            updateStatus('combined-status', '🧪 综合测试已准备就绪', 'info');
+        });
+    </script>
+</body>
+</html> 

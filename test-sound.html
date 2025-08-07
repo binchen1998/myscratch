@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声音管理功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .sound-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .sound-info {
+            flex: 1;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>声音管理功能测试</h1>
+    
+    <div class="test-section">
+        <h2>基本功能测试</h2>
+        <button onclick="testAddSound()">测试添加声音</button>
+        <button onclick="testPlaySound()">测试播放声音</button>
+        <button onclick="testStopAllSounds()">测试停止所有声音</button>
+        <button onclick="testSetVolume()">测试设置音量</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>声音列表</h2>
+        <div id="soundsList">
+            <p>还没有声音</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>文件上传测试</h2>
+        <input type="file" id="audioFile" accept="audio/*" onchange="handleFileUpload(event)">
+        <p>选择一个音频文件来测试上传功能</p>
+    </div>
+
+    <script src="sound-manager.js"></script>
+    <script>
+        // 测试函数
+        function testAddSound() {
+            // 模拟添加一个测试声音
+            const testSoundData = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+            addSound('测试声音', testSoundData, 2.5);
+            updateSoundsDisplay();
+        }
+        
+        function testPlaySound() {
+            if (sounds.length > 0) {
+                playSound(0);
+            } else {
+                alert('请先添加声音');
+            }
+        }
+        
+        function testStopAllSounds() {
+            stopAllSounds();
+        }
+        
+        function testSetVolume() {
+            setVolume(50);
+            alert('音量已设置为50%');
+        }
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const audio = new Audio(e.target.result);
+                    audio.onloadedmetadata = function() {
+                        const soundName = file.name.replace(/\.[^/.]+$/, "");
+                        addSound(soundName, e.target.result, audio.duration);
+                        updateSoundsDisplay();
+                        alert(`声音 "${soundName}" 已添加`);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function updateSoundsDisplay() {
+            const soundsList = document.getElementById('soundsList');
+            if (sounds.length === 0) {
+                soundsList.innerHTML = '<p>还没有声音</p>';
+                return;
+            }
+            
+            soundsList.innerHTML = sounds.map((sound, index) => `
+                <div class="sound-item">
+                    <div>🎵</div>
+                    <div class="sound-info">
+                        <div><strong>${sound.name}</strong></div>
+                        <div>时长: ${formatDuration(sound.duration)}</div>
+                    </div>
+                    <button onclick="playSound(${index})">播放</button>
+                    <button onclick="deleteSound(${index}); updateSoundsDisplay();">删除</button>
+                </div>
+            `).join('');
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSoundManager();
+            updateSoundsDisplay();
+        });
+    </script>
+</body>
+</html> 
